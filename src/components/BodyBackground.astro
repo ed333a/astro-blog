@@ -1,0 +1,88 @@
+---
+/**
+ * 背景层: 图片 + 颜色 (渐变/纯色), 全部由 config.yml 的 background 驱动。
+ * 逻辑参考 temp/BodyBackground.astro:
+ *   · 图片层: 支持 fill / repeat-x / repeat-y, 纯色 SVG 用 mask + background-color 上色;
+ *   · 颜色层: 渐变或纯色, 日/夜两套 (通过 dark: 变体切换);
+ *   · 两层都 fixed 铺满视口, 位于内容之后 (PageShell 里以 -z-10 挂在最底层)。
+ */
+import { backgroundConfig } from "../objects/config";
+import { getAsset } from "../objects/getAssetUrl";
+
+const bgImgCfg = backgroundConfig.image;
+const bgColorCfg = backgroundConfig.color;
+const bgUrl = getAsset(bgImgCfg.url);
+const bgSvgColor = bgImgCfg.svgColor;
+const bgBlur = backgroundConfig.blur ?? 0;
+
+// ── 图片层样式 ──
+let imageLayerStyle = "";
+if (bgImgCfg.enable && bgUrl) {
+    if (bgImgCfg.fill) {
+        imageLayerStyle = "background-size: cover; background-repeat: no-repeat;";
+    } else if (bgImgCfg["repeat-x"] && bgImgCfg["repeat-y"]) {
+        imageLayerStyle = "background-repeat: repeat;";
+    } else if (bgImgCfg["repeat-x"]) {
+        imageLayerStyle = "background-repeat: repeat-x;";
+    } else if (bgImgCfg["repeat-y"]) {
+        imageLayerStyle = "background-repeat: repeat-y;";
+    } else {
+        imageLayerStyle = "background-repeat: no-repeat;";
+    }
+
+    // 缩放: 同时写 background-size 与 mask-size —— bg8.svg 这类"遮罩上色"的图走的是 mask,
+    // 只写 background-size 不会生效。
+    if (bgImgCfg.scale != null) {
+        imageLayerStyle += `background-size: ${bgImgCfg.scale}%; -webkit-mask-size: ${bgImgCfg.scale}%; mask-size: ${bgImgCfg.scale}%;`;
+    }
+
+    if (bgUrl.endsWith("svg") && bgSvgColor) {
+        // 纯色 SVG: 把 SVG 当遮罩, 用 background-color 上色
+        imageLayerStyle += `-webkit-mask-image: url(${bgUrl}); mask-image: url(${bgUrl}); background-position: center;`;
+        imageLayerStyle += `background-color: ${bgSvgColor};`;
+    } else {
+        imageLayerStyle += `background-image: url(${bgUrl}); background-position: center;`;
+    }
+}
+
+// ── 颜色层 (渐变 / 纯色) ──
+let colorLayerClass = "";
+let hasColorLayer = false;
+if (bgColorCfg.enable) {
+    if (bgColorCfg.linear && bgColorCfg.colors.length >= 2) {
+        colorLayerClass = "bg-color-light-gradient dark:bg-color-dark-gradient";
+        hasColorLayer = true;
+    } else if (bgColorCfg.colors.length >= 1) {
+        colorLayerClass = "bg-color-light dark:bg-color-dark";
+        hasColorLayer = true;
+    }
+}
+
+/** 1~3 个颜色点拼成线性渐变 */
+const gradient = (colors: string[]) => {
+    if (!colors || colors.length === 0) return "transparent";
+    return `linear-gradient(${bgColorCfg.deg}deg, ${colors.slice(0, 3).join(", ")})`;
+};
+
+const styleVars = [
+    `--bg-blur:${bgBlur}px`,
+    `--lightGradient:${gradient(bgColorCfg.colors)}`,
+    `--darkGradient:${gradient(bgColorCfg["colors-dark"])}`,
+    `--lightBgColor:${bgColorCfg.colors[0] ?? "transparent"}`,
+    `--darkBgColor:${bgColorCfg["colors-dark"][0] ?? "transparent"}`,
+].join(";");
+
+// 只有配置了模糊才加 filter (避免 blur(0px) 产生多余层叠上下文)
+const blurClass = bgBlur > 0 ? "blur-[var(--bg-blur)]" : "";
+---
+
+<!-- 背景层: 固定铺满视口, 位于内容之后 (整块在 Swup 容器外面, 换页/滚动都不动) -->
+<div class="pointer-events-none fixed inset-0 -z-10 bg-page" aria-hidden="true">
+    {hasColorLayer ? (
+        <div class:list={["absolute inset-0", colorLayerClass, blurClass]} style={styleVars}>
+            {imageLayerStyle && <div class="absolute inset-0" style={imageLayerStyle}></div>}
+        </div>
+    ) : (
+        imageLayerStyle && <div class="absolute inset-0" style={imageLayerStyle}></div>
+    )}
+</div>

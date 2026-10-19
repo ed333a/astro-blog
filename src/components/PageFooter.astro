@@ -1,0 +1,31 @@
+---
+import GlassElement from "./glass/GlassElement.astro";
+import LicenseNotice from "./LicenseNotice.astro";
+import { siteConfig } from "../objects/config";
+
+interface Props {
+    /** 当前页面的标题与路径: 有的话, 页脚里的版权信息会点名这一篇 */
+    title?: string;
+    path? : string;
+}
+
+const { title, path } = Astro.props;
+const year = new Date().getFullYear();
+---
+
+<!-- 页脚: 同样是毛玻璃面板。mt-auto 让它在内容不足一屏时也贴在页面最下方。
+     圆角用独立变量 --radius-footer (config.yml 的 frostedGlassStyle.radius.footer)。
+     版权信息 (siteConfig.license) 由 LicenseNotice 的紧凑版渲染, 这里只负责把它放进布局。 -->
+<GlassElement as="footer" class="mt-auto flex flex-col items-center gap-3 rounded-[var(--radius-footer)] px-8 py-6 text-sm text-ink sm:flex-row sm:items-start sm:justify-between sm:text-left">
+    <div class="flex flex-col items-center gap-1.5 sm:items-start">
+        <p class="m-0 text-ink/85">© {year} {siteConfig.title} · {siteConfig.subtitle}</p>
+        <LicenseNotice title={title} path={path} compact />
+    </div>
+
+    <ul class="m-0 flex list-none flex-wrap justify-center gap-6 p-0 font-semibold">
+        <li><a href="/rss" class="transition-opacity hover:opacity-70">RSS</a></li>
+        <li><a href="/blog" class="transition-opacity hover:opacity-70">归档</a></li>
+        <li><a href="/about" class="transition-opacity hover:opacity-70">关于</a></li>
+    </ul>
+</GlassElement>
+

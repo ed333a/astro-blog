@@ -1,0 +1,69 @@
+---
+/**
+ * 页面外壳: 所有前台页面共用的那一层 —— 背景图 + 顶部导航 + 内容 + 页脚。
+ * 抽出来的目的是让每个页面只关心自己的内容, 顺便保证「背景 + 毛玻璃面板」这套视觉处处一致。
+ *
+ * 注意: 这层只是布局, 不参与毛玻璃本身 —— 玻璃的底色 / 模糊 / 圆角仍然全部来自
+ * config.yml 的 frostedGlassStyle (由 Layout 写成 --glass-* 变量)。
+ */
+import Layout from "./Layout.astro";
+import NavBar from "../components/NavBar.astro";
+import PageFooter from "../components/PageFooter.astro";
+import CodeBlockTools from "../components/CodeBlockTools.astro";
+import Sidebar from "../components/Sidebar.astro";
+import BackToTop from "../components/BackToTop.astro";
+import BodyBackground from "../components/BodyBackground.astro";
+
+interface Props {
+    /** 浏览器标题 (Layout 会拼上站点名) */
+    title?: string;
+    description?: string;
+    /** 当前文章 / 页面的标题与路径: 页脚里的版权信息会用到 */
+    licenseTitle?: string;
+    licensePath?: string;
+}
+
+const { title, description, licenseTitle, licensePath } = Astro.props;
+---
+
+<Layout title={title} description={description}>
+    <div class="relative flex min-h-screen flex-col gap-6 px-[2.5vw] pt-24 pb-6">
+        <!-- 背景: 图片层 + 颜色层 (渐变/纯色), 全部由 config.yml 的 background 驱动,
+             细节见 components/BodyBackground.astro。fixed 定位: 滚动 / 换页时都不动。 -->
+        <BodyBackground />
+
+        <NavBar />
+
+        <!-- Swup 容器: 换页时只替换这里面的内容 (参考 fuwari 模板),
+             导航栏 / 背景 / 返回顶部都在容器外, 所以完全不动。
+             淡出淡入 + 轻微位移的动画见 styles/global.css 的 .transition-swup-fade。 -->
+        <div id="swup-container" class="flex flex-1 flex-col gap-6 transition-swup-fade">
+            <!-- 页面头 (全宽, 可选): 文章列表页把 <header> 放到这里, 让右侧栏与文章列表顶部对齐 -->
+            <slot name="header" />
+
+            <!-- 两栏: 正文 + 右侧栏 (窄屏时右侧栏落到正文下方)。
+                 items-stretch 让 <aside> 撑满整列高度, 里面的 sticky 才有滚动空间可用。 -->
+            <div class="flex flex-col gap-6 lg:flex-row lg:items-stretch">
+                <main class="flex min-w-0 flex-1 flex-col gap-6">
+                    <slot />
+                </main>
+
+                <!-- 右侧栏: 侧边栏 + (文章页) 目录; 桌面端 sticky 在顶部导航栏下方 -->
+                <aside class="w-full lg:w-72 lg:shrink-0">
+                    <div class="flex flex-col gap-6 lg:sticky lg:top-24">
+                        <Sidebar />
+                        <slot name="sidebar" />
+                    </div>
+                </aside>
+            </div>
+
+            <PageFooter title={licenseTitle} path={licensePath} />
+        </div>
+
+        <!-- 代码块的交互脚本 (复制 / 折行 / 折叠): 本身不输出标记, 放在这里全站可用 -->
+        <CodeBlockTools />
+
+        <!-- 右下角返回顶部按钮 -->
+        <BackToTop />
+    </div>
+</Layout>

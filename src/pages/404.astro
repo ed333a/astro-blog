@@ -1,0 +1,26 @@
+---
+import PageShell from "../layouts/PageShell.astro";
+import GlassElement from "../components/glass/GlassElement.astro";
+---
+
+<PageShell title="404" description="页面不存在。">
+    <header slot="header" class="flex flex-col gap-2 pt-4">
+        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">404</p>
+        <h1 class="m-0 text-6xl font-extrabold sm:text-7xl">404</h1>
+        <p class="m-0 max-w-2xl text-sm text-ink/95">你访问的页面不存在，或者已经被移动了。</p>
+    </header>
+
+    <GlassElement class="flex flex-col items-start gap-5 rounded-[var(--radius-card)] p-6 text-ink sm:p-8">
+        <p class="m-0 text-sm leading-relaxed text-ink/90">
+            可能是链接写错了，或者这篇文章已经被删除。你可以回到首页，或者去文章列表里找找想看的内容。
+        </p>
+        <div class="flex flex-wrap gap-3">
+            <a href="/" class="rounded-full bg-black/20 px-5 py-2.5 text-sm font-semibold transition duration-300 ease-out hover:opacity-70 dark:bg-white/15">
+                ← 返回首页
+            </a>
+            <a href="/blog" class="rounded-full border border-ink/25 px-5 py-2.5 text-sm font-semibold transition duration-300 ease-out hover:bg-black/20 dark:hover:bg-white/15">
+                浏览全部文章
+            </a>
+        </div>
+    </GlassElement>
+</PageShell>

@@ -1,0 +1,36 @@
+---
+import PageShell from "../../layouts/PageShell.astro";
+import ArticleCard from "../../components/ArticleCard.astro";
+import { getSortedPosts } from "../../objects/collections";
+
+// 每个标签生成一个页面: /tags/<标签名>, 列出该标签下的全部文章。
+export async function getStaticPaths() {
+    const posts = await getSortedPosts();
+    const tags = [...new Set(posts.flatMap((post) => post.data.tags))];
+
+    return tags.map((tag) => ({
+        params: { tag },
+        props: {
+            tag,
+            tagPosts: posts.filter((post) => post.data.tags.includes(tag)),
+        },
+    }));
+}
+
+const { tag, tagPosts } = Astro.props;
+---
+
+<PageShell title={`标签: ${tag}`} description={`标签「${tag}」下的全部文章。`}>
+    <header slot="header" class="flex flex-col gap-2 pt-4">
+        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">Tag</p>
+        <h1 class="m-0 text-3xl font-extrabold sm:text-4xl">#{tag}</h1>
+        <p class="m-0 max-w-2xl text-sm text-ink/95">
+            共 {tagPosts.length} 篇文章 ——
+            <a href="/tags" class="font-semibold underline-offset-4 transition-opacity hover:underline hover:opacity-75">← 全部标签</a>
+        </p>
+    </header>
+
+    <section class="flex flex-col gap-3" aria-label={`标签 ${tag} 的文章`}>
+        {tagPosts.map((post) => <ArticleCard post={post} />)}
+    </section>
+</PageShell>

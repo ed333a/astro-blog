@@ -1,0 +1,70 @@
+---
+import GlassElement from "./glass/GlassElement.astro";
+
+interface Props {
+    /** 当前页码 (从 1 开始) */
+    current: number;
+    /** 总页数 */
+    total: number;
+    /** 列表基础路径: 第 1 页是 base, 其余是 base/页码 */
+    base: string;
+}
+
+const { current, total, base } = Astro.props;
+
+const pageUrl = (page: number) => (page <= 1 ? base : `${base}/${page}`);
+
+/** 页码窗口: 首尾各一个 + 当前页两侧各一个, 中间用省略号填 (页数很少时全部列出) */
+function pageItems(currentPage: number, totalPages: number): Array<number | "gap"> {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
+
+    const items: Array<number | "gap"> = [1];
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+
+    if (start > 2) items.push("gap");
+    for (let page = start; page <= end; page += 1) items.push(page);
+    if (end < totalPages - 1) items.push("gap");
+    items.push(totalPages);
+
+    return items;
+}
+
+const items = pageItems(current, total);
+
+const pillClasses = "flex h-8 min-w-8 items-center justify-center rounded-full border border-ink/20 px-3 font-semibold transition duration-300 ease-out hover:bg-black/20 dark:hover:bg-white/15";
+const disabledClasses = "flex h-8 items-center justify-center rounded-full border border-ink/10 px-3 font-semibold text-ink/40";
+---
+
+<!-- 分页: 同样是一块毛玻璃面板 (第 1 页是 base, 之后是 base/2, base/3 ...) -->
+<GlassElement
+    as="nav"
+    aria-label="文章分页"
+    class="flex flex-col items-center gap-3 rounded-[var(--radius-card)] px-4 py-4 text-sm text-ink sm:flex-row sm:justify-between"
+>
+    <p class="m-0 text-xs font-medium text-ink/75">第 {current} / {total} 页</p>
+
+    <ul class="m-0 flex list-none flex-wrap items-center gap-1.5 p-0">
+        <li>
+            {current > 1
+                ? <a href={pageUrl(current - 1)} rel="prev" class={pillClasses}>← 上一页</a>
+                : <span class={disabledClasses} aria-disabled="true">← 上一页</span>}
+        </li>
+
+        {items.map((item) => (
+            <li>
+                {item === "gap"
+                    ? <span class="px-1 text-ink/60" aria-hidden="true">…</span>
+                    : item === current
+                        ? <span class="flex h-8 min-w-8 items-center justify-center rounded-full border border-transparent bg-black/25 px-3 font-bold" aria-current="page">{item}</span>
+                        : <a href={pageUrl(item)} class={pillClasses}>{item}</a>}
+            </li>
+        ))}
+
+        <li>
+            {current < total
+                ? <a href={pageUrl(current + 1)} rel="next" class={pillClasses}>下一页 →</a>
+                : <span class={disabledClasses} aria-disabled="true">下一页 →</span>}
+        </li>
+    </ul>
+</GlassElement>

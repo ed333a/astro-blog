@@ -1,0 +1,177 @@
+# 所有的资源文件路径遵循以下规则:
+# 若路径以 '/' 开头, 如 '/folder/1.png', 则该资源文件路径是相对于 public 文件夹下的资源文件
+# 
+# 若路径不以 '/' 开头, 如 'folder/1.png', 则该资源文件路径是相对于 src/assets 文件夹下的资源文件
+
+#######################################
+# 站点配置
+#######################################
+siteConfig:
+  title: astro-blog-glass
+  subtitle: this is subtitle
+  description: A glass style blog, built by astro.
+
+  # 文章链接格式
+  # 支持的变量 (大小写敏感)
+  #==============================================
+  # :postID       ->  文章 ID (自动生成)
+  # :date         ->  文章的发布日期 (YYYYMMDDHHmmss)
+  # :date_tamp    ->  文章发布日期的时间戳
+  # :category     ->  文章分类
+  # :year         ->  文章发表的年份
+  # :month        ->  文章发表的月份
+  # :day          ->  文章发表的日期
+  # :hour         ->  文章发表时间-小时
+  # :minute       ->  文章发表时间-分钟
+  # :second       ->  文章发表时间-秒
+  # :year_i       ->  文章发表的年份 (不含前导 0)
+  # :month_i      ->  文章发表的月份 (不含前导 0)
+  # :day_i        ->  文章发表的日期 (不含前导 0)
+  # :hour_i       ->  文章发表时间-小时 (不含前导 0)
+  # :minute_i     ->  文章发表时间-分钟 (不含前导 0)
+  # :second_i     ->  文章发表时间-秒数 (不含前导 0)
+  # :title        ->  文章的标题
+  # :title_pinyin ->  文章标题 (中文汉字转换为拼音)
+  # :file_name    ->  文档的文件名称
+  #==============================================
+  postPermalink: 'p/:postID'
+  # 每页展示的文章数量
+  postsPerPage: 6
+  # 文章 ID 哈希的长度
+  postIDLehgth: 12
+  # 站点地址, 在文章底部的版权内容中用到
+  siteUrl: https://blog.tyh123.top
+  # 版权信息
+  license:
+    enable: true
+    name: CC-BY-NC-SA 4.0
+    url: https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+#######################################
+# 作者信息
+#######################################
+author:
+  # 作者名称
+  name: tyh123
+  # 头像图片路径: 以 '/' 开头表示 public 目录下的资源; 留空则用名字首字母占位
+  avatar: 'assets/img/avatars/avatar.jpg'
+  # 一句话介绍
+  bio: 一个喜欢折腾前端的开发者
+  # 社交媒体链接 (侧边栏展示)
+  socialLinks:
+    - name: GitHub
+      url: https://github.com/tyh123
+    - name: RSS
+      url: /rss
+
+#######################################
+# 侧边栏统计 (评论 / 访问量等来自 API, 接入前先用静态占位)
+#######################################
+sidebar:
+  comments: 12        # 评论数量
+  totalVisits: 34567  # 总访问量
+  visitors: 2345      # 访客数量
+
+#######################################
+# 代码块渲染设置 (prismjs)
+#######################################
+codeBlock:
+  showLineNumber: true        # 是否显示行号
+  tabReplace: ''              # 将 tab 制表符替换为此内容, 留空为不替换
+  tabSize: 4                  # tab 替换长度
+  fold_at: 15                 # 控制代码在多少行折叠, 防止代码块过长, 若该值小于等于 0 则表示不折叠
+  wordwrap: false             # 控制代码块是否自动换行
+  wordWrapToggleButton: true  # 是否显示 开/关 自动换行按钮
+  copyButton: true            # 是否显示复制按钮
+  fontSize: 15                # 代码字体大小 (px)
+
+#######################################
+# 背景图片
+#######################################
+background: 
+  image:
+    enable: true    # 是否启用背景 
+    url: 'assets/img/blog_bg/bg8.svg'       # 背景图片地址, 使用 "/" 表示路径相对于 public 目录, 否则相对于 src 目录
+    svgColor: '#f5f5f5'                     # 当背景图为纯色的 SVG 图片时, 可以设置此项来自定义 svg 颜色
+    repeat-x: true                          # 控制图片在水平方向上重复
+    repeat-y: false                         # 控制图片在垂直方向上重复
+    fill: false                             # 控制图片铺满整个页面, 这个值启用后上面两个选项将会失效
+    scale: 40                               # 背景图片缩放 (%): 对应 background-size / mask-size; 数值越大图案越大, 不写则用默认尺寸
+  # 背景色设置
+  color:
+    enable: true    # 启用背景色
+    linear: true    # 是否启用渐变色背景, 如果为 false 则使用颜色列表中的第一个颜色, 为 true 则需要至少提供 2 种颜色, 至多 3 种。
+    deg: 135        # 渐变旋色转角度, 输入整数值 0-360
+    colors:         # 日间模式颜色列表, 最多可以有三个
+      - '#2acaae'
+      - '#67a39f'
+      - '#39b967'
+    colors-dark:    # 夜间模式颜色表, 最多可以有三个
+      - '#1d5f16'
+      - '#163a5f'
+      - '#5e165f'
+
+#######################################
+# 美化设置
+#######################################
+# 毛玻璃 (纯 CSS: backdrop-filter 模糊 + 半透明底色 + 描边/投影, 没有 JS, 手机端同样有效)。
+# 所有参数由 Layout 在服务端渲染成 <html> 上的 --glass-* / --radius-* 变量,
+# 交给 styles/global.css 的 frosted-glass 工具类消费 (见 components/glass/GlassElement.astro)。
+# 调效果只改这个文件, 不用碰组件。
+frostedGlassStyle:
+  # ── 1 背景模糊: backdrop-filter 里的滤镜函数 ──
+  blur: 5                 # 背景模糊强度 (px), 越大越糊 [0,60]
+  saturate: 1.4           # 背景饱和度 (1 = 不变)
+  brightnessLight: 0.85   # 背景亮度 (1 = 不变, 日间)
+  brightnessDark: 0.9     # 背景亮度 (夜间)
+
+  # ── 2 背景颜色与阴影: 玻璃面板自己的底子 (任何 CSS 颜色值, 支持带 alpha 的透明色) ──
+  background:             # 玻璃面板的底色, 越不透明越「实」, 越透明越通透
+    light: 'rgba(255, 0, 0, 0.05)'
+    dark: 'rgba(18, 18, 24, 0.42)'
+  border:                 # 面板描边 (同时用作顶部那道内高光)
+    light: 'rgba(255, 255, 255, 0.30)'
+    dark: 'rgba(255, 255, 255, 0.14)'
+  shadow:                 # 面板投影 (完整的 box-shadow 值)
+    light: '0 10px 30px -14px rgba(0, 0, 0, 0.30)'
+    dark: '0 12px 32px -16px rgba(0, 0, 0, 0.65)'
+  page:                   # 页面兜底底色: 背景图之外的那一层, 也是老浏览器下玻璃的退化色
+    light: '#e8e8ee'
+    dark: '#0b0b0f'
+
+  # ── 3 圆角 (px): 三个位置各一个, 互不影响 ──
+  radius:
+    navbar: 999           # 顶部导航栏圆角
+    footer: 999           # 底部页脚圆角
+    card: 32              # 卡片 (文章卡片等普通面板) 圆角
+    codeBlock: 16         # 代码块
+
+# 卡片光斑: 鼠标在卡片上移动时, 跟着指针走的那圈高亮描边 (纯 CSS 渐变 + mask, 脚本只负责写鼠标坐标)。
+# 同样由 Layout 渲染成 --spotlight-* 变量, 交给 styles/global.css 的 spotlight-border 工具类 (见 ArticleCard)。
+cardSpotlight:
+  radius: 220             # 光斑半径 (px), 越大高亮在描边上铺得越长
+  color:                  # 光斑颜色: 日/夜各一份 (支持带 alpha 的透明色)
+    light: 'rgba(255, 255, 255, 0.95)'
+    dark: 'rgba(255, 255, 255, 0.85)'
+
+theme:
+  # 默认主题选择 (Light,Dark,Auto 大小写敏感, 默认 Auto)
+  style: Dark
+
+#######################################
+# 博客评论系统
+#######################################
+comments:
+  enable: true        # 启用评论系统
+  enableInDev: false  # 是否在 dev 环境下启用
+  # (计划接入: Twikoo)
+  use: Artalk   # 目前仅支持 Artalk
+  
+
+  # artalk 评论系统配置
+  artalk:
+    # 填写完整的网页链接格式, 即以 http(s):// 开头的链接格式 
+    server: http://localhost:7890     # Artalk 后端地址
+    serverDev:  http://localhost:4008 # 在 Dev 环境的后端地址 (npm run dev)
+    site: '我的博客'  # 站点名称
+    

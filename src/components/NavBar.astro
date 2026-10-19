@@ -1,0 +1,49 @@
+---
+import GlassElement from "./glass/GlassElement.astro";
+import NavSidebar from "./NavSidebar.astro";
+import ThemeToggleButton from "./ThemeToggleButton.astro";
+import { navLinks } from "../objects/navLinks";
+---
+
+<!-- 导航栏: 屏幕宽度的 95%, 距顶部 5px。
+     fixed + inset-x-0 + mx-auto 实现居中, 避免使用 transform (它会额外创建包含块与层叠上下文,
+     让 backdrop-filter 的取样范围变得不好预测)。
+     圆角用独立变量 --radius-navbar (config.yml 的 frostedGlassStyle.radius.navbar)。
+     响应式 (断点取 Tailwind 默认的 md = 768px):
+       · ≥ md: 左 Logo, 右「导航链接 + 主题切换」, 和过去完全一样;
+       · < md: 只留 Logo 与一个「打开侧边栏」的按钮 —— 链接与主题切换都搬进 NavSidebar 的抽屉里,
+              手机上导航栏就不会挤成一条缝。 -->
+<GlassElement as="nav" class="fixed inset-x-0 top-[5px] z-50 mx-auto flex w-[95%] items-center justify-between rounded-[var(--radius-navbar)] px-7 py-3.5 text-ink">
+    <a href="/" class="text-xl font-extrabold tracking-tight">My Blog</a>
+
+    <!-- 桌面端: 导航链接 + 主题切换 -->
+    <div class="hidden items-center gap-5 md:flex">
+        <ul class="m-0 flex list-none gap-6 p-0">
+            {navLinks.map((link) => (
+                <li><a href={link.href} class="text-[15px] font-semibold transition-opacity hover:opacity-70">{link.label}</a></li>
+            ))}
+        </ul>
+
+        <!-- 紧凑版主题按钮 (尺寸由调用处给, 见 ThemeToggleButton 的说明) -->
+        <ThemeToggleButton class="px-3 py-1.5 text-[13px]" />
+    </div>
+
+    <!-- 移动端: 只留这个按钮。aria-controls 指向抽屉, aria-expanded 由 NavSidebar 的脚本维护 -->
+    <button
+        type="button"
+        data-nav-toggle
+        aria-controls="nav-sidebar"
+        aria-expanded="false"
+        aria-label="打开导航菜单"
+        class="flex cursor-pointer items-center rounded-full bg-black/20 p-2.5 transition duration-300 ease-out hover:opacity-70 md:hidden dark:bg-white/15"
+    >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="h-4 w-4" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16"></path>
+        </svg>
+    </button>
+</GlassElement>
+
+<!-- 侧边栏 (抽屉) 跟着导航栏走: 用到 NavBar 的页面自动就有, 页面里不用再单独放一个 -->
+<NavSidebar />
+
+

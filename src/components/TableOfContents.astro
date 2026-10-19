@@ -1,0 +1,42 @@
+---
+import GlassElement from "./glass/GlassElement.astro";
+
+interface Heading {
+    depth: number;
+    slug: string;
+    text: string;
+}
+
+interface Props {
+    headings: Heading[];
+}
+
+// 只收 h2 / h3: h1 是文章标题 (正文头已经展示), h4+ 太细碎, 都不进目录。
+const { headings } = Astro.props;
+const items = headings.filter((heading) => heading.depth >= 2 && heading.depth <= 3);
+---
+
+<!-- 文章目录: 放在右侧栏「侧边栏」下方 (PageShell 的 sidebar 插槽), 桌面端随侧边栏一起 sticky。 -->
+<GlassElement as="nav" aria-label="文章目录" class="flex flex-col gap-3 rounded-[var(--radius-card)] p-5 text-ink">
+    <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">目录</p>
+
+    {items.length === 0 ? (
+        <p class="m-0 text-xs text-ink/70">本文没有小标题。</p>
+    ) : (
+        <ul class="m-0 flex list-none flex-col gap-1 p-0">
+            {items.map((heading) => (
+                <li>
+                    <a
+                        href={`#${heading.slug}`}
+                        class:list={[
+                            "block rounded-lg text-sm leading-relaxed transition-colors duration-300 ease-out hover:bg-black/20 dark:hover:bg-white/15",
+                            heading.depth === 3 ? "pl-4 text-ink/80" : "font-medium text-ink/95",
+                        ]}
+                    >
+                        {heading.text}
+                    </a>
+                </li>
+            ))}
+        </ul>
+    )}
+</GlassElement>

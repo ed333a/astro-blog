@@ -1,0 +1,100 @@
+---
+// 代码块的交互脚本: 复制 / 折行开关 / 折叠开关 (config.yml 的 codeBlock 控制按钮是否渲染)。
+//
+// 这里刻意不输出任何标记 —— 工具栏的按钮是构建期由 src/objects/codeBlock.ts 生成的
+// (那样首帧就是完整的样子, 不会等脚本跑起来才"长"出按钮), 脚本只用事件委托认三个 data-* 标记:
+//   [data-code-copy]  复制 (成功后换成对勾 + tool-pop 动画, 1.6s 后恢复)
+//   [data-code-wrap]  切换折行 (状态写在容器的 data-wrap 上, 图标交叉淡入淡出)
+//   [data-code-fold]  展开 / 收起 (状态写在容器的 data-folded 上, 底部渐变遮罩跟着显隐)
+// 和 Layout 的主题切换、NavSidebar 的开合是同一套写法: 状态只有一处, 谁都不用引用谁。
+---
+
+<script>
+    /** 复制成功/失败提示的停留时间 (ms) */
+    const FEEDBACK_DURATION = 1600;
+
+    function setLabel(button: HTMLElement, label?: string): void {
+        const target = button.querySelector<HTMLElement>("[data-code-label]");
+        if (target && label) target.textContent = label;
+    }
+
+    /**
+     * 写复制状态。
+     * data-copied 是驱动样式 (颜色 / 对勾 / tool-pop 动画) 的唯一开关,
+     * 所以重新赋值前先删掉并强制一次重排, 保证连点也能重新播动画。
+     */
+    function setCopyState(button: HTMLElement, state: "ok" | "error"): void {
+        delete button.dataset.copied;
+        void button.offsetWidth;
+        button.dataset.copied = state;
+
+        setLabel(button, state === "ok" ? button.dataset.labelDone : button.dataset.labelError);
+
+        window.clearTimeout(Number(button.dataset.feedbackTimer ?? 0));
+        const timer = window.setTimeout(() => {
+            delete button.dataset.copied;
+            setLabel(button, button.dataset.labelIdle);
+        }, FEEDBACK_DURATION);
+        button.dataset.feedbackTimer = String(timer);
+    }
+
+    /** 复制到剪贴板: 优先 Clipboard API, 非安全上下文退回到临时 textarea */
+    async function copyText(text: string): Promise<boolean> {
+        try {
+            await navigator.clipboard.writeText(text);
+            return true;
+        } catch {
+            const helper = document.createElement("textarea");
+            helper.value = text;
+            helper.setAttribute("readonly", "");
+            helper.style.position = "fixed";
+            helper.style.opacity = "0";
+            document.body.append(helper);
+            helper.select();
+
+            let copied = false;
+            try {
+                copied = document.execCommand("copy");
+            } catch {
+                copied = false;
+            }
+            helper.remove();
+            return copied;
+        }
+    }
+
+    document.addEventListener("click", async (event) => {
+        const target = event.target as HTMLElement | null;
+        if (!target) return;
+
+        const block = target.closest<HTMLElement>("[data-code-block]");
+        if (!block) return;
+
+        const copyButton = target.closest<HTMLElement>("[data-code-copy]");
+        if (copyButton) {
+            const code = block.querySelector("code");
+            if (!code) return;
+            setCopyState(copyButton, (await copyText(code.textContent ?? "")) ? "ok" : "error");
+            return;
+        }
+
+        const wrapButton = target.closest<HTMLElement>("[data-code-wrap]");
+        if (wrapButton) {
+            const wrapped = block.dataset.wrap === "on";
+            block.dataset.wrap = wrapped ? "off" : "on";
+            wrapButton.setAttribute("aria-pressed", String(!wrapped));
+            setLabel(wrapButton, wrapped ? wrapButton.dataset.labelOff : wrapButton.dataset.labelOn);
+            return;
+        }
+
+        const foldButton = target.closest<HTMLElement>("[data-code-fold]");
+        if (foldButton) {
+            const folded = block.dataset.folded === "true";
+            block.dataset.folded = String(!folded);
+            block.querySelectorAll<HTMLElement>("[data-code-fold]").forEach((button) => {
+                button.setAttribute("aria-expanded", String(folded));
+                setLabel(button, folded ? button.dataset.labelExpanded : button.dataset.labelFolded);
+            });
+        }
+    });
+</script>

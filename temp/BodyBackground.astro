@@ -1,0 +1,134 @@
+---
+import { beautyConfig } from "@/ts/data/config";
+import { backgroundConfig as bgCfg } from "@/ts/data/config";
+import { getAsset } from "@/ts/utils/getAssetUrl";
+import { theme } from "@/ts/utils/themeUtils";
+
+const bgImgCfg = bgCfg.image;
+const bgColorCfg = bgCfg.color;
+const bgUrl = getAsset(bgCfg.image.url);
+
+// svg 自定义颜色
+const bgSvgColor = bgImgCfg.svgColor;
+
+// 背景渐变色
+const lightGradient = `linear-gradient(${bgCfg.color.deg}deg, ${bgCfg.color.colors[0]}, ${bgCfg.color.colors.length > 2 ? `${bgCfg.color.colors[1]}, ${bgCfg.color.colors[2]}` : bgCfg.color.colors[1]})`;
+const darkGradient = `linear-gradient(${bgCfg.color.deg}deg, ${bgCfg.color["colors-dark"][0]}, ${bgCfg.color["colors-dark"].length > 2 ? `${bgCfg.color["colors-dark"][1]}, ${bgCfg.color["colors-dark"][2]}` : bgCfg.color["colors-dark"][1]})`;
+const lightBgColor = bgColorCfg.colors[0];
+const darkBgColor = bgColorCfg["colors-dark"][0];
+
+// ---------- 图片层样式 ----------
+let imageLayerStyle = "";
+if (bgImgCfg.enable && bgUrl) {
+    if (bgImgCfg.fill) {
+        imageLayerStyle = "background-size: cover;"
+    } else if (bgImgCfg["repeat-x"] && bgImgCfg["repeat-y"]) {
+        imageLayerStyle = "background-repeat: repeat;"
+    } else {
+        if (bgImgCfg["repeat-x"] && !bgImgCfg["repeat-y"]) {
+            imageLayerStyle = "background-repeat: repeat-x;"
+        } else if (!bgImgCfg["repeat-x"] && bgImgCfg["repeat-y"]) {
+            imageLayerStyle = "background-repeat: repeat-y;"
+        } else {
+            imageLayerStyle = "background-repeat: no-repeat;"
+        }
+    }
+
+    if (bgUrl.endsWith("svg") && bgSvgColor) {
+        // 增加一层遮罩层达到自定义 svg 颜色的效果
+        imageLayerStyle += `-webkit-mask-image: url(${bgUrl}); background-position: center;`;
+		imageLayerStyle += `background-color: ${bgSvgColor};`;
+	} else {
+        imageLayerStyle += `background-image: url(${bgUrl}); background-position: center;`
+    }
+}
+
+// ---------- 颜色层样式 ----------
+let colorLayerClass = "";
+let hasColorLayer = false;
+
+if (bgColorCfg.enable) {
+	if (bgColorCfg.linear && bgColorCfg.colors.length >= 2) {
+		colorLayerClass = `bg-color-light-gradient dark:bg-color-dark-gradient`;
+		hasColorLayer = true;
+	} else if (bgColorCfg.colors.length >= 1) {
+		colorLayerClass = `bg-color-light dark:bg-color-dark`;
+		hasColorLayer = true;
+	}
+}
+
+const bgBlur = `${bgCfg.blur}px`;
+const styleVars = {
+  '--bg-blur': bgBlur,
+  '--lightGradient': lightGradient,
+  '--darkGradient': darkGradient,
+  '--lightBgColor': lightBgColor,
+  '--darkBgColor': darkBgColor,
+};
+---
+
+<script>
+    import { theme } from "@/ts/utils/themeUtils"
+    
+    function switchTheme() {
+        if (theme() === "light") {
+            theme("dark");
+        } else if (theme() === "dark") {
+            theme("auto");
+        } else if (theme() === "auto") {
+            theme("light");
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", ()=> {
+        const btn = document.getElementById("btn");
+        if (btn) btn.addEventListener("click", switchTheme);
+    });
+</script>
+
+<style>
+
+    @tailwind components;
+    @layer components {
+        .bg-color-dark-gradient { background-image: var(--darkGradient); }
+        .bg-color-light-gradient { background-image: var(--lightGradient); }
+        .bg-color-dark { background-color: var(--darkBgColor); }
+        .bg-color-light { background-color: var(--lightBgColor); }
+    }
+    
+    /* 背景层样式 */
+    .bg-layer {
+        @apply fixed top-0 left-0 w-full h-full pointer-events-none;
+    }
+
+    /* 图片层 */
+    .bg-image-layer {
+        @apply z-[0];
+    }
+
+    /* 颜色层*/
+    .bg-color-layer {
+        @apply z-[1] blur-[var(--bg-blur)];
+    }
+
+    /* 内容层 */
+    .content-layer {
+        @apply relative z-[2] min-h-[200vh];
+    }
+</style>
+
+<!-- 背景层 -->
+{
+    hasColorLayer ? (
+        <div class=`bg-layer bg-color-layer ${colorLayerClass}` style={Object.entries(styleVars).map(([k,v]) => `${k}:${v}`).join(';')} aria-hidden="true">
+            <div class="bg-layer bg-image-layer" style={imageLayerStyle} aria-hidden="true"/>
+        </div>
+    ) : (
+        <div class="bg-layer bg-image-layer" style={imageLayerStyle} aria-hidden="true"></div>
+    )
+}
+
+<!-- 内容层 -->
+<div class="content-layer">
+    <slot />
+</div>

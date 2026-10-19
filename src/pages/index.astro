@@ -1,11 +1,33 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+import PageShell from "../layouts/PageShell.astro";
+import ArticleCard from "../components/ArticleCard.astro";
+import { siteConfig } from "../objects/config";
+import { getSortedPosts } from "../objects/collections";
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+// 首页只展示「最新」的一屏: 数量与列表页每页文章数一致 (config.yml 的 siteConfig.postsPerPage),
+// 想往下翻就去 /blog (那里有完整的分页)。
+const posts = await getSortedPosts();
+const latest = posts.slice(0, siteConfig.postsPerPage);
 ---
 
-<Layout>
-	<Welcome />
-</Layout>
+<PageShell>
+    <header slot="header" class="flex flex-col gap-2 pt-4">
+        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">My Blog</p>
+        <h1 class="m-0 text-3xl font-extrabold sm:text-4xl">{siteConfig.title}</h1>
+        <p class="m-0 max-w-2xl text-sm text-ink/95">{siteConfig.description}</p>
+    </header>
+
+    <section class="flex flex-col gap-3" aria-label="最新文章">
+        <div class="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 class="m-0 text-xl font-bold">最新文章</h2>
+            <a href="/blog" class="text-sm font-semibold underline-offset-4 transition-opacity hover:underline hover:opacity-75">
+                全部 {posts.length} 篇 →
+            </a>
+        </div>
+
+        {latest.length === 0
+            ? <p class="m-0 text-sm text-ink/85">还没有文章 —— 往 <code>src/contents/posts</code> 里放一个 Markdown 文件就有了。</p>
+            : latest.map((post) => <ArticleCard post={post} />)}
+    </section>
+</PageShell>
+

@@ -1,0 +1,68 @@
+---
+import PageShell from "../layouts/PageShell.astro";
+import GlassElement from "../components/glass/GlassElement.astro";
+import { getSortedPosts } from "../objects/collections";
+
+// 按分类聚合文章: 分类里没写 category 的统一归到「未分类」。
+const posts = await getSortedPosts();
+
+const categoryMap = new Map<string, typeof posts>();
+for (const post of posts) {
+    const category = post.data.category?.trim() || "未分类";
+    const list = categoryMap.get(category) ?? [];
+    list.push(post);
+    categoryMap.set(category, list);
+}
+const categories = [...categoryMap.entries()].sort((a, b) => a[0].localeCompare(b[0], "zh-CN"));
+---
+
+<PageShell title="分类" description="按分类浏览所有文章。">
+    <header slot="header" class="flex flex-col gap-2 pt-4">
+        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">Categories</p>
+        <h1 class="m-0 text-3xl font-extrabold sm:text-4xl">分类</h1>
+        <p class="m-0 max-w-2xl text-sm text-ink/95">共 {categories.length} 个分类。</p>
+    </header>
+
+    <!-- 侧边栏目录: 列出所有分类, 点击平滑滚动到对应分类。
+         用原生 <nav> 而不是 GlassElement, 因为 slot="..." 需要落在原生元素上才会进侧边栏插槽
+         (GlassElement 会把 slot 当普通属性透传)。frosted-glass 就是 GlassElement 加的玻璃样式。 -->
+    <nav slot="sidebar" aria-label="分类目录" class="frosted-glass flex flex-col gap-3 rounded-[var(--radius-card)] p-5 text-ink">
+        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">目录</p>
+        <ul class="m-0 flex list-none flex-col gap-1 p-0">
+            {categories.map(([category, categoryPosts], index) => (
+                <li>
+                    <a
+                        href={`#category-${index}`}
+                        class="flex items-baseline justify-between gap-2 rounded-lg px-2 py-1 text-sm transition-colors duration-300 ease-out hover:bg-black/20 dark:hover:bg-white/15"
+                    >
+                        <span class="truncate">{category}</span>
+                        <span class="shrink-0 text-[11px] font-medium text-ink/60">{categoryPosts.length}</span>
+                    </a>
+                </li>
+            ))}
+        </ul>
+    </nav>
+
+    <div class="flex flex-col gap-3">
+        {categories.length === 0
+            ? <GlassElement class="rounded-[var(--radius-card)] p-6 text-sm text-ink/85">还没有分类。</GlassElement>
+            : categories.map(([category, categoryPosts], index) => (
+                <GlassElement id={`category-${index}`} class="scroll-mt-24 flex flex-col gap-3 rounded-[var(--radius-card)] p-6 text-ink sm:p-7">
+                    <div class="flex items-baseline justify-between gap-3">
+                        <h2 class="m-0 text-xl font-bold">{category}</h2>
+                        <span class="text-xs font-semibold text-ink/70">{categoryPosts.length} 篇</span>
+                    </div>
+                    <ul class="m-0 flex list-none flex-col gap-1.5 p-0">
+                        {categoryPosts.map((post) => (
+                            <li class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+                                {post.data.dateText && (
+                                    <time datetime={post.data.dateText} class="shrink-0 font-mono text-xs text-ink/60">{post.data.dateText}</time>
+                                )}
+                                <a href={`/${post.data.path}`} class="font-semibold underline-offset-4 transition-opacity hover:underline hover:opacity-80">{post.data.title}</a>
+                            </li>
+                        ))}
+                    </ul>
+                </GlassElement>
+            ))}
+    </div>
+</PageShell>

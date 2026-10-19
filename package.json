@@ -1,20 +1,31 @@
 {
-  "name": "astro-blog-liquid-glass",
+  "name": "astro-blog-glass",
   "type": "module",
   "version": "0.0.1",
   "engines": {
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "astro dev",
+    "dev": "astro dev --host",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.3.5"
+    "@astrojs/tailwind": "^6.0.2",
+    "@astrojs/ts-plugin": "^1.10.12",
+    "@swup/astro": "^1.8.0",
+    "astro": "^7.3.5",
+    "swup": "^4.10.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.5"
   },
   "allowScripts": {
     "esbuild": true
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3"
   }
 }

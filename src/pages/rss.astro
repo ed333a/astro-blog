@@ -1,0 +1,108 @@
+---
+/**
+ * 美化版 RSS 订阅页面 (/rss)。
+ * 真正的订阅源仍是 /rss.xml (标准 XML, 供阅读器抓取), 这里只做人类可读的订阅入口,
+ * 所以不会影响任何 RSS 阅读器。
+ */
+import PageShell from "../layouts/PageShell.astro";
+import GlassElement from "../components/glass/GlassElement.astro";
+import ArticleCard from "../components/ArticleCard.astro";
+import { siteConfig } from "../objects/config";
+import { getSortedPosts } from "../objects/collections";
+import { absoluteUrl } from "../objects/posts";
+
+const posts = await getSortedPosts();
+const feedUrl = absoluteUrl("rss.xml");
+const recent = posts.slice(0, 10);
+
+const readers = [
+    { name: "Feedly", url: `https://feedly.com/i/subscription/feed/${encodeURIComponent(feedUrl)}` },
+    { name: "Inoreader", url: `https://www.inoreader.com/?add_feed=${encodeURIComponent(feedUrl)}` },
+];
+---
+
+<PageShell title="RSS 订阅" description={`订阅 ${siteConfig.title} 的文章更新。`}>
+    <header slot="header" class="flex flex-col gap-2 pt-4">
+        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">RSS</p>
+        <h1 class="m-0 text-3xl font-extrabold sm:text-4xl">RSS 订阅</h1>
+        <p class="m-0 max-w-2xl text-sm text-ink/95">用任意 RSS 阅读器订阅本站更新 —— 有新文章时会自动推送。</p>
+    </header>
+
+    <!-- 订阅地址 -->
+    <GlassElement class="flex flex-col gap-4 rounded-[var(--radius-card)] p-6 text-ink sm:p-8">
+        <div class="flex flex-col gap-1">
+            <h2 class="m-0 text-xl font-bold">订阅地址</h2>
+            <p class="m-0 text-sm text-ink/80">把下面的地址添加到你的 RSS 阅读器即可。</p>
+        </div>
+
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <code class="min-w-0 flex-1 rounded-2xl border border-ink/20 bg-black/20 px-4 py-3 font-mono text-sm break-all text-ink/90 dark:bg-white/10">{feedUrl}</code>
+            <button
+                type="button"
+                data-copy-feed
+                data-feed-url={feedUrl}
+                class="shrink-0 cursor-pointer rounded-full bg-black/20 px-5 py-2.5 text-sm font-semibold transition duration-300 ease-out hover:opacity-70 dark:bg-white/15"
+            >
+                <span data-copy-label>复制链接</span>
+            </button>
+        </div>
+
+        <p class="m-0 text-xs text-ink/60">
+            也可以直接打开 XML:
+            <a href="/rss.xml" target="_blank" rel="noopener" data-no-swup class="font-semibold underline-offset-4 transition-opacity hover:underline hover:opacity-80">/rss.xml</a>
+        </p>
+    </GlassElement>
+
+    <!-- 快捷订阅 -->
+    <GlassElement class="flex flex-col gap-4 rounded-[var(--radius-card)] p-6 text-ink sm:p-8">
+        <h2 class="m-0 text-xl font-bold">快捷订阅</h2>
+        <ul class="m-0 flex list-none flex-wrap gap-3 p-0">
+            {readers.map((reader) => (
+                <li>
+                    <a
+                        href={reader.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-1.5 rounded-full bg-black/20 px-4 py-2 text-sm font-semibold transition duration-300 ease-out hover:opacity-70 dark:bg-white/15"
+                    >
+                        {reader.name}
+                        <span aria-hidden="true">↗</span>
+                    </a>
+                </li>
+            ))}
+        </ul>
+    </GlassElement>
+
+    <!-- 最近更新 (订阅源里大概长这样) -->
+    <section class="flex flex-col gap-3" aria-label="最近更新">
+        <h2 class="m-0 text-xl font-bold">最近更新</h2>
+        {recent.length === 0
+            ? <p class="m-0 text-sm text-ink/85">还没有文章。</p>
+            : recent.map((post) => <ArticleCard post={post} />)}
+    </section>
+</PageShell>
+
+<script>
+    // 复制订阅地址 (事件委托: 换页后依然有效)
+    document.addEventListener("click", async (event) => {
+        const button = (event.target as HTMLElement | null)?.closest<HTMLElement>("[data-copy-feed]");
+        if (!button) return;
+
+        const url = button.dataset.feedUrl ?? "";
+        const label = button.querySelector<HTMLElement>("[data-copy-label]");
+        const original = label?.textContent ?? "复制链接";
+
+        try {
+            await navigator.clipboard.writeText(url);
+            if (label) {
+                label.textContent = "已复制 ✓";
+                window.setTimeout(() => { label.textContent = original; }, 1600);
+            }
+        } catch {
+            if (label) {
+                label.textContent = "复制失败";
+                window.setTimeout(() => { label.textContent = original; }, 1600);
+            }
+        }
+    });
+</script>

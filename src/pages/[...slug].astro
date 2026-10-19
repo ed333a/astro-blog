@@ -1,0 +1,119 @@
+---
+import { getCollection, render } from "astro:content";
+import PageShell from "../layouts/PageShell.astro";
+import GlassElement from "../components/glass/GlassElement.astro";
+import LicenseNotice from "../components/LicenseNotice.astro";
+import TableOfContents from "../components/TableOfContents.astro";
+import { getSortedPosts } from "../objects/collections";
+
+/**
+ * 文章详情 + 特殊页面 (About) 的公用路由。
+ *
+ * 路径不是写死的, 而是内容自己算出来的:
+ *   · 文章     → content.config.ts 里的 loader 按 siteConfig.postPermalink 生成 (见 objects/posts.ts);
+ *   · 特殊页面 → 按文件名 (About.md → /about)。
+ * 所以这一条 [...slug] 动态路由就覆盖了全部内容, 以后加文章 / 加特殊页面都不用动它。
+ */
+export async function getStaticPaths() {
+    const posts = await getSortedPosts();
+    const pages = (await getCollection("pages", ({ data }) => !data.draft))
+        .sort((left, right) => left.data.title.localeCompare(right.data.title, "zh-CN"));
+
+    return [
+        ...posts.map((entry, index) => ({
+            params: { slug: entry.data.path },
+            props : {
+                entry,
+                // 列表是按时间倒序排的: 前一篇 = 更早的那篇, 后一篇 = 更新的那篇
+                older: posts[index + 1],
+                newer: posts[index - 1],
+            },
+        })),
+        ...pages.map((entry) => ({ params: { slug: entry.data.path }, props: { entry } })),
+    ];
+}
+
+const { entry, older, newer } = Astro.props;
+const { Content, headings } = await render(entry);
+
+const isPost = entry.data.type === "post";
+const { title, description, category, dateText, tags, path, readingMinutes, wordCount } = entry.data;
+---
+
+<PageShell
+    title={title}
+    description={description}
+    licenseTitle={isPost ? title : undefined}
+    licensePath={isPost ? path : undefined}
+>
+    <!-- 正文面板: 一块毛玻璃卡片, 圆角用 --radius-card (config.yml 的 frostedGlassStyle.radius.card)。
+         里面的 Markdown 元素样式统一由 global.css 的 markdown-body 工具类负责。 -->
+    <GlassElement as="article" class="flex flex-col gap-6 rounded-[var(--radius-card)] p-6 text-ink sm:p-8">
+        <!-- 草稿提示: 只在 dev 下渲染草稿时出现 (build 时草稿不会被打包) -->
+        {isPost && entry.data.draft && import.meta.env.DEV && (
+            <div class="flex items-start gap-2.5 rounded-2xl border border-amber-400/40 bg-amber-400/15 px-4 py-3 text-sm leading-relaxed text-ink">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true">
+                    <path d="M12 9v4"></path>
+                    <path d="M12 17h.01"></path>
+                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path>
+                </svg>
+                <p class="m-0">
+                    这篇文章是草稿文章，在运行 <code class="rounded bg-black/20 px-1.5 py-0.5 font-mono text-[0.85em]">npm run build</code> 时不会被渲染。
+                </p>
+            </div>
+        )}
+
+        <header class="flex flex-col gap-3">
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+                {category && <span class="rounded-full bg-black/20 px-3 py-1 font-semibold tracking-wide">{category}</span>}
+                {dateText && <time datetime={dateText} class="font-medium text-ink/75">{dateText}</time>}
+                {isPost && <span class="text-ink/75">{readingMinutes} 分钟阅读</span>}
+                {isPost && <span class="text-ink/75">{wordCount.toLocaleString("zh-CN")} 字</span>}
+            </div>
+
+            <h1 class="m-0 text-2xl leading-tight font-extrabold sm:text-3xl">{title}</h1>
+
+            {description && <p class="m-0 text-sm leading-relaxed text-ink/85">{description}</p>}
+
+            {tags.length > 0 && (
+                <ul class="m-0 flex list-none flex-wrap gap-2 p-0 text-[11px] text-ink/70">
+                    {tags.map((tag) => <li class="rounded-full border border-ink/25 px-2 py-0.5">#{tag}</li>)}
+                </ul>
+            )}
+        </header>
+
+        <!-- 文章正文 (Markdown 渲染结果, 代码块带工具栏) -->
+        <div class="markdown-body">
+            <Content />
+        </div>
+
+        <!-- 版权信息 (config.yml 的 siteConfig.license): 挂在文章底部, 特殊页面不需要 -->
+        {isPost && <LicenseNotice title={title} path={path} />}
+    </GlassElement>
+
+    <!-- 文章目录: 放在右侧栏「侧边栏」下方 (PageShell 的 sidebar 插槽) -->
+    {isPost && headings.length > 0 && <TableOfContents slot="sidebar" headings={headings} />}
+
+    <!-- 上一篇 / 下一篇 (只在文章页出现) -->
+    {isPost && (older || newer) && (
+        <nav class="grid gap-3 sm:grid-cols-2" aria-label="文章导航">
+            {older
+                ? <GlassElement as="a" href={`/${older.data.path}`} class="group flex flex-col gap-1 rounded-[var(--radius-card)] p-4 text-sm text-ink transition-[translate,background-color,border-color,box-shadow,color] duration-300 ease-out hover:-translate-y-[3px]">
+                    <span class="text-xs text-ink/70">← 上一篇</span>
+                    <span class="font-semibold underline-offset-4 group-hover:underline">{older.data.title}</span>
+                </GlassElement>
+                : <span />}
+
+            {newer
+                ? <GlassElement as="a" href={`/${newer.data.path}`} class="group flex flex-col items-end gap-1 rounded-[var(--radius-card)] p-4 text-right text-sm text-ink transition-[translate,background-color,border-color,box-shadow,color] duration-300 ease-out hover:-translate-y-[3px]">
+                    <span class="text-xs text-ink/70">下一篇 →</span>
+                    <span class="font-semibold underline-offset-4 group-hover:underline">{newer.data.title}</span>
+                </GlassElement>
+                : <span />}
+        </nav>
+    )}
+
+    <p class="m-0 text-center text-xs text-ink/70">
+        <a href="/blog" class="underline-offset-4 transition-opacity hover:underline hover:opacity-80">← 返回文章列表</a>
+    </p>
+</PageShell>

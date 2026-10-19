@@ -1,0 +1,29 @@
+---
+interface Props {
+    id?: string;
+    class?: string;
+    as?: keyof HTMLElementTagNameMap;
+    /** Astro 视图过渡名称 (transition:name): 给需要独立于页面整体动画的元素用 (如导航栏 / 背景)。
+        只有显式传了值才渲染指令 —— 否则每个玻璃面板都会被 Astro 分配一个自动的 view-transition-name。 */
+    transitionName?: string;
+    /** 除上面几个之外的属性 (data-* / aria-* / inert ...) 原样透传到根元素,
+        使用方就不用为了几个属性把面板再包一层 (比如 <GlassElement data-spotlight>)。 */
+    [key: string]: any;
+}
+
+// 毛玻璃面板: 外观全部由 global.css 的 frosted-glass 工具类提供 (纯 CSS, 没有脚本参与)。
+// 圆角由使用方按位置指定 —— 导航栏/页脚/卡片各有一个变量, 都来自 config.yml 的
+// frostedGlassStyle.radius: rounded-[var(--radius-navbar)] / [--radius-footer] / [--radius-card]。
+// 浏览器完全不支持 backdrop-filter 时, 面板会退化成一块实色板 (见 global.css)。
+const { id, as: Tag = "div", class: className, transitionName, ...rest } = Astro.props;
+---
+
+{transitionName ? (
+    <Tag id={id} class:list={[className, "frosted-glass"]} transition:name={transitionName} {...rest}>
+        <slot />
+    </Tag>
+) : (
+    <Tag id={id} class:list={[className, "frosted-glass"]} {...rest}>
+        <slot />
+    </Tag>
+)}

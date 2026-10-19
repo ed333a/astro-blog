@@ -1,0 +1,432 @@
+/* ── 样式入口: 全部样式都由 Tailwind 生成 ──
+   这里只放 Tailwind 的指令, 具体元素的样式一律写在组件模板的工具类里。 */
+@import "tailwindcss";
+
+/* 深浅色主题跟随 <html class="Dark"> (与 src/objects/utils.ts 的 BlogTheme 一致),
+   覆盖 Tailwind 默认的 prefers-color-scheme 策略。 */
+@custom-variant dark (&:where(.Dark, .Dark *));
+
+/* 主题「模式」的变体: Light / Dark / Auto 三态都要能分别命中。
+   dark: 只区分「当前外观」, 而主题按钮需要区分「模式」, 所以单独用 <html data-theme="..."> 标记。 */
+@custom-variant theme-light (&:where(html[data-theme="Light"], html[data-theme="Light"] *));
+@custom-variant theme-dark (&:where(html[data-theme="Dark"], html[data-theme="Dark"] *));
+@custom-variant theme-auto (&:where(html[data-theme="Auto"], html[data-theme="Auto"] *));
+
+/* 移动端侧边栏的开合状态: <html data-nav="open"> (由 components/NavSidebar.astro 的脚本写入)。
+   按钮 / 遮罩 / 抽屉三块各自认这个状态, 于是谁也不用引用谁, 也不会出现「抽屉开了但遮罩没跟上」。
+   属性不存在 (= 收起) 时所有 nav-open: 的样式都不生效, 所以服务端渲染出来就是收起的。 */
+@custom-variant nav-open (&:where(html[data-nav="open"], html[data-nav="open"] *));
+
+/* ── 设计变量: 会自动生成对应的工具类 ──
+   bg-page / text-ink / font-sans ... */
+@theme {
+    --font-sans: Inter, Roboto, "Helvetica Neue", "Arial Nova", "Nimbus Sans", Arial, sans-serif;
+
+    /* 正文颜色: 页面背景是一张照片, 浅色字 + 深色阴影比深色字更容易从照片里跳出来 */
+    --color-ink: #f8f8fb;
+
+    /* 页面兜底底色 (背景图没加载/加载中时露出来的那层):
+       文字是浅色的, 所以底色统一压暗, 避免出现「白字白底」看不清的情况。
+       真正的值来自 config.yml 的 frostedGlassStyle.page, 由下面的 :root 覆盖。 */
+    --color-page: #1b1b20;
+
+    /* 弹性缓动: 代码块工具栏按钮的「完成动画」用 (objects/codeBlock.ts 的 ease-pop 工具类) */
+    --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* 复制成功时的弹一下: animate-tool-pop */
+    --animate-tool-pop: tool-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    @keyframes tool-pop {
+        0% {
+            transform: scale(0.62);
+            opacity: 0.35;
+        }
+
+        60% {
+            transform: scale(1.12);
+            opacity: 1;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+}
+
+/* ── 毛玻璃: 由主题决定的那一半参数 ──
+   数值全部来自 config.yml, 由 Layout 内联在 <html style="--glass-blur:..."> 上。
+   内联样式不会被类选择器覆盖, 所以配置文件里日/夜各给一份 (--glass-*-light / -dark),
+   再在这里按当前主题挑一个用 —— 切换主题时玻璃的底色/描边/亮度会自动跟着变, 一行脚本都不需要。 */
+:root {
+    --glass-brightness: var(--glass-brightness-light, 1);
+    --glass-bg: var(--glass-bg-light, rgb(255 255 255 / 0.18));
+    --glass-border: var(--glass-border-light, rgb(255 255 255 / 0.30));
+    --glass-shadow: var(--glass-shadow-light, 0 10px 30px -14px rgb(0 0 0 / 0.30));
+
+    /* 页面兜底底色也跟着主题换 (config.yml 的 frostedGlassStyle.page) */
+    --color-page: var(--glass-page-light, #1b1b20);
+
+    /* 卡片光斑的颜色 (日/夜各一份, 见 config.yml 的 cardSpotlight), 与 --glass-* 同一套「变量挑一份」思路 */
+    --spotlight-color: var(--spotlight-color-light, rgb(255 255 255 / 0.95));
+
+    /* 滚动条滑块 (毛玻璃效果: 半透明白 + 描边, 见下方「滚动条」一节) */
+    --scrollbar-thumb: rgb(255 255 255 / 0.32);
+    --scrollbar-thumb-hover: rgb(255 255 255 / 0.52);
+}
+
+/* ── 深色主题令牌 ──
+   工具类里的颜色都是 var(--color-*), 所以在 .Dark 下覆盖同名变量, 全站文字/底色自动跟随,
+   不用给每个元素再写一遍 dark: 变体。 */
+html.Dark {
+    color-scheme: dark;
+
+    /* 毛玻璃: 夜里换另一套底色/描边/亮度 (config.yml 的 *Dark) */
+    --glass-brightness: var(--glass-brightness-dark, 0.9);
+    --glass-bg: var(--glass-bg-dark, rgb(18 18 24 / 0.42));
+    --glass-border: var(--glass-border-dark, rgb(255 255 255 / 0.14));
+    --glass-shadow: var(--glass-shadow-dark, 0 12px 32px -16px rgb(0 0 0 / 0.65));
+
+    --color-page: var(--glass-page-dark, #050506);
+    --color-ink: #f2f2f5;
+
+    /* 夜里玻璃更透, 光斑稍微柔一点, 免得描边亮得刺眼 */
+    --spotlight-color: var(--spotlight-color-dark, rgb(255 255 255 / 0.85));
+
+    --scrollbar-thumb: rgb(255 255 255 / 0.20);
+    --scrollbar-thumb-hover: rgb(255 255 255 / 0.36);
+}
+
+/* ── 主题切换过渡 (Light ↔ Dark) ──
+   切换主题只是把 <html> 上的变量与 .Dark 类换掉, 颜色本来会「瞬间跳变」;
+   这里给全站元素补一条 0.3s ease 的颜色过渡, 让整页平滑地换色 (纯 CSS, 不需要脚本参与)。
+   只过渡「颜色类」属性, 故意不含这两样:
+     · transform / translate —— 卡片的悬停上浮有自己的时长与缓动 (0.3s ease-out), 不该被统一改写;
+     · backdrop-filter —— 手机上为 0.3s 反复重算一次大半径模糊太贵, 不值当。
+   放进 @layer base: 组件模板里写的 transition-* 工具类在 utilities 层, 优先于这里,
+   所以卡片悬停 / 背景图淡入淡出 / 主题按钮各自的过渡不会被这条盖掉。 */
+@layer base {
+    html,
+    html *,
+    html *::before,
+    html *::after {
+        transition:
+            background-color 0.3s ease,
+            border-color 0.3s ease,
+            color 0.3s ease,
+            fill 0.3s ease,
+            stroke 0.3s ease,
+            box-shadow 0.3s ease,
+            text-shadow 0.3s ease;
+    }
+}
+
+/* ── 文字阴影: 拉开文字与背景图 / 渐变之间的对比度 ──
+   text-shadow 是继承属性, 在 <body> 上声明一次即可覆盖全站文字
+   (主页 header、最新文章标题、其它页面标题, 以及玻璃面板里的文字都会继承)。
+   日间: 背景偏亮 → 用较深的阴影把浅色字抠出来;
+   夜间: 背景偏暗, 但在亮色图案上也需要足够对比, 所以阴影同样保留一定强度。 */
+@utility text-shadow-contrast {
+    text-shadow:
+        0 1px 2px rgb(0 0 0 / 0.85),
+        0 2px 6px rgb(0 0 0 / 0.55),
+        0 0 14px rgb(0 0 0 / 0.42);
+
+    @variant dark {
+        text-shadow:
+            0 1px 2px rgb(0 0 0 / 0.60),
+            0 2px 6px rgb(0 0 0 / 0.35),
+            0 0 12px rgb(0 0 0 / 0.22);
+    }
+}
+
+/* ── 毛玻璃面板 ──
+   纯 CSS, 一行脚本都不需要:
+     ① backdrop-filter: 把面板身后的画面糊掉 —— 模糊强度 = config.yml 的 blur, 另外叠了饱和度/亮度;
+     ② background-color: 玻璃自己的底色 (config.yml 的 background, 带 alpha 的透明色);
+     ③ border + box-shadow: 1px 描边、顶部那条内高光和外投影, 画出玻璃的「厚度」。
+   参数全部来自 config.yml, 由 Layout 写成 <html> 上的 --glass-* 变量。
+   用法: class="frosted-glass" (见 components/glass/GlassElement.astro)。
+   圆角不在这里写死, 由使用方按位置挑一个变量 —— 这样导航栏/页脚/卡片能各自调:
+   rounded-[var(--radius-navbar)] / rounded-[var(--radius-footer)] / rounded-[var(--radius-card)]。 */
+@utility frosted-glass {
+    /* ① 玻璃底色 + 描边 + 投影 (日/夜由 --glass-bg 等变量自动切换) */
+    background-color: var(--glass-bg, rgb(255 255 255 / 0.18));
+    border: 1px solid var(--glass-border, rgb(255 255 255 / 0.30));
+    box-shadow:
+        var(--glass-shadow, 0 10px 30px -14px rgb(0 0 0 / 0.30)),
+        inset 0 1px 0 var(--glass-border, rgb(255 255 255 / 0.30));
+
+    /* ② 背景模糊: 这一条就是毛玻璃的全部秘密 */
+    -webkit-backdrop-filter: blur(var(--glass-blur, 14px)) saturate(var(--glass-saturate, 1.4)) brightness(var(--glass-brightness, 1));
+    backdrop-filter: blur(var(--glass-blur, 14px)) saturate(var(--glass-saturate, 1.4)) brightness(var(--glass-brightness, 1));
+}
+
+/* Safari 18 之前 (iOS 16/17) 只认带前缀的 backdrop-filter, 而构建期的 CSS 优化会按默认浏览器
+   目标把上面那条带前缀的声明删掉, 所以这里单独补一条: 只有支持前缀的浏览器才进这个块, 值一模一样。 */
+@supports (-webkit-backdrop-filter: blur(1px)) {
+    .frosted-glass {
+        -webkit-backdrop-filter: blur(var(--glass-blur, 14px)) saturate(var(--glass-saturate, 1.4)) brightness(var(--glass-brightness, 1));
+    }
+}
+
+/* 老浏览器 (完全没有 backdrop-filter): 糊不了背后的画面, 半透明底色会让背景图原样透出来,
+   面板里的文字会看不清 —— 所以退化成一块不透明的实色面板 (用页面底色或主题兜底色)。 */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .frosted-glass {
+        background-color: var(--color-page, #1b1b20);
+    }
+}
+
+/* ── 背景颜色层 (components/BodyBackground.astro 按 config.yml 的 background.color 渲染) ──
+   日/夜两套渐变或纯色, 通过 dark: 变体切换。 */
+@utility bg-color-light-gradient {
+    background-image: var(--lightGradient);
+}
+
+@utility bg-color-dark-gradient {
+    background-image: var(--darkGradient);
+}
+
+@utility bg-color-light {
+    background-color: var(--lightBgColor);
+}
+
+@utility bg-color-dark {
+    background-color: var(--darkBgColor);
+}
+
+/* ── 隐藏所有滚动条 (保留滚动功能) ──
+   页面主体和内部滚动容器 (代码块 / 移动端抽屉等) 一律不显示滚动条;
+   鼠标滚轮 / 键盘 / 触摸滚动都照常可用。 */
+* {
+    scrollbar-width: none;        /* Firefox */
+    -ms-overflow-style: none;     /* 旧 Edge / IE */
+}
+
+::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;                    /* Chrome / Edge / Safari */
+}
+
+/* ── 卡片光斑: 鼠标在卡片上移动时, 跟着指针走的那圈高亮描边 ──
+   做法还是纯 CSS (脚本只负责写坐标, 不参与画):
+     ① 卡片上盖一层 ::before, 里面是一条「以鼠标位置为圆心」的径向渐变;
+     ② 再用遮罩把渐变中间掏空, 于是整块渐变只剩最外那 1px —— 正好压在 frosted-glass 的描边上,
+        看起来就是「边框被指针点亮了」。
+   圆心来自 --spotlight-x / --spotlight-y (ArticleCard 的脚本在 pointermove 时写到卡片元素上);
+   脚本没跑到 (或鼠标还没动过) 时回落到面板中心的 50% 50%, 悬停仍能看到一圈对称的高光。
+   半径与颜色来自 config.yml 的 cardSpotlight, 由 Layout 渲染成 --spotlight-* 变量。
+   用法: class="spotlight-border" (见 components/ArticleCard.astro)。 */
+@utility spotlight-border {
+    /* 光斑要盖在卡片自己身上, 所以卡片得是定位元素 (这里顺手补上, 使用方不用再写 relative) */
+    position: relative;
+
+    &::before {
+        content: "";
+        position: absolute;
+        inset: -1px;                /* -1px: 正好压在 frosted-glass 那 1px 描边的外沿上 */
+        border-radius: inherit;     /* 贴着卡片自己的圆角 (--radius-card) 走 */
+        padding: 1px;               /* 渐变只在这 1px 的 padding 里可见 = 就是那圈描边 */
+        background: radial-gradient(
+            circle var(--spotlight-radius, 220px) at var(--spotlight-x, 50%) var(--spotlight-y, 50%),
+            var(--spotlight-color, rgb(255 255 255 / 0.95)),
+            transparent
+        );
+
+        /* 两层全不透明的遮罩, 用 exclude 只留下「padding box 减去 content box」的那 1px,
+           这就是上面那条径向渐变最终能变成「一圈描边」的原因。
+           顺序有讲究: 简写会顺手把 composite 重置回 add, 所以 composite 必须写在简写之后。
+           带 -webkit- 前缀的那两条是给「只认前缀的浏览器」(Chrome 111~119 这类) 用的 ——
+           frosted-glass 那边要靠额外的 @supports 块才能保住 -webkit-backdrop-filter, 这里不用:
+           构建产物里这几条前缀声明是留着的 (Lightning CSS 会按浏览器目标自动补前缀)。 */
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+
+        /* 平时完全透明 (没悬停就一点视觉负担都没有), 悬停时 0.3s 淡入 —— 与卡片上浮同一条曲线。
+           pointer-events: none —— 这层只是装饰, 别挡住卡片里的链接。 */
+        opacity: 0;
+        transition: opacity 0.3s ease-out;
+        pointer-events: none;
+    }
+
+    /* 触屏设备没有「悬停」这个概念, 整块包在 (hover: hover) 里 —— 和 Tailwind 的 hover: 变体同一个保护,
+       手机点一下卡片闪一圈高亮反而奇怪。 */
+    @media (hover: hover) {
+        &:hover::before {
+            opacity: 1;
+        }
+    }
+}
+
+/* ── 代码块配色 (shiki 双主题) ──
+   astro.config.mjs 里把代码块配成 themes: { light: github-light, dark: github-dark }, 于是 shiki 会把
+   日间配色写成每个 token 的行内样式, 夜间配色放在 --shiki-dark-* 变量里 (同样在行内)。
+   行内样式没法被类选择器覆盖, 所以夜间这一份必须带 !important —— 这就是这个工具类存在的唯一原因。
+   用法: 给 <pre> 挂上 class="shiki-theme" (见 objects/codeBlock.ts)。 */
+@utility shiki-theme {
+    & span {
+        @variant dark {
+            color: var(--shiki-dark) !important;
+            background-color: var(--shiki-dark-bg) !important;
+        }
+    }
+
+    @variant dark {
+        color: var(--shiki-dark) !important;
+        background-color: var(--shiki-dark-bg) !important;
+    }
+}
+
+/* ── 文章正文 (Markdown 渲染结果) 的排版 ──
+   Markdown 渲染出来的是一堆裸标签, 没有类名可用, 所以这里的做法是把 Tailwind 的工具类
+   用 @apply 批量套到这些标签上 —— 样式依然全部来自 Tailwind, 只是集中声明了一次。
+   用法: 包住 <Content /> 的那一层写 class="markdown-body"。 */
+@utility markdown-body {
+    @apply text-[0.95rem] leading-[1.85] text-ink/95;
+
+    /* 首尾元素不要留多余的外边距 (否则面板上下会被顶出空隙) */
+    & > :first-child {
+        @apply mt-0;
+    }
+
+    & > :last-child {
+        @apply mb-0;
+    }
+
+    /* 标题: 二级带一条分隔线, 让长文的结构更清楚 */
+    & h1 {
+        @apply mt-10 mb-4 text-2xl font-extrabold;
+    }
+
+    & h2 {
+        @apply mt-10 mb-4 border-b border-ink/15 pb-2 text-xl font-bold;
+    }
+
+    & h3 {
+        @apply mt-8 mb-3 text-lg font-bold;
+    }
+
+    & h4 {
+        @apply mt-6 mb-2 text-base font-bold;
+    }
+
+    & p {
+        @apply my-4;
+    }
+
+    & a {
+        @apply font-semibold underline decoration-dotted underline-offset-4 transition-opacity hover:opacity-80;
+    }
+
+    & strong {
+        @apply font-bold;
+    }
+
+    & em {
+        @apply italic;
+    }
+
+    & del {
+        @apply text-ink/60 line-through;
+    }
+
+    & ul {
+        @apply my-4 list-disc pl-6;
+    }
+
+    & ol {
+        @apply my-4 list-decimal pl-6;
+    }
+
+    & li {
+        @apply my-1.5;
+    }
+
+    /* 行内代码: 一小块半透明底 + 等宽字体 */
+    & code {
+        @apply rounded bg-black/25 px-1.5 py-0.5 font-mono text-[0.85em] dark:bg-white/15;
+    }
+
+    /* 代码块自己有配色 (github-light / github-dark), 别被上面那条行内代码的底色盖住 */
+    & .code-block code {
+        @apply bg-transparent p-0 text-inherit;
+    }
+
+    & blockquote {
+        @apply my-5 rounded-r-2xl border-l-4 border-ink/30 bg-black/15 py-2 pr-4 pl-4 text-ink/90 dark:bg-white/8;
+    }
+
+    & blockquote p {
+        @apply my-2;
+    }
+
+    & hr {
+        @apply my-8 border-ink/20;
+    }
+
+    & img {
+        @apply my-5 max-w-full rounded-2xl;
+    }
+
+    /* 表格: 只画横线, 和玻璃面板的观感更接近 */
+    & table {
+        @apply my-6 w-full border-collapse text-left text-sm;
+    }
+
+    & th {
+        @apply border-b border-ink/25 px-3 py-2 font-semibold;
+    }
+
+    & td {
+        @apply border-b border-ink/10 px-3 py-2 align-top;
+    }
+
+    /* GFM 任务列表 */
+    & input[type="checkbox"] {
+        @apply mr-2 align-middle;
+    }
+}
+
+/* ── 锚点平滑滚动: 目录点击标题时平滑滚到对应位置 ──
+   html 上的 scroll-behavior 让浏览器原生 hash 跳转变平滑 (Astro 对站内同页 hash 链接
+   直接 location.href 跳转, 不走 view transition, 所以纯 CSS 即可);
+   scroll-margin-top 让标题滚到顶部后停在固定导航栏下方, 而不是被导航栏盖住。 */
+html {
+    scroll-behavior: smooth;
+}
+
+.markdown-body :is(h1, h2, h3, h4, h5, h6) {
+    scroll-margin-top: 6rem;
+}
+
+/* ── 页面过渡 (Swup, 参考 fuwari 模板) ──
+   @swup/astro 接管站内跳转, 只替换 #swup-container 里的内容 (见 PageShell)。
+   导航栏 / 背景 / 返回顶部都在容器外, 所以背景完全不动, 也没有快照/黑屏问题。
+   Swup 在过渡期间会给 <html> 加两个类:
+     · is-changing  → 给容器打开 transition
+     · is-animating → 容器淡出 + 下移 1rem; 内容换好后移除该类, 容器再淡入 + 上移回原位
+   这就是 fuwari 的「淡出 → 换内容 → 淡入上移」效果 (200ms)。 */
+html.is-changing .transition-swup-fade {
+    transition: opacity 200ms ease, translate 200ms ease;
+}
+
+html.is-animating .transition-swup-fade {
+    opacity: 0;
+    translate: 0 1rem;
+}
+
+/* 「减少动态效果」的用户: 关掉过渡, 直接切换 */
+@media (prefers-reduced-motion: reduce) {
+    html.is-changing .transition-swup-fade {
+        transition: none;
+    }
+
+    html.is-animating .transition-swup-fade {
+        opacity: 1;
+        translate: 0 0;
+    }
+}

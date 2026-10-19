@@ -1,0 +1,49 @@
+---
+import PageShell from "../../layouts/PageShell.astro";
+import ArticleCard from "../../components/ArticleCard.astro";
+import Pagination from "../../components/Pagination.astro";
+import { siteConfig } from "../../objects/config";
+import { getSortedPosts } from "../../objects/collections";
+
+// 文章列表 (每页文章数 = config.yml 的 siteConfig.postsPerPage)。
+// 路由是 blog/[...page]: 第 1 页不传页码 (URL 就是 /blog), 之后是 /blog/2, /blog/3 ...
+export async function getStaticPaths() {
+    const posts = await getSortedPosts();
+    const perPage = siteConfig.postsPerPage;
+    // 一篇文章都没有时也要有一页, 否则这个路由会一条路径都生成不出来
+    const totalPages = Math.max(1, Math.ceil(posts.length / perPage));
+
+    return Array.from({ length: totalPages }, (_, index) => {
+        const page = index + 1;
+        return {
+            params: { page: page === 1 ? undefined : String(page) },
+            props : {
+                pagePosts  : posts.slice((page - 1) * perPage, page * perPage),
+                currentPage: page,
+                totalPages,
+                totalPosts : posts.length,
+            },
+        };
+    });
+}
+
+const { pagePosts, currentPage, totalPages, totalPosts } = Astro.props;
+---
+
+<PageShell title="文章" description={`${siteConfig.title} 的全部文章, 共 ${totalPosts} 篇。`}>
+    <header slot="header" class="flex flex-col gap-2 pt-4">
+        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">Archive</p>
+        <h1 class="m-0 text-3xl font-extrabold sm:text-4xl">文章</h1>
+        <p class="m-0 max-w-2xl text-sm text-ink/95">
+            截至目前, 我一共撰写了 {totalPosts} 篇文章。
+        </p>
+    </header>
+
+    <section class="flex flex-col gap-3" aria-label="文章列表">
+        {pagePosts.length === 0
+            ? <p class="m-0 text-sm text-ink/85">还没有文章 —— 往 <code>src/contents/posts</code> 里放一个 Markdown 文件就有了。</p>
+            : pagePosts.map((post) => <ArticleCard post={post} />)}
+    </section>
+
+    {totalPages > 1 && <Pagination current={currentPage} total={totalPages} base="/blog" />}
+</PageShell>

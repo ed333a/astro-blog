@@ -1,0 +1,39 @@
+---
+// 返回顶部按钮: 固定在右下角, 页面往下滚超过阈值后淡入, 点击平滑回到顶部。
+// 显隐用 Tailwind 的 data-[visible=true]: 变体 (状态写在按钮的 data-visible 上, 纯 CSS 过渡);
+// 脚本沿用项目「事件委托 + 被动监听」的写法, 换页后无需重新初始化。
+---
+
+<button
+    type="button"
+    data-back-to-top
+    aria-label="返回顶部"
+    title="返回顶部"
+    class="fixed right-6 bottom-6 z-50 flex cursor-pointer items-center justify-center rounded-full p-3 text-ink frosted-glass opacity-0 translate-y-2 pointer-events-none transition-[opacity,translate] duration-300 ease-out data-[visible=true]:opacity-100 data-[visible=true]:translate-y-0 data-[visible=true]:pointer-events-auto"
+>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true">
+        <path d="M12 19V5"></path>
+        <path d="m6 11 6-6 6 6"></path>
+    </svg>
+</button>
+
+<script>
+    // 往下滚超过这个距离才出现按钮 (px)
+    const SHOW_AFTER = 480;
+
+    const syncVisibility = () => {
+        const button = document.querySelector<HTMLElement>("[data-back-to-top]");
+        if (!button) return;
+        if (window.scrollY > SHOW_AFTER) button.dataset.visible = "true";
+        else delete button.dataset.visible;
+    };
+
+    // 被动监听滚动: 只读写一个 data 属性, 不碰样式
+    window.addEventListener("scroll", syncVisibility, { passive: true });
+
+    // 事件委托: 点击 [data-back-to-top] 平滑回顶 (换页后按钮元素会被替换, 但委托一直有效)
+    document.addEventListener("click", (event) => {
+        const trigger = (event.target as HTMLElement | null)?.closest("[data-back-to-top]");
+        if (trigger) window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+</script>

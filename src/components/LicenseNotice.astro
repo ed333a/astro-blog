@@ -1,0 +1,43 @@
+---
+import { siteConfig } from "../objects/config";
+import { absoluteUrl } from "../objects/posts";
+
+interface Props {
+    /** 正文标题 (compact 模式下用来在页脚里点名) */
+    title? : string;
+    /** 站内路径 (不含开头 "/"), 用来拼出原文链接 */
+    path?  : string;
+    /** 紧凑模式: 页脚里的一行文字 (文章底部用完整版) */
+    compact?: boolean;
+}
+
+const { title, path, compact = false } = Astro.props;
+const { license } = siteConfig;
+const originalUrl = path ? absoluteUrl(path) : undefined;
+
+const licenseLinkClasses = "font-semibold underline decoration-dotted underline-offset-4 transition-opacity hover:opacity-80";
+---
+
+<!-- 版权信息 (config.yml 的 siteConfig.license):
+     文章底部用完整版 (标题 + 许可 + 原文链接), 页脚用紧凑版 (一行文字)。 -->
+{license.enable && (compact ? (
+    <p class="m-0 text-xs leading-relaxed text-ink/70">
+        {title ? `《${title}》` : "本站内容"}采用
+        <a href={license.url} class={licenseLinkClasses}>{license.name}</a>
+        许可协议, 转载请注明出处。
+    </p>
+) : (
+    <aside class="flex flex-col gap-2 rounded-2xl border border-ink/15 bg-black/10 p-4 text-xs leading-relaxed text-ink/85 dark:bg-white/5">
+        <p class="m-0 text-[11px] font-semibold tracking-[0.2em] text-ink/70 uppercase">版权声明</p>
+        <p class="m-0">
+            本文《{title ?? "未命名"}》采用
+            <a href={license.url} class={licenseLinkClasses}>{license.name}</a>
+            许可协议, 转载请注明出处。
+        </p>
+        {originalUrl && (
+            <p class="m-0 break-all">
+                原文链接: <a href={originalUrl} class={licenseLinkClasses}>{originalUrl}</a>
+            </p>
+        )}
+    </aside>
+))}

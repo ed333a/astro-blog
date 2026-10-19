@@ -1,0 +1,218 @@
+---
+import PageShell from "../layouts/PageShell.astro";
+import GlassElement from "../components/glass/GlassElement.astro";
+import { friendLinks } from "../objects/friendLinks";
+import { authorConfig, siteConfig } from "../objects/config";
+import { getAsset } from "@/objects/getAssetUrl";
+
+// 交换友链用的站点信息 (长 / 短两版介绍)
+const siteIntroLong = "分享单片机、FPGA 开发, 和 PCB 设计经验, 记录嵌入式开发路上的成长点滴。";
+const siteIntroShort = "记录嵌入式学习过程。";
+
+// 头像: 以 '/' 开头是 public 资源, http 是外链, 其他按 src 目录解析
+const avatarUrl = authorConfig.avatar ? getAsset(authorConfig.avatar) : "";
+
+// 站点信息: 每一条都可以单独复制; 头像给绝对地址, 别人可以直接引用
+const siteOrigin = siteConfig.siteUrl.replace(/\/+$/, "");
+const avatarFullUrl = avatarUrl
+    ? (avatarUrl.startsWith("http") ? avatarUrl : `${siteOrigin}${avatarUrl}`)
+    : "（未设置）";
+
+const infoItems = [
+    { label: "站点名称", value: siteConfig.title },
+    { label: "站点地址", value: siteConfig.siteUrl },
+    { label: "站点头像", value: avatarFullUrl, mono: true },
+    { label: "站点介绍（长）", value: siteIntroLong },
+    { label: "站点介绍（短）", value: siteIntroShort },
+];
+
+// 「复制全部」用的纯文本
+const allInfo = infoItems.map((item) => `${item.label}: ${item.value}`).join("\n");
+
+// 申请友链的模板 (方便访客直接复制)
+const applyTemplate = `站点名称: [贵站的站点名称]
+站点地址: [贵站的站点地址]
+站点头像: [贵站的站点头像]
+站点介绍: [贵站的站点介绍]`;
+
+// 友链的内容要求
+const requirements = [
+    { title: "互惠原则",    desc: "申请前请先添加本站友链, 或在留言中说明预计添加时间。一般不接受长期单向友链。" },
+    { title: "站点定位",    desc: "优先接受个人博客、技术笔记、生活记录、开源项目主页等非商业化站点；暂不接受纯广告、采集、营销或跳转聚合站。" },
+    { title: "合规底线",    desc: "站点不得包含违法违规、色情、赌博、暴力、诈骗、恶意下载、侵权盗版等内容；一切以《中华人民共和国网络安全法》及相关法律法规为基准, 如有冲突, 无条件服从法律；如发现此类违法违规内容, 将直接移除友链。" },
+    { title: "访问安全",    desc: "为了用户的网络安全, 您的站点需要强制开启 HTTPS 访问, 并且保持证书有效。" },
+    { title: "更新与维护",  desc: "建议站点保持一定频率的更新和维护。如果长期没有更新也是没有关系的, 但需要保证您的站点链接和基础信息可以保持访问和查看。" },
+    { title: "内容质量",    desc: "希望站点有稳定且真实的内容输出, 原创或认真整理的内容均可; 避免整站搬运、AI 灌水和严重同质化内容。" },
+    { title: "访问体验",    desc: "站点应能稳定访问, 并尽量保证国内访问体验。少量广告可以理解, 但请不要出现遮挡内容、强制跳转或影响阅读的弹窗。" },
+    { title: "文章数量",    desc: "直接申请建议已有 10 篇以上文章; 如果我们已经有过多次互动, 或站点质量较高, 这条可以放宽。" },
+];
+---
+
+<PageShell title="友情链接" description="朋友们和鸣谢的项目。">
+    <header class="flex flex-col gap-2 pt-4">
+        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">Friends</p>
+        <h1 class="m-0 text-3xl font-extrabold sm:text-4xl">友情链接</h1>
+        <p class="m-0 max-w-2xl text-sm text-ink/95">网络浩渺, 能在此相遇已是缘分。</p>
+    </header>
+
+    <!-- 我的站点信息 (每一条都能单独复制, 方便交换友链) -->
+    <GlassElement class="flex flex-col gap-4 rounded-[var(--radius-card)] p-6 text-ink sm:p-8">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                {avatarUrl
+                    ? <img src={avatarUrl} alt={siteConfig.title} class="h-12 w-12 shrink-0 rounded-full object-cover" />
+                    : (
+                        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black/20 text-xl font-bold dark:bg-white/15">
+                            {siteConfig.title.trim().charAt(0).toUpperCase()}
+                        </span>
+                    )}
+                <div class="flex flex-col gap-0.5">
+                    <p class="m-0 text-xs font-semibold tracking-[0.2em] text-ink/70 uppercase">My Site</p>
+                    <h2 class="m-0 text-xl font-bold">我的站点信息</h2>
+                </div>
+            </div>
+            <button
+                type="button"
+                data-copy-all={allInfo}
+                class="shrink-0 cursor-pointer rounded-full bg-black/20 px-4 py-2 text-xs font-semibold transition duration-300 ease-out hover:opacity-70 dark:bg-white/15"
+            >
+                <span data-copy-label>复制全部</span>
+            </button>
+        </div>
+
+        <dl class="m-0 flex flex-col divide-y divide-ink/10 border-t border-ink/10">
+            {infoItems.map((item) => (
+                <div class="flex flex-col gap-1.5 py-3 sm:flex-row sm:items-center sm:gap-4">
+                    <dt class="shrink-0 text-xs font-semibold tracking-wide text-ink/60 sm:w-32">{item.label}</dt>
+                    <dd class:list={["m-0 min-w-0 flex-1 text-sm break-all text-ink/90", item.mono && "font-mono text-xs"]}>{item.value}</dd>
+                    <button
+                        type="button"
+                        data-copy-value={item.value}
+                        class="shrink-0 cursor-pointer self-start rounded-full bg-black/20 px-3 py-1 text-[11px] font-semibold transition duration-300 ease-out hover:opacity-70 sm:self-auto dark:bg-white/15"
+                    >
+                        <span data-copy-label>复制</span>
+                    </button>
+                </div>
+            ))}
+        </dl>
+
+        <p class="m-0 text-xs leading-relaxed text-ink/65">
+            小提示：若你觉得较长版本的站点介绍过长, 可以选择较短版本的内容。
+        </p>
+    </GlassElement>
+
+    <!-- 申请友链 -->
+    <GlassElement class="flex flex-col gap-5 rounded-[var(--radius-card)] p-6 text-ink sm:p-8">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="m-0 text-xl font-bold">申请友链</h2>
+            <button
+                type="button"
+                data-copy-template
+                data-template={applyTemplate}
+                class="shrink-0 cursor-pointer rounded-full bg-black/20 px-5 py-2.5 text-sm font-semibold transition duration-300 ease-out hover:opacity-70 dark:bg-white/15"
+            >
+                <span data-copy-label>复制模板</span>
+            </button>
+        </div>
+
+        <pre class="m-0 overflow-x-auto rounded-2xl border border-ink/20 bg-black/20 p-4 font-mono text-xs leading-relaxed text-ink/90 dark:bg-white/10"><code>{applyTemplate}</code></pre>
+
+        <div class="flex flex-col gap-2 text-xs leading-relaxed text-ink/70">
+            <p class="m-0">
+                提交后会在三个工作日内审核通过并更新页面内容。若信息不完整或暂未满足要求, 我会通过评论区向贵站说明原因, 后续也欢迎贵站继续申请。
+            </p>
+            <p class="m-0">
+                关于站点名称：如果站点名称过长的话, 为了整体显示效果可能会省略掉部分内容, 还请见谅。
+            </p>
+        </div>
+    </GlassElement>
+
+    <!-- 内容要求 -->
+    <GlassElement class="flex flex-col gap-4 rounded-[var(--radius-card)] p-6 text-ink sm:p-8">
+        <h2 class="m-0 text-xl font-bold">补充说明</h2>
+        <ul class="m-0 flex list-none flex-col gap-2.5 p-0 text-sm leading-relaxed text-ink/90">
+            {requirements.map((item) => (
+                <li class="flex gap-2">
+                    <span class="mt-[0.55em] h-1.5 w-1.5 shrink-0 rounded-full bg-ink/50" aria-hidden="true"></span>
+                    <span>
+                        <strong class="font-semibold text-ink">{item.title}：</strong>
+                        {item.desc}
+                    </span>
+                </li>
+            ))}
+        </ul>
+    </GlassElement>
+
+    <div class="flex flex-col gap-3">
+        {friendLinks.map((group) => (
+            <GlassElement class="flex flex-col gap-5 rounded-[var(--radius-card)] p-6 text-ink sm:p-7">
+                <div class="flex flex-col gap-1">
+                    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                        <h2 class="m-0 text-xl font-bold">{group.name}</h2>
+                        {group.tag && <span class="text-xs font-semibold text-ink/70">{group["link-list"].length}{group.tag}</span>}
+                    </div>
+                    {group.desc && <p class="m-0 whitespace-pre-line text-sm leading-relaxed text-ink/85">{group.desc}</p>}
+                </div>
+
+                <ul class="m-0 grid list-none gap-3 p-0 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+                    {group["link-list"].map((friend) => (
+                        <li>
+                            <a
+                                href={friend.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="flex h-full items-start gap-3 rounded-2xl bg-black/10 p-3 transition duration-300 ease-out hover:bg-black/15 dark:bg-white/5 dark:hover:bg-white/10"
+                            >
+                                {friend.cover || friend.icon
+                                    ? <img src={friend.cover ?? friend.icon} alt="" class="h-12 w-12 shrink-0 rounded-full object-cover" />
+                                    : (
+                                        <span
+                                            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white"
+                                            style={`background-color:${friend["icon-color"] ?? "rgba(0,0,0,0.35)"}`}
+                                        >
+                                            {friend.name.trim().charAt(0).toUpperCase()}
+                                        </span>
+                                    )}
+                                <span class="flex min-w-0 flex-col gap-0.5">
+                                    <span class="truncate text-sm font-bold">{friend.name}</span>
+                                    {friend.descr && <span class="line-clamp-2 text-xs leading-relaxed text-ink/75">{friend.descr}</span>}
+                                    {(friend.time || friend.date) && (
+                                        <span class="text-[11px] text-ink/55">{friend.time ?? `收录于 ${friend.date}`}</span>
+                                    )}
+                                </span>
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            </GlassElement>
+        ))}
+    </div>
+</PageShell>
+
+<script>
+    // 复制 (事件委托: Swup 换页后依然有效)
+    // 支持三种: 单条站点信息 [data-copy-value]、复制全部 [data-copy-all]、申请模板 [data-copy-template]
+    document.addEventListener("click", async (event) => {
+        const button = (event.target as HTMLElement | null)?.closest<HTMLElement>(
+            "[data-copy-value], [data-copy-all], [data-copy-template]",
+        );
+        if (!button) return;
+
+        const text = button.dataset.copyValue ?? button.dataset.copyAll ?? button.dataset.template ?? "";
+        const label = button.querySelector<HTMLElement>("[data-copy-label]");
+        const original = label?.textContent ?? "复制";
+
+        try {
+            await navigator.clipboard.writeText(text);
+            if (label) {
+                label.textContent = "已复制 ✓";
+                window.setTimeout(() => { if (label) label.textContent = original; }, 1600);
+            }
+        } catch {
+            if (label) {
+                label.textContent = "复制失败";
+                window.setTimeout(() => { if (label) label.textContent = original; }, 1600);
+            }
+        }
+    });
+</script>

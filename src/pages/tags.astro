@@ -1,0 +1,53 @@
+---
+import PageShell from "../layouts/PageShell.astro";
+import GlassElement from "../components/glass/GlassElement.astro";
+import { getSortedPosts } from "../objects/collections";
+
+// 统计每个标签的出现次数, 按次数降序排 (次数相同按标签名排), 云图字号随相对频率分级。
+const posts = await getSortedPosts();
+
+const tagCounts = new Map<string, number>();
+for (const post of posts) {
+    for (const tag of post.data.tags) {
+        tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+    }
+}
+const tags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "zh-CN"));
+const maxCount = Math.max(1, ...tags.map(([, count]) => count));
+
+const sizeClass = (count: number) => {
+    const ratio = count / maxCount;
+    if (ratio >= 0.8) return "text-xl sm:text-2xl";
+    if (ratio >= 0.55) return "text-lg sm:text-xl";
+    if (ratio >= 0.3) return "text-base sm:text-lg";
+    return "text-sm sm:text-base";
+};
+---
+
+<PageShell title="标签" description="所有文章标签的标签云。">
+    <header class="flex flex-col gap-2 pt-4">
+        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">Tags</p>
+        <h1 class="m-0 text-3xl font-extrabold sm:text-4xl">标签云</h1>
+        <p class="m-0 max-w-2xl text-sm text-ink/95">共 {tags.length} 个标签。</p>
+    </header>
+
+    <GlassElement class="flex flex-col gap-4 rounded-[var(--radius-card)] p-6 text-ink sm:p-8">
+        {tags.length === 0
+            ? <p class="m-0 text-sm text-ink/85">还没有标签 —— 给文章写几个 <code>tags</code> 就有了。</p>
+            : (
+                <ul class="m-0 flex list-none flex-wrap items-center gap-x-5 gap-y-3 p-0">
+                    {tags.map(([tag, count]) => (
+                        <li>
+                            <a
+                                href={`/tags/${tag}`}
+                                class={`${sizeClass(count)} font-semibold text-ink/90 underline-offset-4 transition-opacity duration-300 ease-out hover:underline hover:opacity-75`}
+                            >
+                                {tag}
+                                <span class="ml-1 align-super text-[0.6em] font-medium text-ink/60">{count}</span>
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            )}
+    </GlassElement>
+</PageShell>

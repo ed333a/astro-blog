@@ -1,0 +1,46 @@
+---
+// 主题切换按钮: 亮色 → 暗色 → 自动 循环。
+// 三种模式的图标 + 文案都写在按钮里, 由 <html data-theme="..."> 决定显示哪一个 —— 纯 CSS,
+// 服务端渲染时模式就已经确定, 不会闪; 点击逻辑在 Layout 的脚本里 (事件委托, 认 [data-theme-toggle])。
+// transition (而非 transition-opacity): 按钮底色在日夜之间会变, 要走主题那条 0.3s 过渡。
+//
+// 尺寸/宽度故意留给使用方: 导航栏里是紧凑的小胶囊, 侧边栏里是占满一行的按钮。
+// 注意 class 是「追加」, 别传与基础样式互斥的工具类 (比如两个不同的 px) —— 谁盖谁要看
+// Tailwind 生成 CSS 的先后顺序, 很容易踩坑; 尺寸相关的类只写在调用处即可。
+interface Props {
+    class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<button
+    type="button"
+    data-theme-toggle
+    title="切换主题: 亮色 → 暗色 → 自动"
+    class:list={[
+        "flex cursor-pointer items-center gap-1.5 rounded-full bg-black/20 font-semibold transition duration-300 ease-out hover:opacity-70 dark:bg-white/15",
+        className,
+    ]}
+>
+    <span class="hidden items-center gap-1.5 theme-light:flex">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="h-4 w-4" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.5 1.5m11.2 11.2 1.5 1.5m0-14.2-1.5 1.5M6.4 17.6l-1.5 1.5"></path>
+        </svg>
+        亮色
+    </span>
+    <span class="hidden items-center gap-1.5 theme-dark:flex">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+            <path d="M21 12.79A8.5 8.5 0 1 1 11.21 3a6.5 6.5 0 0 0 9.79 9.79Z"></path>
+        </svg>
+        暗色
+    </span>
+    <span class="hidden items-center gap-1.5 theme-auto:flex">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 3a9 9 0 0 1 0 18Z" fill="currentColor" stroke="none"></path>
+        </svg>
+        自动
+    </span>
+</button>

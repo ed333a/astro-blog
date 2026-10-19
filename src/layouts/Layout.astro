@@ -1,23 +1,136 @@
+---
+import '../styles/global.css';
+import { cardSpotlightConfig, frostedGlassConfig, siteConfig, themeConfig } from '../objects/config';
+
+interface Props {
+    /** 页面标题: 不传就用「站点标题 · 副标题」 */
+    title?: string;
+    /** 页面描述 (默认取 config.yml 的 siteConfig.description) */
+    description?: string;
+}
+
+const { title, description } = Astro.props;
+const pageTitle = title ? `${title} · ${siteConfig.title}` : `${siteConfig.title} · ${siteConfig.subtitle}`;
+const pageDescription = description || siteConfig.description;
+
+// 主题「模式」(Light/Dark/Auto) 来自 config.yml 的 theme.style。
+// Dark 的情况服务端就能定下来, 先给 <html> 加上 Dark 类; Auto 要等浏览器解析系统偏好,
+// 由下面 <head> 里的内联脚本在首帧之前补齐 (否则会闪一下错误的配色)。
+const htmlClass = ['h-full', themeConfig.style === 'Dark' && 'Dark'];
+
+// config.yml 的 frostedGlassStyle / cardSpotlight 全部在服务端渲染成 <html> 上的 CSS 自定义属性:
+//   --glass-*      毛玻璃: backdrop-filter 的模糊/饱和度/亮度, 玻璃底色、描边、投影与页面兜底底色
+//   --radius-*     圆角: 导航栏 / 页脚 / 卡片各一个, 互不影响
+//   --spotlight-*  卡片光斑: 悬停时跟随鼠标的那圈描边的半径与颜色
+// 日/夜各给一份 (-light / -dark), 由 global.css 按当前主题挑一个 —— 内联样式没法被类选择器覆盖,
+// 所以不能只写一个值; 好处是切换主题完全不需要脚本参与。
+const themeVars = [
+    `--glass-blur:${frostedGlassConfig.blur}px`,
+    `--glass-saturate:${frostedGlassConfig.saturate}`,
+    `--glass-brightness-light:${frostedGlassConfig.brightnessLight}`,
+    `--glass-brightness-dark:${frostedGlassConfig.brightnessDark}`,
+    `--glass-bg-light:${frostedGlassConfig.background.light}`,
+    `--glass-bg-dark:${frostedGlassConfig.background.dark}`,
+    `--glass-border-light:${frostedGlassConfig.border.light}`,
+    `--glass-border-dark:${frostedGlassConfig.border.dark}`,
+    `--glass-shadow-light:${frostedGlassConfig.shadow.light}`,
+    `--glass-shadow-dark:${frostedGlassConfig.shadow.dark}`,
+    `--glass-page-light:${frostedGlassConfig.page.light}`,
+    `--glass-page-dark:${frostedGlassConfig.page.dark}`,
+    `--radius-navbar:${frostedGlassConfig.radius.navbar}px`,
+    `--radius-footer:${frostedGlassConfig.radius.footer}px`,
+    `--radius-card:${frostedGlassConfig.radius.card}px`,
+    `--radius-code-block:${frostedGlassConfig.radius.codeBlock}px`,
+    `--spotlight-radius:${cardSpotlightConfig.radius}px`,
+    `--spotlight-color-light:${cardSpotlightConfig.color.light}`,
+    `--spotlight-color-dark:${cardSpotlightConfig.color.dark}`,
+].join(';');
+---
+
 <!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
+<html
+    lang="zh-CN"
+    class:list={htmlClass}
+    data-theme={themeConfig.style}
+    style={themeVars}
+>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width" />
+
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+
+        <!-- 页面过渡由 @swup/astro 接管 (见 astro.config.mjs):
+             Swup 只替换 #swup-container 的内容, 导航栏 / 背景 / 返回顶部都在容器外,
+             所以背景完全不动; 动画见 styles/global.css 的 .transition-swup-fade。
+             页面里的脚本都写成挂在 document 上的事件委托 (主题 / 侧边栏 / 代码块),
+             换页后不需要重新初始化, 这也是它们当初那样写的原因。 -->
+
+        <!-- 主题必须在首帧前落到 <html> 上, 所以这段必须内联 (模块脚本加载太晚, 会闪).
+             它只做「预置」: localStorage 里的模式优先, 没有就用 config.yml 的 theme.style,
+             Auto 看系统偏好。之后所有主题操作统一走 src/objects/utils.ts 的 theme()。 -->
+        <script is:inline>
+            (() => {
+                const root = document.documentElement;
+                let mode = root.dataset.theme || "Auto";
+                try {
+                    mode = localStorage.getItem("theme") || mode;
+                    localStorage.setItem("theme", mode);
+                } catch {}
+                const isDark = mode === "Dark"
+                    || (mode === "Auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+                root.classList.toggle("Dark", isDark);
+                root.dataset.theme = mode;
+            })();
+        </script>
+
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="alternate" type="application/rss+xml" title={`${siteConfig.title} RSS`} href="/rss.xml" />
+        <meta name="generator" content={Astro.generator} />
+    </head>
+    <body class="min-h-full font-sans text-ink text-shadow-contrast antialiased">
+        <slot />
+    </body>
 </html>
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
+<script>
+    import { BlogTheme, theme as applyTheme } from '../objects/utils';
+
+    // 这个脚本只负责主题切换 —— 毛玻璃是纯 CSS 的 (切主题只换 CSS 变量), 不需要脚本参与。
+    // 「模式」存在 localStorage('theme'),「当前外观」是 <html> 上的 Dark 类: Tailwind 的 dark:
+    // 变体、背景图切换, 以及玻璃的底色/描边/亮度变量 (--glass-bg / --glass-border / --glass-brightness)
+    // 都跟着它走, 落地逻辑统一由 src/objects/utils.ts 的 theme() 负责。
+    const THEME_MODES: BlogTheme[] = [BlogTheme.Light, BlogTheme.Dark, BlogTheme.Auto];
+    const html = document.documentElement;
+
+    /** 当前主题「模式」。首帧前的内联脚本已经把它写在 <html data-theme> 上 */
+    const currentMode = (): BlogTheme => (html.dataset.theme as BlogTheme) || BlogTheme.Auto;
+
+    /** 切换主题: 模式 (data-theme 决定按钮的图标/文案) + 外观 (Dark 类驱动全站配色与玻璃变量) */
+    const setTheme = (mode: BlogTheme) => {
+        applyTheme(mode);
+        html.dataset.theme = mode;
+    };
+
+    /** 亮色 → 暗色 → 自动 → 亮色 */
+    const nextMode = (): BlogTheme => {
+        const index = THEME_MODES.indexOf(currentMode());
+        return THEME_MODES[(index + 1) % THEME_MODES.length];
+    };
+
+    // 事件委托: 任何页面上的 [data-theme-toggle] 都能用
+    document.addEventListener('click', (event) => {
+        const trigger = (event.target as HTMLElement | null)?.closest('[data-theme-toggle]');
+        if (trigger) setTheme(nextMode());
+    });
+
+    // Auto 模式下跟随系统深浅色变化
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if (currentMode() === BlogTheme.Auto) setTheme(BlogTheme.Auto);
+    });
+
+    // 换页后不用重新应用主题: Swup 只替换 #swup-container 的内容,
+    // 不会动 <html> 上的 class / data-theme, 所以所选主题会一直保持。
+</script>

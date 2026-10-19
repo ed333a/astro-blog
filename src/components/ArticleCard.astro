@@ -1,0 +1,76 @@
+---
+import type { CollectionEntry } from "astro:content";
+import GlassElement from "./glass/GlassElement.astro";
+
+interface Props {
+    post: CollectionEntry<"posts">;
+}
+
+const { post } = Astro.props;
+const { title, excerpt, category, dateText, readingMinutes, wordCount, tags, path } = post.data;
+---
+
+<!-- 文章列表里的一行: 每篇文章独占一行 (整行都是毛玻璃面板, 悬停上浮 + 描边跟随鼠标)。
+     标题上的 after:absolute after:inset-0 是「撑满整行」的链接 —— 点卡片任意位置都能进文章,
+     而链接本身仍只有一个 (读屏 / 键盘用户不会在卡片里被一堆链接卡住)。
+     圆角用独立变量 --radius-card (config.yml 的 frostedGlassStyle.radius.card)。 -->
+<GlassElement
+    as="article"
+    data-spotlight
+    class="spotlight-border group flex flex-col gap-3 rounded-[var(--radius-card)] p-5 text-ink transition-[translate,background-color,border-color,box-shadow,color] duration-300 ease-out hover:-translate-y-[3px] sm:flex-row sm:items-center sm:gap-6 sm:p-6"
+>
+    <div class="flex min-w-0 flex-1 flex-col gap-2.5">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+            {category && <span class="rounded-full bg-black/20 px-3 py-1 font-semibold tracking-wide">{category}</span>}
+            {dateText && <time datetime={dateText} class="font-medium text-ink/75">{dateText}</time>}
+            <span class="text-ink/75">{readingMinutes} 分钟阅读</span>
+            <span class="text-ink/75">{wordCount.toLocaleString("zh-CN")} 字</span>
+        </div>
+
+        <h2 class="text-lg leading-snug font-bold sm:text-xl">
+            <a href={`/${path}`} class="underline-offset-4 transition-opacity hover:underline after:absolute after:inset-0 after:z-10 after:content-['']">{title}</a>
+        </h2>
+
+        <p class="line-clamp-2 text-sm leading-relaxed text-ink/90">{excerpt}</p>
+
+        {tags.length > 0 && (
+            <ul class="m-0 flex list-none flex-wrap gap-2 p-0 text-[11px] text-ink/70">
+                {tags.map((tag) => <li class="rounded-full border border-ink/25 px-2 py-0.5">#{tag}</li>)}
+            </ul>
+        )}
+    </div>
+
+    <!-- 桌面端才显示的「阅读全文」提示 (整行已经是链接了, 这里只是视觉引导) -->
+    <span class="hidden shrink-0 items-center gap-1.5 text-sm font-semibold text-ink/85 sm:flex">
+        阅读全文
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1" aria-hidden="true">
+            <path d="M5 12h14"></path>
+            <path d="m13 6 6 6-6 6"></path>
+        </svg>
+    </span>
+</GlassElement>
+
+<script>
+    // 光斑跟随鼠标: 只做一件事 —— 把指针相对卡片的坐标写成卡片上的 --spotlight-x / --spotlight-y,
+    // 剩下那圈描边全交给 styles/global.css 的 spotlight-border (纯 CSS, 这里不碰样式)。
+    // 用事件委托挂在 document 上: 一个页面有几张卡片、什么时候渲染出来的都不用管,
+    // 而且这段脚本无论 ArticleCard 被用多少次都只会打包进来一份 (Astro 的脚本会去重)。
+    document.addEventListener(
+        "pointermove",
+        (event) => {
+            // 触屏 / 手写笔没有「悬停」, 直接跳过 (CSS 那边也有 (hover: hover) 兜着)
+            if (event.pointerType !== "mouse") return;
+
+            const card = (event.target as Element | null)?.closest<HTMLElement>("[data-spotlight]");
+            if (!card) return;
+
+            // 相对卡片的坐标要按「没被 translate 影响」的矩形算: getBoundingClientRect 拿到的正是
+            // 卡片当前的位置, 悬停上浮那 3px 会一起算进去, 所以光斑始终贴着指针。
+            const rect = card.getBoundingClientRect();
+            card.style.setProperty("--spotlight-x", `${event.clientX - rect.left}px`);
+            card.style.setProperty("--spotlight-y", `${event.clientY - rect.top}px`);
+        },
+        { passive: true },
+    );
+</script>
+
