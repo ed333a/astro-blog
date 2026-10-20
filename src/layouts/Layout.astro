@@ -60,16 +60,6 @@ const themeVars = [
 
         <title>{pageTitle}</title>
         <meta name="description" content={pageDescription} />
-
-        <!-- 页面过渡由 @swup/astro 接管 (见 astro.config.mjs):
-             Swup 只替换 #swup-container 的内容, 导航栏 / 背景 / 返回顶部都在容器外,
-             所以背景完全不动; 动画见 styles/global.css 的 .transition-swup-fade。
-             页面里的脚本都写成挂在 document 上的事件委托 (主题 / 侧边栏 / 代码块),
-             换页后不需要重新初始化, 这也是它们当初那样写的原因。 -->
-
-        <!-- 主题必须在首帧前落到 <html> 上, 所以这段必须内联 (模块脚本加载太晚, 会闪).
-             它只做「预置」: localStorage 里的模式优先, 没有就用 config.yml 的 theme.style,
-             Auto 看系统偏好。之后所有主题操作统一走 src/objects/utils.ts 的 theme()。 -->
         <script is:inline>
             (() => {
                 const root = document.documentElement;
@@ -99,10 +89,6 @@ const themeVars = [
 <script>
     import { BlogTheme, theme as applyTheme } from '../objects/utils';
 
-    // 这个脚本只负责主题切换 —— 毛玻璃是纯 CSS 的 (切主题只换 CSS 变量), 不需要脚本参与。
-    // 「模式」存在 localStorage('theme'),「当前外观」是 <html> 上的 Dark 类: Tailwind 的 dark:
-    // 变体、背景图切换, 以及玻璃的底色/描边/亮度变量 (--glass-bg / --glass-border / --glass-brightness)
-    // 都跟着它走, 落地逻辑统一由 src/objects/utils.ts 的 theme() 负责。
     const THEME_MODES: BlogTheme[] = [BlogTheme.Light, BlogTheme.Dark, BlogTheme.Auto];
     const html = document.documentElement;
 
@@ -131,7 +117,4 @@ const themeVars = [
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
         if (currentMode() === BlogTheme.Auto) setTheme(BlogTheme.Auto);
     });
-
-    // 换页后不用重新应用主题: Swup 只替换 #swup-container 的内容,
-    // 不会动 <html> 上的 class / data-theme, 所以所选主题会一直保持。
 </script>

@@ -8,7 +8,7 @@
 #######################################
 siteConfig:
   title: 硬件日记
-  subtitle: this is subtitle
+  subtitle: 技能分享 · 随笔日记
   description: 分享单片机、FPGA 开发, 和 PCB 设计经验, 记录嵌入式开发路上的成长点滴。
 
   # 文章链接格式
@@ -92,7 +92,7 @@ background:
   image:
     enable: true    # 是否启用背景 
     url: 'assets/img/blog_bg/bg8.svg'       # 背景图片地址, 使用 "/" 表示路径相对于 public 目录, 否则相对于 src 目录
-    svgColor: '#f5f5f5'                     # 当背景图为纯色的 SVG 图片时, 可以设置此项来自定义 svg 颜色
+    svgColor: '#000000'                     # 当背景图为纯色的 SVG 图片时, 可以设置此项来自定义 svg 颜色
     repeat-x: true                          # 控制图片在水平方向上重复
     repeat-y: false                         # 控制图片在垂直方向上重复
     fill: false                             # 控制图片铺满整个页面, 这个值启用后上面两个选项将会失效
@@ -153,6 +153,17 @@ cardSpotlight:
   color:                  # 光斑颜色: 日/夜各一份 (支持带 alpha 的透明色)
     light: 'rgba(255, 255, 255, 0.95)'
     dark: 'rgba(255, 255, 255, 0.85)'
+
+#######################################
+# 仓库卡片 (${github owner/repo} / ${gitee owner/repo})
+#######################################
+repo:
+  # 是否在构建期请求 GitHub / Gitee API, 获取仓库的描述 / stars / forks / license。
+  # 若构建环境访问不了这些 API (会打印 "fetch failed" 并降级为静态卡片), 把 fetch 设为 false 即可:
+  # 直接使用静态卡片, 不请求、不等待、不报警告。
+  fetch: true
+  # 请求超时 (ms)
+  timeout: 6000
 
 theme:
   # 默认主题选择 (Light,Dark,Auto 大小写敏感, 默认 Auto)

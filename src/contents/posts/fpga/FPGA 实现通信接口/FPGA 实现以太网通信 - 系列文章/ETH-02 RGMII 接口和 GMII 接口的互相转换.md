@@ -10,7 +10,7 @@ category: FPGA
 postID: db8d0357 # 自动生成, 不要修改这个项目的值
 ---
 
-在 [ETH-01 初识以太网的硬件组成](ETH-01%20初识以太网的硬件组成.md) 中我讲到了 RGMII 接口和 GMII 的两种数据接口。本篇则围绕这两种数据接口的互相转换展开。
+在 ${post 4a0bb95d} 中我讲到了 RGMII 接口和 GMII 的两种数据接口。本篇则围绕这两种数据接口的互相转换展开。
 ### 前言
 **在 FPGA 中，数据通常只在时钟的上升沿被采集。对于采用双边沿数据有效的 RGMII 接口而言，若仅使用上升沿进行采样，就会丢失下降沿所对应的数据**。同理，FPGA 在输出数据时，也只能在上升沿发生变化。为解决这一问题，Xilinx 提供了 `IDDR` 和 `ODDR` 两个原语，分别用于接收和发送双边沿数据。
 
@@ -91,7 +91,7 @@ ODDR #(
 - **SAME_EDGE**：在该模式下，D1/D2 都可以由上升沿触发的逻辑产生，DDR 内部会自动把 D2 对齐到下降沿进行输出，从而避免了跨边沿的约束，时序宽松，设计更加简单。该模式的图例如下。
 - ![ODDR_CLK_EDGE_SAME_EDGE](/img/posts/fpga_impl_interface/ethernet_impl/eth-02/ODDR_CLK_EDGE_SAME_EDGE.png)
 ### TX_CTRL 的转换
-在 RGMII 接口中，`TX_CTL`是一个集成了 GMII 接口中 `TX_EN`(发送使能) 和 `TX_ER`(发送错误) 功能的符合信号，通过将这两个信号编码在了同一个时钟周期内，传递了两个控制信息。
+在 RGMII 接口中，`TX_CTL`是一个集成了 GMII 接口中 `TX_EN`(发送使能) 和 `TX_ER`(发送错误) 功能的复合信号，通过将这两个信号编码在了同一个时钟周期内，传递了两个控制信息。
 
 `TX_CTL` 采用的同样也是**双边沿采样 (DDR)**，配合发送时钟 `TXC` 一起传输。它的编码规则如下：
 - **上升沿**：传输 `TX_EN` 信号，表示该时钟周期内的数据是否有效。
@@ -120,7 +120,7 @@ ODDR #(
     .C              (   gmii_txc        ),  //  1-bit clock input
     .CE             (   1'b1            ),  //  1-bit clock enable input
     .D1             (   gmii_tx_en      ),  //  1-bit data input (positive edge)
-    .D2             (   gmii_tx_en      ),  //  1-bit data input (negative edge) 实际上发送时 tx_ctl 信号一致都是拉高的，所以下降沿也接到了 gmii_tx_en 信号上。
+    .D2             (   gmii_tx_en      ),  //  1-bit data input (negative edge) 实际上发送时 tx_ctl 信号一直都是拉高的，所以下降沿也接到了 gmii_tx_en 信号上。
     .R              (   1'b0            ),  //  1-bit reset
     .S              (   1'b0            )   //  1-bit set
 );

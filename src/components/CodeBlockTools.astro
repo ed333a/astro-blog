@@ -67,7 +67,15 @@
         if (copyButton) {
             const code = block.querySelector("code");
             if (!code) return;
-            setCopyState(copyButton, (await copyText(code.textContent ?? "")) ? "ok" : "error");
+
+            // 行号模式下每行是相邻的 <span class="line"> (它们之间的换行文本已被删掉),
+            // 直接 textContent 会把所有行拼成一行 —— 所以按行拼接, 用 \n 还原换行。
+            const lines = code.querySelectorAll<HTMLElement>(".line");
+            const text = lines.length > 0
+                ? Array.from(lines, (line) => line.textContent ?? "").join("\n")
+                : code.textContent ?? "";
+
+            setCopyState(copyButton, (await copyText(text)) ? "ok" : "error");
             return;
         }
 

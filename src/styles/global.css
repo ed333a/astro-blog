@@ -17,6 +17,34 @@
    属性不存在 (= 收起) 时所有 nav-open: 的样式都不生效, 所以服务端渲染出来就是收起的。 */
 @custom-variant nav-open (&:where(html[data-nav="open"], html[data-nav="open"] *));
 
+/* ── 搜索面板 (components/SearchBox.astro) ──
+   窄屏 (< lg) 时输入面板浮在导航栏下方, 靠 opacity + translate + scale 淡入/下滑;
+   收起状态用 invisible + opacity-0 (visibility 参与过渡, 所以收起时会等淡出结束再隐藏),
+   展开状态写在 <html data-search="open"> 上 (脚本维护)。
+   这里用属性选择器把优先级抬到工具类之上, 不依赖工具类在构建产物里的先后顺序。
+   面板用 fixed + inset-x-0 + top-[calc(100%+10px)]: 导航栏自己有 backdrop-filter,
+   它会给 fixed 后代建立包含块, 所以这几个百分比/inset 实际是相对导航栏的 padding box ——
+   正好与导航栏等宽、贴在其下方。下面 @supports 给不支持毛玻璃的浏览器补一套视口坐标。 */
+@media (max-width: 63.999rem) {
+    html[data-search="open"] [data-search-panel] {
+        visibility: visible;
+        opacity: 1;
+        translate: 0 0;
+        scale: 1;
+        pointer-events: auto;
+    }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    @media (max-width: 63.999rem) {
+        html[data-search="open"] [data-search-panel] {
+            top: 72px;
+            right: 8.5vw;
+            left: 8.5vw;
+        }
+    }
+}
+
 /* ── 设计变量: 会自动生成对应的工具类 ──
    bg-page / text-ink / font-sans ... */
 @theme {
@@ -175,6 +203,42 @@ html.Dark {
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     .frosted-glass {
         background-color: var(--color-page, #1b1b20);
+    }
+}
+
+/* ── 搜索结果面板 (components/SearchBox.astro) ──
+   搜索结果是一个被脚本挂到 <body> 的浮层 (这样它不落在导航栏的 backdrop root 里,
+   backdrop-filter 才能真正模糊到页面背景), 所以它需要一套自己的「深色磨砂」外观:
+     · 半透明深色底保证任何背景图上文字都看得清;
+     · 自己的 backdrop-filter 做出背景模糊 (与毛玻璃同一套观感, 但更实一点);
+     · 描边 + 投影把它从页面里「托」起来。
+   日/夜只在底色上略有区别 —— 面板里的文字始终是浅色 (text-ink)。 */
+@utility search-surface {
+    background-color: rgb(22 22 30 / 0.78);
+    border: 1px solid rgb(255 255 255 / 0.16);
+    box-shadow:
+        0 20px 50px -24px rgb(0 0 0 / 0.72),
+        inset 0 1px 0 rgb(255 255 255 / 0.14);
+    -webkit-backdrop-filter: blur(16px) saturate(1.35);
+    backdrop-filter: blur(16px) saturate(1.35);
+
+    @variant dark {
+        background-color: rgb(12 12 16 / 0.82);
+        border-color: rgb(255 255 255 / 0.12);
+    }
+}
+
+/* Safari 18 之前只认带前缀的 backdrop-filter, 与 frosted-glass 同样的补丁 */
+@supports (-webkit-backdrop-filter: blur(1px)) {
+    .search-surface {
+        -webkit-backdrop-filter: blur(16px) saturate(1.35);
+    }
+}
+
+/* 完全不支持 backdrop-filter: 退化成不透明面板, 别让文字和背景图糊在一起 */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .search-surface {
+        background-color: rgb(22 22 30 / 0.57);
     }
 }
 
@@ -397,6 +461,11 @@ html.Dark {
 
     & .note > :last-child {
         @apply mb-0;
+    }
+
+    /* 仓库卡片内部的头像: 不要套用正文 img 的大边距/圆角 */
+    & .repo-card img {
+        @apply my-0 rounded-full;
     }
 }
 

@@ -101,6 +101,12 @@ const sidebarSchema = z.object({
     visitors   : z.number().int().min(0),   // 访客数量
 });
 
+// 仓库卡片 (${github owner/repo} / ${gitee owner/repo}): 是否在构建期请求 API 以及超时
+const repoSchema = z.object({
+    fetch  : z.boolean().default(true),                          // 是否在构建期请求 GitHub / Gitee API
+    timeout: z.number().int().min(500).max(60000).default(6000), // 请求超时 (ms)
+});
+
 // 背景图片 / 背景色 (见 config.yml 的 background, 由 components/BodyBackground.astro 消费)
 const backgroundImageSchema = z.object({
     enable    : z.boolean(),
@@ -137,6 +143,7 @@ const configSchema = z.object({
     theme: themeConfigSchema,
     author: authorSchema,
     sidebar: sidebarSchema,
+    repo: repoSchema.default({ fetch: true, timeout: 6000 }),
 });
 
 type Config              = z.infer<typeof configSchema>
@@ -148,6 +155,7 @@ type SiteConfig          = z.infer<typeof siteConfigSchema>
 type CodeBlockConfig     = z.infer<typeof codeBlockSchema>
 type AuthorConfig        = z.infer<typeof authorSchema>
 type SidebarConfig       = z.infer<typeof sidebarSchema>
+type RepoConfig          = z.infer<typeof repoSchema>
 
 // export const val
 export const config               : Config              = configSchema.parse(rawConfig);
@@ -159,4 +167,5 @@ export const cardSpotlightConfig  : CardSpotlightConfig = config.cardSpotlight;
 export const themeConfig          : ThemeConfig         = config.theme;
 export const authorConfig         : AuthorConfig        = config.author;
 export const sidebarConfig        : SidebarConfig       = config.sidebar;
+export const repoConfig           : RepoConfig          = config.repo;
 

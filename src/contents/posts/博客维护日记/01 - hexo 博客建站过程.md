@@ -11,11 +11,8 @@ type: post
 postID: f1ef2aaa # 自动生成, 不要修改这个项目的值
 ---
 
-### 关于 Astro
-Astro 是一个为内容驱动型网站而生的现代 Web 框架。
-
 ${note [warn]
-注意: 文章中关于使用 hexo 框架建站的内容已不再适用于本站，本站采用 [Astro](https://astro.build/) 框架搭建。具体方式已在上文详细介绍。
+注意: 文章中关于使用 hexo 框架建站的内容已不再适用于本站, 本站采用 [Astro](https://astro.build/) 框架搭建。相关内容仅作参考, 请勿直接用于 Astro 框架的博客网站。
 }
 
 ### 关于 Hexo

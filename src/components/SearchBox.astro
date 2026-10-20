@@ -1,0 +1,453 @@
+---
+/**
+ * 顶部导航栏的搜索框。
+ *
+ * 布局 (断点取 Tailwind 默认的 lg = 1024px):
+ *   · ≥ lg: 导航栏里直接是一个输入框, 结果面板从输入框下方展开;
+ *   · < lg: 只留一个放大镜按钮 (导航栏本来就窄, 塞不下输入框), 点开后面板浮在导航栏下方。
+ * 两种形态共用同一个输入框与结果容器 —— 面板只是换了一套定位, 逻辑只有一份。
+ *
+ * 数据来自构建期生成的 /search.json (见 pages/search.json.ts), 第一次聚焦时才请求,
+ * 之后缓存在内存里, 输入时纯本地过滤。页面切换由 Swup 接管, 导航栏在 #swup-container 之外,
+ * 所以这里的脚本只会执行一次, 事件挂在 document 上即可。
+ * 窄屏展开状态写在 <html data-search="open"> 上 (显示规则见 styles/global.css)。
+ */
+---
+
+<div data-search class="relative flex items-center">
+    <!-- 窄屏: 放大镜按钮 (aria-expanded 由脚本维护) -->
+    <button
+        type="button"
+        data-search-toggle
+        aria-controls="site-search-panel"
+        aria-expanded="false"
+        aria-label="搜索文章"
+        class="flex cursor-pointer items-center rounded-full bg-black/20 p-2.5 transition duration-300 ease-out hover:opacity-70 lg:hidden dark:bg-white/15"
+    >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="h-4 w-4" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m20 20-3.2-3.2"></path>
+        </svg>
+    </button>
+
+    <div
+        id="site-search-panel"
+        data-search-panel
+        class="fixed inset-x-0 top-[calc(100%+10px)] z-[55] invisible -translate-y-2 scale-[0.98] origin-top opacity-0 pointer-events-none transition-[opacity,translate,scale,visibility] duration-200 ease-out lg:static lg:inset-auto lg:z-auto lg:visible lg:translate-y-0 lg:scale-100 lg:opacity-100 lg:pointer-events-auto lg:block lg:w-56"
+    >
+        <!-- 窄屏下面板直接压在页面背景上, 输入框底色要比桌面端更实一点 -->
+        <label class="flex items-center gap-2 rounded-full bg-black/55 px-3.5 py-2 text-ink shadow-[0_8px_24px_-14px_rgba(0,0,0,0.65)] lg:bg-black/20 lg:py-1.5 dark:bg-black/60 dark:lg:bg-white/15">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="h-4 w-4 shrink-0 opacity-80" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"></circle>
+                <path d="m20 20-3.2-3.2"></path>
+            </svg>
+            <input
+                data-search-input
+                type="search"
+                placeholder="搜索文章…"
+                autocomplete="off"
+                spellcheck="false"
+                aria-label="搜索文章"
+                role="combobox"
+                aria-expanded="false"
+                aria-controls="site-search-results"
+                aria-autocomplete="list"
+                class="w-full min-w-0 bg-transparent text-sm font-medium outline-none placeholder:text-ink/70"
+            />
+            <kbd data-search-shortcut class="hidden shrink-0 rounded bg-black/25 px-1.5 py-0.5 text-[10px] font-semibold text-ink/70 xl:inline dark:bg-white/15">Ctrl K</kbd>
+        </label>
+
+        <div
+            id="site-search-results"
+            data-search-results
+            role="listbox"
+            aria-label="搜索结果"
+            class="search-surface fixed z-[80] hidden max-h-[60vh] overflow-y-auto rounded-[var(--radius-card)] p-2 text-ink"
+        />
+    </div>
+</div>
+
+<script>
+    interface SearchItem {
+        title   : string;
+        excerpt : string;
+        category: string;
+        tags    : string[];
+        dateText: string;
+        path    : string;
+        content : string;
+    }
+
+    const INDEX_URL   = "/search.json";
+    const MAX_RESULTS = 8;
+
+    const box     = document.querySelector<HTMLElement>("[data-search]");
+    const input   = box?.querySelector<HTMLInputElement>("[data-search-input]");
+    const results = box?.querySelector<HTMLElement>("[data-search-results]");
+
+    if (box && input && results) {
+        /** 构建期生成的索引; null = 还没请求过 */
+        let index: SearchItem[] | null = null;
+        let loading: Promise<SearchItem[]> | null = null;
+        /** 索引请求是否失败过 (用来区分「空结果」和「没加载到」) */
+        let failed = false;
+        /** 当前结果里被键盘选中的那一项 */
+        let activeIndex = -1;
+
+        document.body.appendChild(results);
+
+        const DESKTOP_QUERY = "(min-width: 1024px)";
+        const isDesktop = () => typeof window.matchMedia === "function"
+            ? window.matchMedia(DESKTOP_QUERY).matches
+            : window.innerWidth >= 1024;
+
+        /** 结果面板定位: 桌面端贴着输入框下方, 窄屏与导航栏等宽并贴在其下方 */
+        const positionResults = () => {
+            if (results.classList.contains("hidden")) return;
+
+            const margin = 8;
+            const edge = 12;
+
+            if (isDesktop()) {
+                const anchor = input.closest("label") ?? input;
+                const rect = anchor.getBoundingClientRect();
+                const width = Math.min(Math.max(384, rect.width), window.innerWidth - edge * 2);
+                const left = Math.min(Math.max(edge, rect.right - width), window.innerWidth - width - edge);
+
+                results.style.left = `${left}px`;
+                results.style.width = `${width}px`;
+                results.style.top = `${rect.bottom + margin}px`;
+                return;
+            }
+
+            // 窄屏: 导航栏是 fixed 的, 它的 rect 不受面板展开动画影响, 拿来做锚点最稳
+            const anchor = box.closest("nav") ?? box;
+            const rect = anchor.getBoundingClientRect();
+            const width = Math.max(0, rect.width - 2);
+
+            results.style.left = `${rect.left + 1}px`;
+            results.style.width = `${width}px`;
+            results.style.top = `${rect.bottom + margin + 2}px`;
+        };
+
+        const normalize = (value: string) => value.toLocaleLowerCase("zh-CN");
+
+        /** 第一次用到时才拉索引 (并缓存 promise, 输入很快时不会重复请求) */
+        const loadIndex = (): Promise<SearchItem[]> => {
+            loading ??= fetch(INDEX_URL)
+                .then((response) => {
+                    if (!response.ok) {
+                        failed = true;
+                        return [] as SearchItem[];
+                    }
+                    return response.json() as Promise<SearchItem[]>;
+                })
+                .catch(() => {
+                    failed = true;
+                    return [] as SearchItem[];
+                })
+                .then((items) => {
+                    index = Array.isArray(items) ? items : [];
+                    return index;
+                });
+            return loading;
+        };
+
+        /** 每个词都要命中 (空格分隔), 按命中位置加权: 标题 > 标签 > 分类 > 摘要 > 正文 */
+        const scoreItem = (item: SearchItem, terms: string[]): number => {
+            const title    = normalize(item.title);
+            const tags     = normalize(item.tags.join(" "));
+            const category = normalize(item.category);
+            const excerpt  = normalize(item.excerpt);
+            const content  = normalize(item.content);
+
+            let total = 0;
+            for (const term of terms) {
+                let score = 0;
+                if (title.includes(term)) score += title.startsWith(term) ? 120 : 100;
+                if (tags.includes(term)) score += 40;
+                if (category.includes(term)) score += 30;
+                if (excerpt.includes(term)) score += 15;
+                if (content.includes(term)) score += 5;
+
+                // 有一个词完全没命中就不算结果
+                if (score === 0) return 0;
+                total += score;
+            }
+            return total;
+        };
+
+        const findMatches = (query: string): SearchItem[] => {
+            if (!index) return [];
+            const terms = normalize(query).split(/\s+/).filter(Boolean);
+            if (terms.length === 0) return [];
+
+            return index
+                .map((item) => ({ item, score: scoreItem(item, terms) }))
+                .filter(({ score }) => score > 0)
+                // 分数高的在前; 同分按日期倒序 (新文章优先)
+                .sort((a, b) => b.score - a.score || b.item.dateText.localeCompare(a.item.dateText))
+                .slice(0, MAX_RESULTS)
+                .map(({ item }) => item);
+        };
+
+
+
+        /** 把 text 写进 parent, 命中的关键词用 <mark> 标出来 (纯 DOM 操作, 不拼 HTML) */
+        const appendHighlighted = (parent: HTMLElement, text: string, terms: string[]) => {
+            const lower = normalize(text);
+            let cursor = 0;
+
+            while (cursor < text.length) {
+                let start  = -1;
+                let length = 0;
+
+                for (const term of terms) {
+                    const found = lower.indexOf(term, cursor);
+                    if (found !== -1 && (start === -1 || found < start || (found === start && term.length > length))) {
+                        start  = found;
+                        length = term.length;
+                    }
+                }
+
+                if (start === -1) {
+                    parent.append(text.slice(cursor));
+                    return;
+                }
+                if (start > cursor) parent.append(text.slice(cursor, start));
+
+                const mark = document.createElement("mark");
+                mark.className   = "rounded-sm bg-white/30 px-0.5 text-ink";
+                mark.textContent = text.slice(start, start + length);
+                parent.append(mark);
+
+                cursor = start + length;
+            }
+        };
+
+        const hideResults = () => {
+            results.classList.add("hidden");
+            input.setAttribute("aria-expanded", "false");
+            activeIndex = -1;
+        };
+
+        /** 状态文案 (加载中 / 没结果 / 请求失败) */
+        const showStatus = (message: string) => {
+            const status = document.createElement("p");
+            status.className   = "m-0 px-3 py-2 text-sm text-ink/80";
+            status.textContent = message;
+            results.append(status);
+        };
+
+        const renderResults = (query: string) => {
+            results.replaceChildren();
+            activeIndex = -1;
+
+            const keyword = query.trim();
+            if (!keyword) {
+                hideResults();
+                return;
+            }
+
+            results.classList.remove("hidden");
+            input.setAttribute("aria-expanded", "true");
+            positionResults();
+
+            if (!index) {
+                showStatus("正在搜索…");
+                return;
+            }
+
+            if (failed) {
+                showStatus("搜索索引加载失败, 请刷新页面后重试。");
+                return;
+            }
+
+            const terms   = normalize(keyword).split(/\s+/).filter(Boolean);
+            const matches = findMatches(keyword);
+
+            if (matches.length === 0) {
+                showStatus(`没有找到与「${keyword}」相关的文章。`);
+                return;
+            }
+
+            matches.forEach((item) => {
+                const link = document.createElement("a");
+                link.href = `/${item.path.replace(/^\/+/, "")}`;
+                link.dataset.searchResult = "";
+                link.setAttribute("role", "option");
+                link.setAttribute("aria-selected", "false");
+                link.className = "block rounded-2xl px-3 py-2.5 transition-colors duration-200 ease-out hover:bg-black/20 focus-visible:bg-black/20 focus-visible:outline-none dark:hover:bg-white/15 dark:focus-visible:bg-white/15";
+
+                const title = document.createElement("p");
+                title.className = "m-0 truncate text-sm font-semibold";
+                appendHighlighted(title, item.title, terms);
+
+                const excerpt = document.createElement("p");
+                excerpt.className   = "m-0 mt-1 line-clamp-1 text-xs leading-relaxed text-ink/75";
+                excerpt.textContent = item.excerpt;
+
+                const meta = document.createElement("p");
+                meta.className = "m-0 mt-1 flex flex-wrap items-center gap-x-2 text-[11px] text-ink/65";
+                if (item.dateText) {
+                    const time = document.createElement("span");
+                    time.textContent = item.dateText;
+                    meta.append(time);
+                }
+                if (item.category) {
+                    const category = document.createElement("span");
+                    category.textContent = item.category;
+                    meta.append(category);
+                }
+                for (const tag of item.tags.slice(0, 4)) {
+                    const chip = document.createElement("span");
+                    chip.textContent = `#${tag}`;
+                    meta.append(chip);
+                }
+
+                link.append(title, excerpt, meta);
+                results.append(link);
+            });
+
+            // 默认选中第一条, 直接按 Enter 就能进
+            const first = results.querySelector<HTMLAnchorElement>("[data-search-result]");
+            first?.setAttribute("aria-selected", "true");
+            activeIndex = first ? 0 : -1;
+        };
+
+        const resultLinks = () => [...results.querySelectorAll<HTMLAnchorElement>("[data-search-result]")];
+
+        /** 键盘上下移动选中项 (循环) */
+        const moveActive = (step: number) => {
+            const links = resultLinks();
+            if (links.length === 0) return;
+
+            activeIndex = (activeIndex + step + links.length) % links.length;
+            links.forEach((link, position) => {
+                const active = position === activeIndex;
+                link.classList.toggle("bg-black/20", active);
+                link.classList.toggle("dark:bg-white/15", active);
+                link.setAttribute("aria-selected", String(active));
+            });
+            links[activeIndex]?.scrollIntoView({ block: "nearest" });
+        };
+
+        /** 打开 / 收起窄屏面板 (宽屏上面板一直可见, 这个状态对布局没有影响) */
+        const setPanelOpen = (open: boolean) => {
+            const root = document.documentElement;
+            if (open) root.dataset.search = "open";
+            else delete root.dataset.search;
+
+            document.querySelectorAll<HTMLElement>("[data-search-toggle]").forEach((toggle) => {
+                toggle.setAttribute("aria-expanded", String(open));
+            });
+        };
+
+        const closeSearch = () => {
+            setPanelOpen(false);
+            hideResults();
+            input.blur();
+        };
+
+        /** 跳转: 有 Swup 就交给它做页面过渡, 否则直接跳 */
+        const navigate = (href: string) => {
+            closeSearch();
+            const swup = (window as unknown as { swup?: { navigate?: (url: string) => void } }).swup;
+            if (swup?.navigate) swup.navigate(href);
+            else window.location.assign(href);
+        };
+
+        const followActive = () => {
+            const links  = resultLinks();
+            const target = links[activeIndex] ?? links[0];
+            const href   = target?.getAttribute("href");
+            if (href) navigate(href);
+        };
+
+        // ── 输入与加载 ──
+        input.addEventListener("focus", () => {
+            void loadIndex().then(() => {
+                if (input.value.trim()) renderResults(input.value);
+            });
+            if (input.value.trim()) renderResults(input.value);
+        });
+
+        input.addEventListener("input", () => {
+            renderResults(input.value);
+
+            // 索引还没到: 先显示「正在搜索…」, 到货后用当前输入重新渲染
+            if (input.value.trim() && !index) {
+                void loadIndex().then(() => {
+                    if (input.value.trim()) renderResults(input.value);
+                });
+            }
+        });
+
+        // ── 键盘 ──
+        input.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowDown") {
+                event.preventDefault();
+                moveActive(1);
+            } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                moveActive(-1);
+            } else if (event.key === "Enter") {
+                if (resultLinks().length > 0) {
+                    event.preventDefault();
+                    followActive();
+                }
+            } else if (event.key === "Escape") {
+                event.preventDefault();
+                closeSearch();
+            }
+        });
+
+        // ── 鼠标 / 触摸: 放大镜开合, 点结果后先收起, 点面板外面关闭 ──
+        document.addEventListener("click", (event) => {
+            const target = event.target as HTMLElement | null;
+            if (!target) return;
+
+            if (target.closest("[data-search-toggle]")) {
+                const open = document.documentElement.dataset.search !== "open";
+                setPanelOpen(open);
+                if (open) {
+                    void loadIndex();
+                    input.focus();
+                } else {
+                    closeSearch();
+                }
+                return;
+            }
+
+            if (target.closest("[data-search-result]")) {
+                closeSearch();
+                return;
+            }
+
+            if (!box.contains(target) && !results.contains(target)) closeSearch();
+        });
+
+        // 窗口尺寸变化时重新贴合一次 (桌面 ↔ 窄屏的锚点不一样)
+        window.addEventListener("resize", positionResults);
+
+        // ── 快捷键: Ctrl / ⌘ + K 聚焦搜索框; Esc 在输入框没焦点时也能关闭 ──
+        document.addEventListener("keydown", (event) => {
+            if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === "k") {
+                event.preventDefault();
+                setPanelOpen(true);
+                input.focus();
+                input.select();
+                void loadIndex();
+                return;
+            }
+            if (event.key === "Escape" && document.documentElement.dataset.search === "open") {
+                closeSearch();
+            }
+        });
+
+        // 快捷键提示按平台显示 (Mac 用 ⌘)
+        const shortcut = box.querySelector<HTMLElement>("[data-search-shortcut]");
+        if (shortcut && /Mac|iPhone|iPad/.test(navigator.userAgent)) shortcut.textContent = "⌘ K";
+    }
+</script>
+

@@ -11,6 +11,7 @@
  */
 
 import { transformOutsideCode } from "./markdownSegments";
+import { repoConfig } from "./config";
 
 type RepoPlatform = "github" | "gitee";
 
@@ -78,34 +79,55 @@ function formatCount(value: number): string {
 const metaCache = new Map<string, RepoMeta | null>();
 
 async function fetchRepoMeta(platform: RepoPlatform, repo: string): Promise<RepoMeta | null> {
+    // 关闭远程请求时直接返回 null → 使用静态卡片 (不请求、不等待、不报警告)
+    if (!repoConfig.fetch) return null;
+
     const token = platform === "github" ? process.env.GITHUB_TOKEN : process.env.GITEE_TOKEN;
     const url = platform === "github"
         ? `https://api.github.com/repos/${repo}`
         : `https://gitee.com/api/v5/repos/${repo}${token ? `?access_token=${encodeURIComponent(token)}` : ""}`;
 
-    try {
-        const response = await fetch(url, {
-            headers: {
-                Accept        : "application/vnd.github+json",
-                "User-Agent": "astro-blog-glass",
-                ...(platform === "github" && token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-            signal: AbortSignal.timeout(6000),
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const ATTEMPTS = 2;
 
-        const json = await response.json() as Record<string, any>;
-        return {
-            description: typeof json.description === "string" ? json.description : undefined,
-            stars      : typeof json.stargazers_count === "number" ? json.stargazers_count : undefined,
-            forks      : typeof json.forks_count === "number" ? json.forks_count : undefined,
-            license    : typeof json.license === "string" ? json.license : json.license?.spdx_id ?? json.license?.name,
-            avatar     : json.owner?.avatar_url,
-        };
-    } catch (error) {
-        console.warn(`[repo] 获取 ${platform}:${repo} 信息失败, 使用静态卡片: ${String(error)}`);
-        return null;
+    for (let attempt = 1; attempt <= ATTEMPTS; attempt += 1) {
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    Accept        : "application/vnd.github+json",
+                    "User-Agent": "astro-blog-glass",
+                    ...(platform === "github" && token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                signal: AbortSignal.timeout(repoConfig.timeout),
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            const json = await response.json() as Record<string, any>;
+            return {
+                description: typeof json.description === "string" ? json.description : undefined,
+                stars      : typeof json.stargazers_count === "number" ? json.stargazers_count : undefined,
+                forks      : typeof json.forks_count === "number" ? json.forks_count : undefined,
+                license    : typeof json.license === "string" ? json.license : json.license?.spdx_id ?? json.license?.name,
+                avatar     : json.owner?.avatar_url,
+            };
+        } catch (error) {
+            // 首次失败等 500ms 再试一次 (网络抖动/偶发超时)
+            if (attempt < ATTEMPTS) {
+                await new Promise((resolve) => setTimeout(resolve, 500));
+                continue;
+            }
+
+            // 打印真实的底层原因 (cause.code 常见: ENOTFOUND / ECONNRESET / ETIMEDOUT / CERT_*)
+            const cause = (error as { cause?: { code?: string; message?: string } })?.cause;
+            const reason = cause?.code ?? cause?.message;
+            console.warn(
+                `[repo] 获取 ${platform}:${repo} 信息失败, 使用静态卡片: ${String(error)}${reason ? ` (${reason})` : ""}` +
+                ` —— 若构建环境访问不了该 API, 可在 config.yml 的 repo.fetch 设为 false 关闭请求。`,
+            );
+            return null;
+        }
     }
+
+    return null;
 }
 
 async function loadRepoMeta(platform: RepoPlatform, repo: string): Promise<RepoMeta | undefined> {
@@ -199,7 +221,8 @@ export async function replaceRepositories(markdown: string): Promise<RepoRenderR
     const replaced = transformOutsideCode(markdown, (segment) =>
         transformOutsideInlineCode(segment, (text) =>
             text.replace(REPO_PATTERN, (_raw, platform: RepoPlatform, repo: string) =>
-                repoCardMarkup(platform, repo, meta[`${platform}:${repo}`] ?? undefined),
+                // 卡片是块级元素: 前后加空行让它成为独立的 HTML 块, 避免被包进段落 <p> 里 (否则布局会乱)
+                `\n\n${repoCardMarkup(platform, repo, meta[`${platform}:${repo}`] ?? undefined)}\n\n`,
             ),
         ),
     );

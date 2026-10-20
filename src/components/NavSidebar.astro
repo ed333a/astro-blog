@@ -4,13 +4,6 @@ import ThemeToggleButton from "./ThemeToggleButton.astro";
 import { navLinks } from "../objects/navLinks";
 ---
 
-<!-- 移动端侧边栏 (右侧抽屉): ≥ md 时整块隐藏 (md:hidden), 导航链接与主题切换都搬到这里,
-     顶部导航栏在移动端就只剩一个「打开菜单」的按钮。
-     开合状态只有一个地方 —— <html data-nav="open"> (global.css 的 nav-open 变体 + 下面那段脚本),
-     于是遮罩 / 抽屉 / 按钮三块各自动画, 不用互相引用, 也不会出现「抽屉开了但遮罩没跟上」。
-     服务端渲染出来的是收起状态 (没有 data-nav 属性 = 收起), 所以首帧不会闪一下打开的样子。 -->
-
-<!-- 遮罩: 压暗页面 + 点一下收起。收起时必须 pointer-events-none, 否则它会盖住整页, 什么都点不动。 -->
 <div
     data-nav-scrim
     aria-hidden="true"
@@ -18,10 +11,6 @@ import { navLinks } from "../objects/navLinks";
 >
 </div>
 
-<!-- 抽屉本体: 同样是毛玻璃面板 (GlassElement), 四周留 5px 与顶部导航栏的间距对齐。
-     收起时整块右移出屏幕 (translate), 而不是 display:none —— 这样才有滑入滑出的过渡;
-     多移 12px 是为了盖住右下角那 5px 的留白, 免得屏幕边缘漏出一点面板。
-     圆角用 --radius-card: 整块抽屉更像一张卡片, 而不是导航栏那种胶囊。 -->
 <GlassElement
     as="aside"
     id="nav-sidebar"
@@ -67,10 +56,6 @@ import { navLinks } from "../objects/navLinks";
 </GlassElement>
 
 <script>
-    // 移动端侧边栏的开合: 状态只写在一个地方 —— <html data-nav="open">。
-    // CSS 那边 (global.css 的 nav-open 变体) 只认这个属性; 脚本这边用事件委托, 认
-    // [data-nav-toggle] / [data-nav-close] / [data-nav-scrim], 所以按钮、遮罩、抽屉不用互相引用,
-    // 页面里出现几份导航也不会打架 (和 Layout 里主题切换那套写法一致)。
     const html = document.documentElement;
     const isNavOpen = () => html.dataset.nav === "open";
 
