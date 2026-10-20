@@ -18,9 +18,9 @@ const categories = [...categoryMap.entries()].sort((a, b) => a[0].localeCompare(
 
 <PageShell title="分类" description="按分类浏览所有文章。">
     <header slot="header" class="flex flex-col gap-2 pt-4">
-        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">Categories</p>
-        <h1 class="m-0 text-3xl font-extrabold sm:text-4xl">分类</h1>
-        <p class="m-0 max-w-2xl text-sm text-ink/95">共 {categories.length} 个分类。</p>
+        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase text-shadow-contrast">Categories</p>
+        <h1 class="m-0 text-3xl font-extrabold sm:text-4xl text-shadow-contrast">分类</h1>
+        <p class="m-0 max-w-2xl text-sm text-ink/95 text-shadow-contrast">共 {categories.length} 个分类。</p>
     </header>
 
     <!-- 侧边栏目录: 列出所有分类, 点击平滑滚动到对应分类。
@@ -54,11 +54,11 @@ const categories = [...categoryMap.entries()].sort((a, b) => a[0].localeCompare(
                     </div>
                     <ul class="m-0 flex list-none flex-col gap-1.5 p-0">
                         {categoryPosts.map((post) => (
-                            <li class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+                            <li class="flex items-center gap-x-3">
                                 {post.data.dateText && (
                                     <time datetime={post.data.dateText} class="shrink-0 font-mono text-xs text-ink/60">{post.data.dateText}</time>
                                 )}
-                                <a href={`/${post.data.path}`} class="font-semibold underline-offset-4 transition-opacity hover:underline hover:opacity-80">{post.data.title}</a>
+                                <a href={`/${post.data.path}`} class="min-w-0 truncate font-semibold underline-offset-4 transition-opacity hover:underline hover:opacity-80">{post.data.title}</a>
                             </li>
                         ))}
                     </ul>

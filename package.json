@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev --host",
-    "build": "astro build",
+    "build": "astro build && node scripts/subset-font.mjs",
     "preview": "astro preview",
     "astro": "astro"
   },
@@ -26,6 +26,9 @@
     "esbuild": true
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.3.3"
+    "@tailwindcss/vite": "^4.3.3",
+    "glob": "^13.0.6",
+    "jsdom": "^30.1.3",
+    "subset-font": "^2.9.0"
   }
 }

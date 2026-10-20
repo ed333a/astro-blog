@@ -23,9 +23,9 @@ const readers = [
 
 <PageShell title="RSS 订阅" description={`订阅 ${siteConfig.title} 的文章更新。`}>
     <header slot="header" class="flex flex-col gap-2 pt-4">
-        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">RSS</p>
-        <h1 class="m-0 text-3xl font-extrabold sm:text-4xl">RSS 订阅</h1>
-        <p class="m-0 max-w-2xl text-sm text-ink/95">用任意 RSS 阅读器订阅本站更新 —— 有新文章时会自动推送。</p>
+        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase text-shadow-contrast">RSS</p>
+        <h1 class="m-0 text-3xl font-extrabold sm:text-4xl text-shadow-contrast">RSS 订阅</h1>
+        <p class="m-0 max-w-2xl text-sm text-ink/95 text-shadow-contrast">用任意 RSS 阅读器订阅本站更新 —— 有新文章时会自动推送。</p>
     </header>
 
     <!-- 订阅地址 -->
@@ -95,12 +95,12 @@ const readers = [
         try {
             await navigator.clipboard.writeText(url);
             if (label) {
-                label.textContent = "已复制 ✓";
+                label.textContent = "成功 ✓";
                 window.setTimeout(() => { label.textContent = original; }, 1600);
             }
         } catch {
             if (label) {
-                label.textContent = "复制失败";
+                label.textContent = "失败 ✕";
                 window.setTimeout(() => { label.textContent = original; }, 1600);
             }
         }

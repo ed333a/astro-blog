@@ -25,7 +25,7 @@ const documentSchema = z.object({
     /** 文章 ID: frontmatter 没写时由 loader 按 title + description 的哈希生成 */
     postID     : z.string(),
     /** 发布日期 (解析失败 / 没写时为 undefined) */
-    date       : z.date().optional(),
+    published   : z.date().optional(),
     /** 展示用日期 (YYYY-MM-DD) */
     dateText   : z.string().optional(),
     category   : z.string().optional(),

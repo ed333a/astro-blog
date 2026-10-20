@@ -7,9 +7,9 @@
 # 站点配置
 #######################################
 siteConfig:
-  title: astro-blog-glass
+  title: 硬件日记
   subtitle: this is subtitle
-  description: A glass style blog, built by astro.
+  description: 分享单片机、FPGA 开发, 和 PCB 设计经验, 记录嵌入式开发路上的成长点滴。
 
   # 文章链接格式
   # 支持的变量 (大小写敏感)
@@ -56,7 +56,7 @@ author:
   # 头像图片路径: 以 '/' 开头表示 public 目录下的资源; 留空则用名字首字母占位
   avatar: 'assets/img/avatars/avatar.jpg'
   # 一句话介绍
-  bio: 一个喜欢折腾前端的开发者
+  bio: 一个喜欢嵌入式的工作者
   # 社交媒体链接 (侧边栏展示)
   socialLinks:
     - name: GitHub

@@ -73,7 +73,7 @@ const ICON_HIDDEN        = "absolute inset-0 h-3.5 w-3.5 scale-0 opacity-0 trans
 
 /** 复制按钮: 成功后换成对勾 + 绿色底, 并跑一次 tool-pop 动画 (keyframes 在 global.css 的 @theme 里) */
 function copyButtonMarkup(): string {
-    return `<button type="button" data-code-copy data-label-idle="复制" data-label-done="已复制" data-label-error="复制失败" aria-label="复制代码"
+    return `<button type="button" data-code-copy data-label-idle="复制" data-label-done="成功" data-label-error="失败" aria-label="复制代码"
             class="${BUTTON_CLASSES} group/copy data-[copied=ok]:animate-tool-pop data-[copied=ok]:bg-emerald-500/15 data-[copied=ok]:text-emerald-700 data-[copied=error]:bg-rose-500/15 data-[copied=error]:text-rose-700 dark:data-[copied=ok]:bg-emerald-400/15 dark:data-[copied=ok]:text-emerald-300 dark:data-[copied=error]:bg-rose-400/15 dark:data-[copied=error]:text-rose-300">
             <span class="${ICON_SLOT_CLASSES}">
                 <svg ${ICON_ATTRIBUTES} class="${ICON_VISIBLE} group-data-[copied=ok]/copy:scale-0 group-data-[copied=ok]/copy:opacity-0">${ICON_PATH.copy}</svg>
@@ -119,6 +119,58 @@ function bottomExpandButtonMarkup(): string {
 const PRE_PATTERN = /<pre\b([^>]*)>([\s\S]*?)<\/pre>/g;
 
 /**
+ * 把每一行 (shiki 的 <span class="line">…</span>) 的正文包进 <span class="line-content">。
+ * 这样行号与正文可以排成两个 flex 列: 行号吸在左边, 正文在自己的列里折行。
+ * shiki 的输出只用 <span>, 所以按 <span> / </span> 数深度就能找到每行的闭合标签。
+ */
+function wrapLineContents(html: string): string {
+    const lineOpen = '<span class="line">';
+    const contentOpen = '<span class="line-content flex-auto min-w-0">';
+    let result = "";
+    let cursor = 0;
+
+    while (true) {
+        const openIndex = html.indexOf(lineOpen, cursor);
+        if (openIndex < 0) {
+            result += html.slice(cursor);
+            break;
+        }
+
+        const contentStart = openIndex + lineOpen.length;
+        let depth = 1;
+        let i = contentStart;
+
+        while (i < html.length && depth > 0) {
+            const nextOpen = html.indexOf("<span", i);
+            const nextClose = html.indexOf("</span>", i);
+            if (nextClose < 0) {
+                i = html.length;
+                break;
+            }
+            if (nextOpen >= 0 && nextOpen < nextClose) {
+                depth += 1;
+                i = nextOpen + "<span".length;
+            } else {
+                depth -= 1;
+                i = nextClose + "</span>".length;
+            }
+        }
+
+        if (depth !== 0) {
+            // 没找到闭合 (不应该发生), 原样保留剩下的内容
+            result += html.slice(cursor);
+            break;
+        }
+
+        const closeStart = i - "</span>".length;
+        result += html.slice(cursor, contentStart) + contentOpen + html.slice(contentStart, closeStart) + "</span>" + html.slice(closeStart, i);
+        cursor = i;
+    }
+
+    return result;
+}
+
+/**
  * 给每个 <pre> 套上代码块外壳 (工具栏 + 行号 + 折叠渐变)。
  * 语言按「正文里代码块的出现顺序」对齐 —— 两者来自同一份 Markdown, 顺序天然一致。
  */
@@ -140,15 +192,44 @@ export function decorateCodeBlocks(html: string, options: CodeBlockOptions, lang
         const folding   = options.foldAt > 0 && lineCount > options.foldAt;
         const wrapOn    = options.wordwrap;
 
-        // 行号: 计数器画在每一行前面 (Tailwind 的任意属性 + content-[counter(...)])
+        // 行号做成每行的一个 flex 列:
+        //   · .line 是 flex 容器; 行号是它的第一个 flex 项 (::before), 固定宽度, align-self: stretch
+        //     让行号底色铺满整行高度 (换行时也一样), 代码放在第二个 flex 项 .line-content 里;
+        //   · 行号 sticky 在左边, 关闭换行时 <pre> 横向滚动, 行号保持不动;
+        //   · 行号从代码块最左边开始并带底色, 横向滚动时代码不会从行号左侧 / 后面透出来。
         const lineClasses = options.showLineNumber
-            ? ' [counter-increment:code-line] before:inline-block before:w-8 before:pr-3 before:text-right before:text-black/35 before:select-none before:content-[counter(code-line)] dark:before:text-white/35'
+            ? ' flex [counter-increment:code-line] before:flex-none before:w-8 before:shrink-0 before:pr-3 before:text-right before:text-black/35 before:select-none before:content-[counter(code-line)] dark:before:text-white/35 before:sticky before:left-0 before:z-10 before:self-stretch before:bg-[var(--code-bg)] dark:before:bg-[var(--code-bg-dark)]'
             : "";
-        const decoratedInner = lineClasses ? inner.replace(/class="line"/g, `class="line${lineClasses}"`) : inner;
 
-        // <pre> 自己: 保留 shiki 的行内配色 (日间 github-light + --shiki-dark-* 变量), 只补排版与夜间配色工具类
+        // <code> 让宽度随内容撑开 (w-max), 这样 sticky 行号的包含块才有足够的横向空间;
+        // 开启换行时回到 auto, 让文字正常折行。
+        const codeClasses = options.showLineNumber
+            ? 'block w-max min-w-full group-data-[wrap=on]:w-auto'
+            : "";
+
+        // 行号模式下给每行正文套一个 .line-content: 行号与正文 = 两个 flex 列, 正文在自己的列里折行。
+        let decoratedInner = (options.showLineNumber ? wrapLineContents(inner) : inner)
+            .replace(/<code\b([^>]*)>/, (_match, attributes: string) => {
+                if (!codeClasses) return `<code${attributes}>`;
+                return /\bclass="/.test(attributes)
+                    ? `<code${attributes.replace(/\bclass="([^"]*)"/, (_current, current: string) => `class="${current} ${codeClasses}"`)}>`
+                    : `<code${attributes} class="${codeClasses}">`;
+            })
+            .replace(/class="line"/g, `class="line${lineClasses}"`);
+
+        if (options.showLineNumber) {
+            // .line 变成块级 flex 后, shiki 用来分行的换行符会变成空白行, 去掉它们
+            decoratedInner = decoratedInner
+                .replace(/\n(?=<span class="line)/g, "")
+                .replace(/\n(?=<\/code>)/g, "");
+        }
+
+        // <pre> 自己: 保留 shiki 的行内配色 (日间 github-light + --shiki-dark-* 变量), 只补排版与夜间配色工具类。
+        // 行号模式下左侧不留 padding, 让行号槽从代码块最左边开始 (横向滚动时行号始终贴着左边)。
         const preClasses = [
-            "m-0 overflow-x-auto px-4 py-3 font-mono leading-[1.7] tab-4",
+            options.showLineNumber
+                ? "m-0 overflow-x-auto py-3 pr-4 font-mono leading-[1.7] tab-4"
+                : "m-0 overflow-x-auto px-4 py-3 font-mono leading-[1.7] tab-4",
             "group-data-[wrap=on]:whitespace-pre-wrap group-data-[wrap=on]:break-words",
             // shiki-theme: 夜间把行内的 github-light 配色换成 --shiki-dark-* (行内样式只能用 !important 盖)
             "shiki-theme",

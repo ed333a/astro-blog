@@ -18,7 +18,6 @@
 </button>
 
 <script>
-    // 往下滚超过这个距离才出现按钮 (px)
     const SHOW_AFTER = 480;
 
     const syncVisibility = () => {
@@ -28,10 +27,8 @@
         else delete button.dataset.visible;
     };
 
-    // 被动监听滚动: 只读写一个 data 属性, 不碰样式
     window.addEventListener("scroll", syncVisibility, { passive: true });
 
-    // 事件委托: 点击 [data-back-to-top] 平滑回顶 (换页后按钮元素会被替换, 但委托一直有效)
     document.addEventListener("click", (event) => {
         const trigger = (event.target as HTMLElement | null)?.closest("[data-back-to-top]");
         if (trigger) window.scrollTo({ top: 0, behavior: "smooth" });

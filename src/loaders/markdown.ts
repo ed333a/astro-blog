@@ -31,6 +31,8 @@ import {
     usesPinyinVariable,
 } from "../objects/posts";
 import { replacePostReferences, type PostReferenceTarget } from "../objects/postReference";
+import { replaceNotes } from "../objects/note";
+import { replaceRepositories, type RepoMeta } from "../objects/repo";
 import { collectCodeFenceLanguages, decorateCodeBlocks, replaceTabsInCodeBlocks } from "../objects/codeBlock";
 
 /** 文档类型: 决定内容渲染在哪个页面模板上 */
@@ -68,11 +70,12 @@ interface PreparedDocument extends RawDocument {
     path: string;
     /** 展示用日期 (YYYY-MM-DD) */
     dateText?: string;
-    date?: Date;
+    /** 发布日期 (来自 frontmatter 的 published) */
+    published?: Date;
     type: DocumentType;
 }
 
-/** frontmatter 里空着的字段 (例如 `date:`) 会被 YAML 解析成 null, 统一当成「没写」 */
+/** frontmatter 里空着的字段 (例如 `published:`) 会被 YAML 解析成 null, 统一当成「没写」 */
 function withoutNulls(data: Record<string, unknown>): Record<string, unknown> {
     const cleaned: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(data)) {
@@ -156,7 +159,7 @@ function prepareDocument(document: RawDocument, options: MarkdownLoaderOptions):
     const postID = asString(document.data.postID)
         ?? generatePostID(title, description, siteConfig.postIDLehgth);
 
-    const parsedDate = parsePostDate(asString(document.data.date));
+    const parsedDate = parsePostDate(asString(document.data.published));
 
     // 文章: 交给 siteConfig.postPermalink; 特殊页面: 直接用文件名 (About.md → about)
     const path = options.usePermalink
@@ -183,8 +186,8 @@ function prepareDocument(document: RawDocument, options: MarkdownLoaderOptions):
         postID,
         path,
         type,
-        date    : parsedDate?.date,
-        dateText: parsedDate?.text,
+        published : parsedDate?.date,
+        dateText  : parsedDate?.text,
     };
 }
 
@@ -235,18 +238,21 @@ function warnOnDuplicatePostIDs(context: LoaderContext, documents: PreparedDocum
     }
 }
 
-/** 正文处理: 制表符替换 → 引用替换 (代码块里的内容都会跳过) */
-function transformBody(
+/** 正文处理: 制表符替换 → 引用替换 → 提示框 → 仓库展示 (代码块里的内容都会跳过) */
+async function transformBody(
     document: PreparedDocument,
     references: Map<string, PostReferenceTarget>,
     onMissingReference: (id: string) => void,
-): string {
+): Promise<{ body: string; repoMeta: Record<string, RepoMeta | null> }> {
     const withTabsReplaced = replaceTabsInCodeBlocks(
         document.body,
         codeBlockConfig.tabReplace,
         codeBlockConfig.tabSize,
     );
-    return replacePostReferences(withTabsReplaced, (id) => references.get(id), onMissingReference);
+    const withReferences = replacePostReferences(withTabsReplaced, (id) => references.get(id), onMissingReference);
+    const withNotes = replaceNotes(withReferences);
+    const repos = await replaceRepositories(withNotes);
+    return { body: repos.markdown, repoMeta: repos.meta };
 }
 
 /** 扫目录 → 补全字段 → 校验 → 渲染 → 存进 Content Layer */
@@ -267,6 +273,8 @@ async function sync(context: LoaderContext, options: MarkdownLoaderOptions): Pro
         readFileSync(new URL("../objects/codeBlock.ts", import.meta.url), "utf-8"),
         readFileSync(new URL("../objects/markdownSegments.ts", import.meta.url), "utf-8"),
         readFileSync(new URL("../objects/postReference.ts", import.meta.url), "utf-8"),
+        readFileSync(new URL("../objects/note.ts", import.meta.url), "utf-8"),
+        readFileSync(new URL("../objects/repo.ts", import.meta.url), "utf-8"),
         readFileSync(new URL("../objects/posts.ts", import.meta.url), "utf-8"),
         readFileSync(new URL("../objects/pinyin.ts", import.meta.url), "utf-8"),
         // loader 自身的实现也参与渲染结果: 新增 wordCount 这类字段时, 旧缓存必须失效重算
@@ -305,7 +313,7 @@ async function sync(context: LoaderContext, options: MarkdownLoaderOptions): Pro
     const missingReferences = new Set<string>();
 
     for (const document of documents) {
-        const body = transformBody(document, references, (id) => missingReferences.add(id));
+        const { body, repoMeta } = await transformBody(document, references, (id) => missingReferences.add(id));
         const description = asString(document.data.description);
 
         const data: Record<string, unknown> = {
@@ -314,7 +322,7 @@ async function sync(context: LoaderContext, options: MarkdownLoaderOptions): Pro
             type          : document.type,
             draft         : document.data.draft === true,
             postID        : document.postID,
-            date          : document.date,
+            published     : document.published,
             dateText      : document.dateText,
             category      : asString(document.data.category),
             tags          : Array.isArray(document.data.tags) ? document.data.tags.map(String) : [],
@@ -350,7 +358,7 @@ async function sync(context: LoaderContext, options: MarkdownLoaderOptions): Pro
             data        : parsed,
             body,
             filePath    : document.filePath,
-            digest      : context.generateDigest(`${document.contents}\n${renderSource}`),
+            digest      : context.generateDigest(`${document.contents}\n${renderSource}\n${JSON.stringify(repoMeta)}`),
             rendered    : { ...rendered, html },
             assetImports: rendered.metadata?.imagePaths,
         });

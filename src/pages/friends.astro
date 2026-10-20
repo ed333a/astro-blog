@@ -36,23 +36,25 @@ const applyTemplate = `站点名称: [贵站的站点名称]
 站点介绍: [贵站的站点介绍]`;
 
 // 友链的内容要求
+// desc 支持 HTML 标签 (例如 <strong>加粗</strong>、<mark>高亮</mark>、<code>代码</code>、<a href="...">链接</a>);
+// 渲染时会按 HTML 解析 (见模板里的 set:html), 内容来自源码本身, 属于可信内容。
 const requirements = [
-    { title: "互惠原则",    desc: "申请前请先添加本站友链, 或在留言中说明预计添加时间。一般不接受长期单向友链。" },
-    { title: "站点定位",    desc: "优先接受个人博客、技术笔记、生活记录、开源项目主页等非商业化站点；暂不接受纯广告、采集、营销或跳转聚合站。" },
-    { title: "合规底线",    desc: "站点不得包含违法违规、色情、赌博、暴力、诈骗、恶意下载、侵权盗版等内容；一切以《中华人民共和国网络安全法》及相关法律法规为基准, 如有冲突, 无条件服从法律；如发现此类违法违规内容, 将直接移除友链。" },
-    { title: "访问安全",    desc: "为了用户的网络安全, 您的站点需要强制开启 HTTPS 访问, 并且保持证书有效。" },
-    { title: "更新与维护",  desc: "建议站点保持一定频率的更新和维护。如果长期没有更新也是没有关系的, 但需要保证您的站点链接和基础信息可以保持访问和查看。" },
-    { title: "内容质量",    desc: "希望站点有稳定且真实的内容输出, 原创或认真整理的内容均可; 避免整站搬运、AI 灌水和严重同质化内容。" },
+    { title: "互惠原则",    desc: "申请前请先添加本站友链, 或在留言中说明预计添加时间。" },
+    { title: "站点定位",    desc: "优先接受个人博客、技术笔记、生活记录、开源项目主页等非商业化站点; 暂不接受纯广告、采集、营销或跳转聚合站。" },
+    { title: "合规底线",    desc: "<b style=\"color:#ff6666\">站点不得包含违法违规、色情、赌博、暴力、诈骗、恶意下载、侵权盗版等内容; 一切内容均要以 《<a href=\"https\:\/\/www.cac.gov.cn/2025-12/29/c_1768735112911946.htm\">中华人民共和国网络安全法</a>》为准。如发现此类违法违规内容, 将直接移除友链, 并依法行使监督权, 对您的站点进行举报。</b>" },
+    { title: "访问安全",    desc: "为了用户的网络安全, 您的站点<b style=\"color:#ff6666\">需要强制开启 HTTPS 访问</b>, 并且保持证书有效。" },
+    { title: "更新维护",  desc: "建议您的网站保持一定频率的更新和维护。若长期没有更新则需要保证您的站点链接和基础信息可以随时访问和查看。" },
+    { title: "内容质量",    desc: "希望站点有稳定且真实的内容输出, 原创或认真整理的内容均可; 请勿整站搬运、AI 灌水或严重同质化内容。" },
     { title: "访问体验",    desc: "站点应能稳定访问, 并尽量保证国内访问体验。少量广告可以理解, 但请不要出现遮挡内容、强制跳转或影响阅读的弹窗。" },
-    { title: "文章数量",    desc: "直接申请建议已有 10 篇以上文章; 如果我们已经有过多次互动, 或站点质量较高, 这条可以放宽。" },
+    { title: "文章数量",    desc: "直接申请建议已有 10 篇以上文章; 若此前我们已有多次互动, 或者您的站点内容丰富, 质量较高, 这一条可以豁免。" },
 ];
 ---
 
 <PageShell title="友情链接" description="朋友们和鸣谢的项目。">
     <header class="flex flex-col gap-2 pt-4">
-        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">Friends</p>
-        <h1 class="m-0 text-3xl font-extrabold sm:text-4xl">友情链接</h1>
-        <p class="m-0 max-w-2xl text-sm text-ink/95">网络浩渺, 能在此相遇已是缘分。</p>
+        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase text-shadow-contrast">Friends</p>
+        <h1 class="m-0 text-3xl font-extrabold sm:text-4xl text-shadow-contrast">友情链接</h1>
+        <p class="m-0 max-w-2xl text-sm text-ink/95 text-shadow-contrast">网络浩渺, 能在此相遇已是缘分。</p>
     </header>
 
     <!-- 我的站点信息 (每一条都能单独复制, 方便交换友链) -->
@@ -136,7 +138,11 @@ const requirements = [
                     <span class="mt-[0.55em] h-1.5 w-1.5 shrink-0 rounded-full bg-ink/50" aria-hidden="true"></span>
                     <span>
                         <strong class="font-semibold text-ink">{item.title}：</strong>
-                        {item.desc}
+                        <!-- desc 按 HTML 渲染: 支持 <strong> / <em> / <mark> / <code> / <a> 等标签 -->
+                        <span
+                            class="[&_strong]:font-bold [&_em]:italic [&_mark]:rounded [&_mark]:bg-amber-300/80 [&_mark]:px-1 [&_mark]:text-black [&_code]:rounded [&_code]:bg-black/25 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.85em] [&_a]:font-semibold [&_a]:underline [&_a]:decoration-dotted [&_a]:underline-offset-4 dark:[&_code]:bg-white/15"
+                            set:html={item.desc}
+                        ></span>
                     </span>
                 </li>
             ))}
@@ -205,12 +211,12 @@ const requirements = [
         try {
             await navigator.clipboard.writeText(text);
             if (label) {
-                label.textContent = "已复制 ✓";
+                label.textContent = "成功 ✓";
                 window.setTimeout(() => { if (label) label.textContent = original; }, 1600);
             }
         } catch {
             if (label) {
-                label.textContent = "复制失败";
+                label.textContent = "失败 ✕";
                 window.setTimeout(() => { if (label) label.textContent = original; }, 1600);
             }
         }

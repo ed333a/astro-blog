@@ -88,7 +88,7 @@ const { title, description, category, dateText, tags, path, readingMinutes, word
         </div>
 
         <!-- 版权信息 (config.yml 的 siteConfig.license): 挂在文章底部, 特殊页面不需要 -->
-        {isPost && <LicenseNotice title={title} path={path} />}
+        {isPost && <LicenseNotice title={title} path={path} publishDate={dateText} />}
     </GlassElement>
 
     <!-- 文章目录: 放在右侧栏「侧边栏」下方 (PageShell 的 sidebar 插槽) -->

@@ -31,11 +31,11 @@ export const GET: APIRoute = async () => {
 
     const siteUrl = siteConfig.siteUrl.replace(/\/+$/, "");
     const feedUrl = `${siteUrl}/rss.xml`;
-    const lastBuildDate = (posts[0]?.data.date ?? new Date()).toUTCString();
+    const lastBuildDate = (posts[0]?.data.published ?? new Date()).toUTCString();
 
     const items = posts.map((post) => {
         const link = absoluteUrl(post.data.path);
-        const pubDate = post.data.date?.toUTCString() ?? new Date().toUTCString();
+        const pubDate = post.data.published?.toUTCString() ?? new Date().toUTCString();
         const categories = [...new Set([
             ...(post.data.category ? [post.data.category] : []),
             ...post.data.tags,

@@ -18,9 +18,9 @@ const years = [...yearMap.entries()];
 
 <PageShell title="归档" description="按时间线浏览所有文章。">
     <header class="flex flex-col gap-2 pt-4">
-        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">Archives</p>
-        <h1 class="m-0 text-3xl font-extrabold sm:text-4xl">归档</h1>
-        <p class="m-0 max-w-2xl text-sm text-ink/95">共 {posts.length} 篇文章。</p>
+        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase text-shadow-contrast">Archives</p>
+        <h1 class="m-0 text-3xl font-extrabold sm:text-4xl text-shadow-contrast">归档</h1>
+        <p class="m-0 max-w-2xl text-sm text-ink/95 text-shadow-contrast">共 {posts.length} 篇文章。</p>
     </header>
 
     <GlassElement class="flex flex-col gap-6 rounded-[var(--radius-card)] p-6 text-ink sm:p-8">
@@ -37,7 +37,7 @@ const years = [...yearMap.entries()];
                             <li class="relative flex gap-4 border-l border-ink/20 pb-5 pl-5 last:pb-0">
                                 <span class="absolute top-1.5 -left-[5px] h-2.5 w-2.5 rounded-full border border-ink/40 bg-black/40 dark:bg-white/30" aria-hidden="true"></span>
                                 <time datetime={post.data.dateText} class="shrink-0 font-mono text-xs leading-6 text-ink/60">{post.data.dateText}</time>
-                                <a href={`/${post.data.path}`} class="font-semibold leading-6 underline-offset-4 transition-opacity hover:underline hover:opacity-80">{post.data.title}</a>
+                                <a href={`/${post.data.path}`} class="min-w-0 truncate font-semibold leading-6 underline-offset-4 transition-opacity hover:underline hover:opacity-80">{post.data.title}</a>
                             </li>
                         ))}
                     </ol>

@@ -5,47 +5,47 @@
   tag: ' 位好朋友'
   link-list:
     - name: 阿飘
-      link: ligeaaa.github.io
+      link: https://ligeaaa.github.io
       icon: http://magic-knowledge.top/img/%25E5%25A4%25B4%25E5%2583%258F3.jpg
       descr: '天还没亮呢，有的是时间！'
       date: 2026-09-02
     - name: Luquiesceneの小屋
-      link: luq-blog.xyz
+      link: https://luq-blog.xyz
       icon: https://luq-blog.xyz/avatar.webp
       descr: 'To be or not to be: that is the question.'
       date: 2026-06-22
     - name: evil0knight's Blog
-      link: evil0knight.github.io/quartz/
+      link: https://evil0knight.github.io/quartz/
       icon: https://avatars.githubusercontent.com/evil0knight
       descr: 嵌入式软件,笔记博客,欢迎交流
       date: 2026-06-18
     - name: 夏夜流萤
-      link: blog.cuteleaf.cn
+      link: https://blog.cuteleaf.cn
       icon: https://weavatar.com/avatar/d252655d40d6874417a720bad0a6c5f77f8f6a1fd2f882f8f338402dc37e4190?s=640
       descr: 飞萤之火自无梦的长夜亮起，绽放在终竟的明天。
       date: 2026-06-07
     - name: 安知鱼
-      link: blog.anheyu.com
+      link: https://blog.anheyu.com
       icon: https://npm.elemecdn.com/anzhiyu-blog-static@1.0.4/img/avatar.jpg
       descr: 生活明朗，万物可爱
       date: 2026-06-07
     - name: 雪萌の小窝
-      link: xuemeng.work
+      link: https://xuemeng.work
       icon: https://xuemeng.work/wp-content/uploads/2026/02/icon.jpg
       descr: 一个喜欢嵌入式的杂鱼大学生的博客～
       date: 2026-06-04
     - name: mccsjs
-      link: seln.cn
+      link: https://seln.cn
       icon: https://seln.cn/img/ico.jpg
       descr: 点一盏灯，等一个迷路的夜🍁🍁🍁
       date: 2026-06-04
     - name: Liseezn's blog
-      link: blog.liseezn.top
+      link: https://blog.liseezn.top
       icon: https://blog.liseezn.top/logo.webp
       descr: 分享学习，项目，及教程
       date: 2026-05-26
     - name: 辰渊尘
-      link: blog.mcxiaochen.top
+      link: https://blog.mcxiaochen.top
       icon: https://blog.mcxiaochen.top/images/congyu/touxiang.webp
       descr: 05后，高中生，内容偏技术向，同时也会更新生活日常，希望能对你有用QwQ
       date: 2026-05-26

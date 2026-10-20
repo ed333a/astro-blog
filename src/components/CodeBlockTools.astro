@@ -10,7 +10,6 @@
 ---
 
 <script>
-    /** 复制成功/失败提示的停留时间 (ms) */
     const FEEDBACK_DURATION = 1600;
 
     function setLabel(button: HTMLElement, label?: string): void {
@@ -18,11 +17,6 @@
         if (target && label) target.textContent = label;
     }
 
-    /**
-     * 写复制状态。
-     * data-copied 是驱动样式 (颜色 / 对勾 / tool-pop 动画) 的唯一开关,
-     * 所以重新赋值前先删掉并强制一次重排, 保证连点也能重新播动画。
-     */
     function setCopyState(button: HTMLElement, state: "ok" | "error"): void {
         delete button.dataset.copied;
         void button.offsetWidth;
@@ -38,7 +32,6 @@
         button.dataset.feedbackTimer = String(timer);
     }
 
-    /** 复制到剪贴板: 优先 Clipboard API, 非安全上下文退回到临时 textarea */
     async function copyText(text: string): Promise<boolean> {
         try {
             await navigator.clipboard.writeText(text);

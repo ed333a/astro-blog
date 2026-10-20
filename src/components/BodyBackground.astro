@@ -76,7 +76,6 @@ const styleVars = [
 const blurClass = bgBlur > 0 ? "blur-[var(--bg-blur)]" : "";
 ---
 
-<!-- 背景层: 固定铺满视口, 位于内容之后 (整块在 Swup 容器外面, 换页/滚动都不动) -->
 <div class="pointer-events-none fixed inset-0 -z-10 bg-page" aria-hidden="true">
     {hasColorLayer ? (
         <div class:list={["absolute inset-0", colorLayerClass, blurClass]} style={styleVars}>

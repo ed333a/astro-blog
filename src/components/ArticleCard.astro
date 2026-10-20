@@ -10,10 +10,6 @@ const { post } = Astro.props;
 const { title, excerpt, category, dateText, readingMinutes, wordCount, tags, path } = post.data;
 ---
 
-<!-- 文章列表里的一行: 每篇文章独占一行 (整行都是毛玻璃面板, 悬停上浮 + 描边跟随鼠标)。
-     标题上的 after:absolute after:inset-0 是「撑满整行」的链接 —— 点卡片任意位置都能进文章,
-     而链接本身仍只有一个 (读屏 / 键盘用户不会在卡片里被一堆链接卡住)。
-     圆角用独立变量 --radius-card (config.yml 的 frostedGlassStyle.radius.card)。 -->
 <GlassElement
     as="article"
     data-spotlight
@@ -40,7 +36,6 @@ const { title, excerpt, category, dateText, readingMinutes, wordCount, tags, pat
         )}
     </div>
 
-    <!-- 桌面端才显示的「阅读全文」提示 (整行已经是链接了, 这里只是视觉引导) -->
     <span class="hidden shrink-0 items-center gap-1.5 text-sm font-semibold text-ink/85 sm:flex">
         阅读全文
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1" aria-hidden="true">
@@ -51,21 +46,13 @@ const { title, excerpt, category, dateText, readingMinutes, wordCount, tags, pat
 </GlassElement>
 
 <script>
-    // 光斑跟随鼠标: 只做一件事 —— 把指针相对卡片的坐标写成卡片上的 --spotlight-x / --spotlight-y,
-    // 剩下那圈描边全交给 styles/global.css 的 spotlight-border (纯 CSS, 这里不碰样式)。
-    // 用事件委托挂在 document 上: 一个页面有几张卡片、什么时候渲染出来的都不用管,
-    // 而且这段脚本无论 ArticleCard 被用多少次都只会打包进来一份 (Astro 的脚本会去重)。
     document.addEventListener(
         "pointermove",
         (event) => {
-            // 触屏 / 手写笔没有「悬停」, 直接跳过 (CSS 那边也有 (hover: hover) 兜着)
             if (event.pointerType !== "mouse") return;
 
             const card = (event.target as Element | null)?.closest<HTMLElement>("[data-spotlight]");
             if (!card) return;
-
-            // 相对卡片的坐标要按「没被 translate 影响」的矩形算: getBoundingClientRect 拿到的正是
-            // 卡片当前的位置, 悬停上浮那 3px 会一起算进去, 所以光斑始终贴着指针。
             const rect = card.getBoundingClientRect();
             card.style.setProperty("--spotlight-x", `${event.clientX - rect.left}px`);
             card.style.setProperty("--spotlight-y", `${event.clientY - rect.top}px`);

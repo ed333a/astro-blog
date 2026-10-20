@@ -2,8 +2,10 @@
 import PageShell from "../layouts/PageShell.astro";
 import GlassElement from "../components/glass/GlassElement.astro";
 import { getSortedPosts } from "../objects/collections";
+import { tagHash } from "../objects/tags";
 
 // 统计每个标签的出现次数, 按次数降序排 (次数相同按标签名排), 云图字号随相对频率分级。
+// 标签链接用标签的稳定哈希 (/tags/<hash>), 不在 URL 里直接出现原始标签内容。
 const posts = await getSortedPosts();
 
 const tagCounts = new Map<string, number>();
@@ -26,9 +28,9 @@ const sizeClass = (count: number) => {
 
 <PageShell title="标签" description="所有文章标签的标签云。">
     <header class="flex flex-col gap-2 pt-4">
-        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">Tags</p>
-        <h1 class="m-0 text-3xl font-extrabold sm:text-4xl">标签云</h1>
-        <p class="m-0 max-w-2xl text-sm text-ink/95">共 {tags.length} 个标签。</p>
+        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase text-shadow-contrast">Tags</p>
+        <h1 class="m-0 text-3xl font-extrabold sm:text-4xl text-shadow-contrast">标签云</h1>
+        <p class="m-0 max-w-2xl text-sm text-ink/95 text-shadow-contrast">共 {tags.length} 个标签。</p>
     </header>
 
     <GlassElement class="flex flex-col gap-4 rounded-[var(--radius-card)] p-6 text-ink sm:p-8">
@@ -39,7 +41,7 @@ const sizeClass = (count: number) => {
                     {tags.map(([tag, count]) => (
                         <li>
                             <a
-                                href={`/tags/${tag}`}
+                                href={`/tags/${tagHash(tag)}`}
                                 class={`${sizeClass(count)} font-semibold text-ink/90 underline-offset-4 transition-opacity duration-300 ease-out hover:underline hover:opacity-75`}
                             >
                                 {tag}

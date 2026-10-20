@@ -11,7 +11,7 @@ draft: false
 postID: 'a0b1c2d3e4f5'
 
 # 特殊页面可以不写日期 (留空即可, 构建时按"没有日期"处理)
-date:
+published:
 
 category: demo
 

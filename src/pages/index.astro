@@ -12,15 +12,15 @@ const latest = posts.slice(0, siteConfig.postsPerPage);
 
 <PageShell>
     <header slot="header" class="flex flex-col gap-2 pt-4">
-        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">My Blog</p>
-        <h1 class="m-0 text-3xl font-extrabold sm:text-4xl">{siteConfig.title}</h1>
-        <p class="m-0 max-w-2xl text-sm text-ink/95">{siteConfig.description}</p>
+        <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink uppercase text-shadow-contrast">My Blog</p>
+        <h1 class="m-0 text-3xl font-extrabold text-shadow-contrast sm:text-4xl">{siteConfig.title}</h1>
+        <p class="m-0 max-w-2xl text-sm text-ink text-shadow-contrast">{siteConfig.description}</p>
     </header>
 
     <section class="flex flex-col gap-3" aria-label="最新文章">
         <div class="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 class="m-0 text-xl font-bold">最新文章</h2>
-            <a href="/blog" class="text-sm font-semibold underline-offset-4 transition-opacity hover:underline hover:opacity-75">
+            <h2 class="m-0 text-xl font-bold text-ink text-shadow-contrast">最新文章</h2>
+            <a href="/blog" class="text-sm font-semibold text-ink text-shadow-contrast underline-offset-4 transition-opacity hover:underline hover:opacity-80">
                 全部 {posts.length} 篇 →
             </a>
         </div>

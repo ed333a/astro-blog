@@ -213,17 +213,17 @@ export function absoluteUrl(path: string): string {
 
 interface SortablePost {
     data: {
-        date?   : Date;
-        title   : string;
-        draft   : boolean;
+        published?: Date;
+        title     : string;
+        draft     : boolean;
     };
 }
 
 /** 新文章在前; 没有日期的排在最后 (按标题兜底, 保证每次构建顺序一致) */
 export function sortPostsDescending<T extends SortablePost>(entries: T[]): T[] {
     return [...entries].sort((a, b) => {
-        const left  = a.data.date?.getTime() ?? Number.NEGATIVE_INFINITY;
-        const right = b.data.date?.getTime() ?? Number.NEGATIVE_INFINITY;
+        const left  = a.data.published?.getTime() ?? Number.NEGATIVE_INFINITY;
+        const right = b.data.published?.getTime() ?? Number.NEGATIVE_INFINITY;
         if (left !== right) return right - left;
         return a.data.title.localeCompare(b.data.title, "zh-CN");
     });
