@@ -14,4 +14,5 @@ export const navLinks: NavLink[] = [
     { href: "/archives", label: "归档" },
     { href: "/friends", label: "友链" },
     { href: "/about", label: "关于我" },
+    { href: "https://statistics.tyh123.top/share/FImjZEcRBfGrjPTH", label: "统计"},
 ];

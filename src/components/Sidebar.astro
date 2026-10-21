@@ -1,30 +1,27 @@
 ---
 import GlassElement from "./glass/GlassElement.astro";
-import { authorConfig, sidebarConfig } from "../objects/config";
+import { authorConfig } from "../objects/config";
 import { getSortedPosts } from "../objects/collections";
 import { getAsset } from "@/objects/getAssetUrl";
 
-// 侧边栏的「本地统计」直接从内容集合算: 文章数 / 总字数 / 标签数。
-// 评论 / 总访问量 / 访客数来自 config.yml 的 sidebar (接入 API 前先用静态占位)。
+// 本地统计照常构建时计算
 const posts = await getSortedPosts();
 const articleCount = posts.length;
 const totalWords = posts.reduce((sum, post) => sum + post.data.wordCount, 0);
 const tagCount = new Set(posts.flatMap((post) => post.data.tags)).size;
 
 const { name, avatar, bio, socialLinks } = authorConfig;
-const { comments, totalVisits, visitors } = sidebarConfig;
 
-// 统计项统一成一份数组, 以后把后面三项换成 API 数据时只改这里
+// value 为 null 的项由前端脚本异步填充
 const stats = [
-    { label: "文章", value: articleCount },
-    { label: "字数", value: totalWords },
-    { label: "标签", value: tagCount },
-    { label: "评论", value: comments },
-    { label: "总访问量", value: totalVisits },
-    { label: "访客", value: visitors },
+    { key: "articles",   label: "文章",     value: articleCount },
+    { key: "words",      label: "字数",     value: totalWords },
+    { key: "tags",       label: "标签",     value: tagCount },
+    { key: "comments",   label: "评论",     value: null },
+    { key: "total_pv",   label: "总访问量", value: null },
+    { key: "total_uv",   label: "访客",     value: null },
 ];
 
-// 外部链接新开标签页 (RSS 这类站内链接除外)
 const linkTarget = (url: string) =>
     url.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {};
 ---
@@ -67,9 +64,117 @@ const linkTarget = (url: string) =>
             {stats.map((stat) => (
                 <div class="flex flex-col rounded-2xl bg-black/10 px-3 py-2 dark:bg-white/5">
                     <dt class="order-2 text-[11px] font-medium text-ink/70">{stat.label}</dt>
-                    <dd class="order-1 m-0 text-sm font-bold tabular-nums">{stat.value.toLocaleString("zh-CN")}</dd>
+                    <dd
+                        class="order-1 m-0 text-sm font-bold tabular-nums"
+                        data-stat={stat.key}
+                    >
+                        {stat.value === null ? "—" : stat.value.toLocaleString("zh-CN")}
+                    </dd>
                 </div>
             ))}
         </dl>
     </GlassElement>
 </aside>
+
+<script>
+    const CACHE_TTL = 60 * 60 * 1000; // 1 小时
+    const CACHE_KEY = "sidebar-stats-cache-v1"; // 带版本号，格式变化时改 v2 即可失效
+
+    const BLOG_STATS_API = "https://api.tyh123.top/blog_statistics.php";
+    const ARTALK_COMMENT_API =
+        "http://artalk.tyh123.top/api/v2/stats/site_comment";
+
+    const fmt = (n) =>
+        typeof n === "number" && Number.isFinite(n) ? n.toLocaleString("zh-CN") : "—";
+
+    function setStat(key, value) {
+        const el = document.querySelector(`[data-stat="${key}"]`);
+        if (el) el.textContent = fmt(value);
+    }
+
+    // ---------- 缓存读写 ----------
+    function readCache() {
+        try {
+            const raw = sessionStorage.getItem(CACHE_KEY);
+            if (!raw) return {};
+            const obj = JSON.parse(raw);
+            return obj && typeof obj === "object" ? obj : {};
+        } catch {
+            return {};
+        }
+    }
+
+    // 按字段各自打时间戳，避免一个接口失败拖累另一个的缓存
+    function writeCache(patch) {
+        try {
+            const now = Date.now();
+            const cache = readCache();
+            for (const [k, v] of Object.entries(patch)) {
+                cache[k] = { value: v, ts: now };
+            }
+            sessionStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+        } catch {
+            /* 隐私模式等情况下静默失败 */
+        }
+    }
+
+    // 未过期则返回缓存值，否则返回 undefined
+    function getFresh(key) {
+        const entry = readCache()[key];
+        if (
+            entry &&
+            typeof entry.ts === "number" &&
+            Date.now() - entry.ts < CACHE_TTL
+        ) {
+            return entry.value;
+        }
+        return undefined;
+    }
+
+    // ---------- 主流程 ----------
+    function loadStats() {
+        const cachedPv = getFresh("total_pv");
+        const cachedUv = getFresh("total_uv");
+        const cachedComments = getFresh("comments");
+
+        // 命中缓存的立即上屏（不发请求）
+        if (cachedPv !== undefined) setStat("total_pv", cachedPv);
+        if (cachedUv !== undefined) setStat("total_uv", cachedUv);
+        if (cachedComments !== undefined) setStat("comments", cachedComments);
+
+        const needBlog = cachedPv === undefined || cachedUv === undefined;
+        const needComments = cachedComments === undefined;
+
+        if (needBlog) {
+            fetch(BLOG_STATS_API)
+                .then((r) => (r.ok ? r.json() : null))
+                .then((d) => {
+                    if (!d) return;
+                    setStat("total_pv", d.total_pv);
+                    setStat("total_uv", d.total_uv);
+                    writeCache({ total_pv: d.total_pv, total_uv: d.total_uv });
+                })
+                .catch(() => {});
+        }
+
+        if (needComments) {
+            fetch(ARTALK_COMMENT_API)
+                .then((r) => (r.ok ? r.json() : null))
+                .then((d) => {
+                    if (!d || d.data == null) return;
+                    setStat("comments", d.data);
+                    writeCache({ comments: d.data });
+                })
+                .catch(() => {});
+        }
+    }
+
+    if (document.readyState === "complete") {
+        loadStats();
+    } else {
+        window.addEventListener("load", loadStats, { once: true });
+    }
+
+    // 每次加载页面都要执行一次
+    document.addEventListener("astro:page-load", loadStats);
+</script>
