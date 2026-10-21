@@ -55,6 +55,9 @@ import { navLinks } from "../objects/navLinks";
     <ThemeToggleButton class="w-full justify-center px-4 py-3 text-sm" />
 </GlassElement>
 
+<!-- Swup 换页时会把文档里的内联脚本再执行一遍 (SwupScriptsPlugin), 而抽屉在 #swup-container 之外、
+     事件本来就挂在 document 上 —— 重复绑定会让「开 → 关」瞬间互相抵消, 看起来就是点了没反应
+     (所以只有没换过页的首页能打开)。下面用 <html data-nav-bound> 挡住后续执行。 -->
 <script>
     const html = document.documentElement;
     const isNavOpen = () => html.dataset.nav === "open";
@@ -80,24 +83,28 @@ import { navLinks } from "../objects/navLinks";
         if (open) document.querySelector<HTMLElement>("[data-nav-panel] [data-nav-close]")?.focus();
     };
 
-    document.addEventListener("click", (event) => {
-        const target = event.target as HTMLElement | null;
-        if (!target) return;
+    if (html.dataset.navBound !== "1") {
+        html.dataset.navBound = "1";
 
-        if (target.closest("[data-nav-toggle]")) setNavOpen(!isNavOpen());
-        else if (target.closest("[data-nav-close]") || target.closest("[data-nav-scrim]")) setNavOpen(false);
-        // 点了抽屉里的链接就该走了, 顺手收起抽屉 (主题按钮不是 <a>, 所以点它不会把抽屉关掉)
-        else if (target.closest("[data-nav-panel] a")) setNavOpen(false);
-    });
+        document.addEventListener("click", (event) => {
+            const target = event.target as HTMLElement | null;
+            if (!target) return;
 
-    // Esc 关掉 (跟对话框的习惯对齐)
-    document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && isNavOpen()) setNavOpen(false);
-    });
+            if (target.closest("[data-nav-toggle]")) setNavOpen(!isNavOpen());
+            else if (target.closest("[data-nav-close]") || target.closest("[data-nav-scrim]")) setNavOpen(false);
+            // 点了抽屉里的链接就该走了, 顺手收起抽屉 (主题按钮不是 <a>, 所以点它不会把抽屉关掉)
+            else if (target.closest("[data-nav-panel] a")) setNavOpen(false);
+        });
 
-    // 拉宽到 md (768px) 就是桌面布局了, 抽屉本就整块隐藏 —— 顺手复位状态,
-    // 免得再缩回手机宽度时抽屉自己开着。
-    window.matchMedia("(min-width: 768px)").addEventListener("change", (event) => {
-        if (event.matches) setNavOpen(false);
-    });
+        // Esc 关掉 (跟对话框的习惯对齐)
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && isNavOpen()) setNavOpen(false);
+        });
+
+        // 拉宽到 md (768px) 就是桌面布局了, 抽屉本就整块隐藏 —— 顺手复位状态,
+        // 免得再缩回手机宽度时抽屉自己开着。
+        window.matchMedia("(min-width: 768px)").addEventListener("change", (event) => {
+            if (event.matches) setNavOpen(false);
+        });
+    }
 </script>

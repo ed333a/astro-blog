@@ -96,6 +96,8 @@ const themeVars = [
     </body>
 </html>
 
+<!-- 主题按钮的点击 / 系统深浅色监听只该挂一次: Swup 换页会把这份脚本再执行一遍,
+     重复绑定会让点一下连跳两个模式 (Light → Auto)。 -->
 <script>
     import { BlogTheme, theme as applyTheme } from '../objects/utils';
 
@@ -117,14 +119,18 @@ const themeVars = [
         return THEME_MODES[(index + 1) % THEME_MODES.length];
     };
 
-    // 事件委托: 任何页面上的 [data-theme-toggle] 都能用
-    document.addEventListener('click', (event) => {
-        const trigger = (event.target as HTMLElement | null)?.closest('[data-theme-toggle]');
-        if (trigger) setTheme(nextMode());
-    });
+    if (html.dataset.themeBound !== '1') {
+        html.dataset.themeBound = '1';
 
-    // Auto 模式下跟随系统深浅色变化
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-        if (currentMode() === BlogTheme.Auto) setTheme(BlogTheme.Auto);
-    });
+        // 事件委托: 任何页面上的 [data-theme-toggle] 都能用
+        document.addEventListener('click', (event) => {
+            const trigger = (event.target as HTMLElement | null)?.closest('[data-theme-toggle]');
+            if (trigger) setTheme(nextMode());
+        });
+
+        // Auto 模式下跟随系统深浅色变化
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if (currentMode() === BlogTheme.Auto) setTheme(BlogTheme.Auto);
+        });
+    }
 </script>

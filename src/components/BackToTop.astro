@@ -17,6 +17,7 @@
     </svg>
 </button>
 
+<!-- 按钮在 #swup-container 之外, 滚动监听只该挂一次 (Swup 换页会重新执行这份内联脚本)。 -->
 <script>
     const SHOW_AFTER = 480;
 
@@ -27,10 +28,14 @@
         else delete button.dataset.visible;
     };
 
-    window.addEventListener("scroll", syncVisibility, { passive: true });
+    if (document.documentElement.dataset.backToTopBound !== "1") {
+        document.documentElement.dataset.backToTopBound = "1";
 
-    document.addEventListener("click", (event) => {
-        const trigger = (event.target as HTMLElement | null)?.closest("[data-back-to-top]");
-        if (trigger) window.scrollTo({ top: 0, behavior: "smooth" });
-    });
+        window.addEventListener("scroll", syncVisibility, { passive: true });
+
+        document.addEventListener("click", (event) => {
+            const trigger = (event.target as HTMLElement | null)?.closest("[data-back-to-top]");
+            if (trigger) window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+    }
 </script>

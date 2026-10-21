@@ -9,6 +9,8 @@
 // 和 Layout 的主题切换、NavSidebar 的开合是同一套写法: 状态只有一处, 谁都不用引用谁。
 ---
 
+<!-- 事件委托, 一次绑定就覆盖全站代码块。Swup 换页会重新执行这份内联脚本,
+     重复绑定会让折行 / 折叠开关点一下切两次 (等于没反应), 所以用一次性标记挡住。 -->
 <script>
     const FEEDBACK_DURATION = 1600;
 
@@ -56,46 +58,50 @@
         }
     }
 
-    document.addEventListener("click", async (event) => {
-        const target = event.target as HTMLElement | null;
-        if (!target) return;
+    if (document.documentElement.dataset.codeToolsBound !== "1") {
+        document.documentElement.dataset.codeToolsBound = "1";
 
-        const block = target.closest<HTMLElement>("[data-code-block]");
-        if (!block) return;
+        document.addEventListener("click", async (event) => {
+            const target = event.target as HTMLElement | null;
+            if (!target) return;
 
-        const copyButton = target.closest<HTMLElement>("[data-code-copy]");
-        if (copyButton) {
-            const code = block.querySelector("code");
-            if (!code) return;
+            const block = target.closest<HTMLElement>("[data-code-block]");
+            if (!block) return;
 
-            // 行号模式下每行是相邻的 <span class="line"> (它们之间的换行文本已被删掉),
-            // 直接 textContent 会把所有行拼成一行 —— 所以按行拼接, 用 \n 还原换行。
-            const lines = code.querySelectorAll<HTMLElement>(".line");
-            const text = lines.length > 0
-                ? Array.from(lines, (line) => line.textContent ?? "").join("\n")
-                : code.textContent ?? "";
+            const copyButton = target.closest<HTMLElement>("[data-code-copy]");
+            if (copyButton) {
+                const code = block.querySelector("code");
+                if (!code) return;
 
-            setCopyState(copyButton, (await copyText(text)) ? "ok" : "error");
-            return;
-        }
+                // 行号模式下每行是相邻的 <span class="line"> (它们之间的换行文本已被删掉),
+                // 直接 textContent 会把所有行拼成一行 —— 所以按行拼接, 用 \n 还原换行。
+                const lines = code.querySelectorAll<HTMLElement>(".line");
+                const text = lines.length > 0
+                    ? Array.from(lines, (line) => line.textContent ?? "").join("\n")
+                    : code.textContent ?? "";
 
-        const wrapButton = target.closest<HTMLElement>("[data-code-wrap]");
-        if (wrapButton) {
-            const wrapped = block.dataset.wrap === "on";
-            block.dataset.wrap = wrapped ? "off" : "on";
-            wrapButton.setAttribute("aria-pressed", String(!wrapped));
-            setLabel(wrapButton, wrapped ? wrapButton.dataset.labelOff : wrapButton.dataset.labelOn);
-            return;
-        }
+                setCopyState(copyButton, (await copyText(text)) ? "ok" : "error");
+                return;
+            }
 
-        const foldButton = target.closest<HTMLElement>("[data-code-fold]");
-        if (foldButton) {
-            const folded = block.dataset.folded === "true";
-            block.dataset.folded = String(!folded);
-            block.querySelectorAll<HTMLElement>("[data-code-fold]").forEach((button) => {
-                button.setAttribute("aria-expanded", String(folded));
-                setLabel(button, folded ? button.dataset.labelExpanded : button.dataset.labelFolded);
-            });
-        }
-    });
+            const wrapButton = target.closest<HTMLElement>("[data-code-wrap]");
+            if (wrapButton) {
+                const wrapped = block.dataset.wrap === "on";
+                block.dataset.wrap = wrapped ? "off" : "on";
+                wrapButton.setAttribute("aria-pressed", String(!wrapped));
+                setLabel(wrapButton, wrapped ? wrapButton.dataset.labelOff : wrapButton.dataset.labelOn);
+                return;
+            }
+
+            const foldButton = target.closest<HTMLElement>("[data-code-fold]");
+            if (foldButton) {
+                const folded = block.dataset.folded === "true";
+                block.dataset.folded = String(!folded);
+                block.querySelectorAll<HTMLElement>("[data-code-fold]").forEach((button) => {
+                    button.setAttribute("aria-expanded", String(folded));
+                    setLabel(button, folded ? button.dataset.labelExpanded : button.dataset.labelFolded);
+                });
+            }
+        });
+    }
 </script>

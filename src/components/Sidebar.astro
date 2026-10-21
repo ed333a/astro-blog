@@ -76,6 +76,8 @@ const linkTarget = (url: string) =>
     </GlassElement>
 </aside>
 
+<!-- 统计只在 astro:page-load 时刷新, 监听挂一次就够。
+     Swup 换页会重新执行这份内联脚本, 用一次性标记避免重复绑定 / 重复请求。 -->
 <script>
     const CACHE_TTL = 60 * 60 * 1000; // 1 小时
     const CACHE_KEY = "sidebar-stats-cache-v1"; // 带版本号，格式变化时改 v2 即可失效
@@ -169,12 +171,16 @@ const linkTarget = (url: string) =>
         }
     }
 
-    if (document.readyState === "complete") {
-        loadStats();
-    } else {
-        window.addEventListener("load", loadStats, { once: true });
-    }
+    if (document.documentElement.dataset.sidebarStatsBound !== "1") {
+        document.documentElement.dataset.sidebarStatsBound = "1";
 
-    // 每次加载页面都要执行一次
-    document.addEventListener("astro:page-load", loadStats);
+        if (document.readyState === "complete") {
+            loadStats();
+        } else {
+            window.addEventListener("load", loadStats, { once: true });
+        }
+
+        // 每次加载页面都要执行一次
+        document.addEventListener("astro:page-load", loadStats);
+    }
 </script>

@@ -39,8 +39,9 @@
     @media (max-width: 63.999rem) {
         html[data-search="open"] [data-search-panel] {
             top: 72px;
-            right: 8.5vw;
-            left: 8.5vw;
+            /* 与 PageShell 的内容区同宽 (留白见 --page-gutter) */
+            right: var(--page-gutter);
+            left: var(--page-gutter);
         }
     }
 }
@@ -101,6 +102,17 @@
     /* 滚动条滑块 (毛玻璃效果: 半透明白 + 描边, 见下方「滚动条」一节) */
     --scrollbar-thumb: rgb(255 255 255 / 0.32);
     --scrollbar-thumb-hover: rgb(255 255 255 / 0.52);
+
+    /* 页面左右留白: 桌面端 8.5vw (内容占 83%), 窄屏 (< md) 收到 2.5vw (内容占 95%,
+       手机上多出来的那点边距很浪费)。导航栏宽度 / 搜索面板兜底定位都读这一个值,
+       三处不会各自跑偏 (见 layouts/PageShell.astro 与 components/NavBar.astro)。 */
+    --page-gutter: 8.5vw;
+}
+
+@media (max-width: 47.999rem) {
+    :root {
+        --page-gutter: 2.5vw;
+    }
 }
 
 /* ── 深色主题令牌 ──

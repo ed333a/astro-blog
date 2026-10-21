@@ -67,6 +67,9 @@
     </div>
 </div>
 
+<!-- 搜索框在导航栏里 (容器之外), 事件挂在 document 上: 只绑定一次。
+     Swup 换页会重新执行这份内联脚本, 重复绑定会让点一下「开 → 关」互相抵消,
+     所以下面用 [data-search] 上的标记挡住第二次初始化。 -->
 <script>
     interface SearchItem {
         title   : string;
@@ -85,7 +88,9 @@
     const input   = box?.querySelector<HTMLInputElement>("[data-search-input]");
     const results = box?.querySelector<HTMLElement>("[data-search-results]");
 
-    if (box && input && results) {
+    if (box && input && results && box.dataset.searchBound !== "1") {
+        box.dataset.searchBound = "1";
+
         /** 构建期生成的索引; null = 还没请求过 */
         let index: SearchItem[] | null = null;
         let loading: Promise<SearchItem[]> | null = null;
