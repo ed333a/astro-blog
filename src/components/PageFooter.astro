@@ -13,7 +13,8 @@ const { title, path } = Astro.props;
 const year = new Date().getFullYear();
 ---
 
-<GlassElement as="footer" class="mt-auto flex flex-col items-center gap-3 rounded-[var(--radius-footer)] px-8 py-6 text-sm text-ink sm:flex-row sm:items-start sm:justify-between sm:text-left">
+<!-- 窄屏页脚用 32px 圆角 (全宽面板用胶囊圆角会显得头重脚轻), 到 md 再回到 config.yml 的 --radius-footer。 -->
+<GlassElement as="footer" class="mt-auto flex flex-col items-center gap-3 rounded-[32px] px-8 py-6 text-sm text-ink sm:flex-row sm:items-start sm:justify-between sm:text-left md:rounded-[var(--radius-footer)]">
     <div class="flex flex-col items-center gap-1.5 sm:items-start">
         <p class="m-0 text-ink/85">© {year} {siteConfig.title} · {siteConfig.subtitle}</p>
         <LicenseNotice title={title} path={path} compact />

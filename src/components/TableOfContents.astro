@@ -16,14 +16,20 @@ const { headings } = Astro.props;
 const items = headings.filter((heading) => heading.depth >= 2 && heading.depth <= 3);
 ---
 
-<!-- 文章目录: 放在右侧栏「侧边栏」下方 (PageShell 的 sidebar 插槽), 桌面端随侧边栏一起 sticky。 -->
-<GlassElement as="nav" aria-label="文章目录" class="flex flex-col gap-3 rounded-[var(--radius-card)] p-5 text-ink">
-    <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">目录</p>
+<!-- 文章目录: 放在右侧栏「侧边栏」下方 (PageShell 的 sidebar 插槽), 桌面端随侧边栏一起 sticky。
+     窄屏 (< lg) 时右侧栏会落到正文下面, 目录离正文太远、只是多出一屏滚动 —— 直接隐藏;
+     桌面端高度受 sticky 列限制 (见 PageShell), 标题行固定、列表超出部分用细滚动条滚动。 -->
+<GlassElement
+    as="nav"
+    aria-label="文章目录"
+    class="hidden min-h-0 flex-col gap-3 rounded-[var(--radius-card)] p-5 text-ink lg:flex"
+>
+    <p class="m-0 shrink-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">目录</p>
 
     {items.length === 0 ? (
         <p class="m-0 text-xs text-ink/70">本文没有小标题。</p>
     ) : (
-        <ul class="m-0 flex list-none flex-col gap-1 p-0">
+        <ul class="slim-scrollbar m-0 flex min-h-0 list-none flex-col gap-1 overflow-y-auto overscroll-contain p-0">
             {items.map((heading) => (
                 <li>
                     <a

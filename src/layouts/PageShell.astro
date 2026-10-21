@@ -38,7 +38,9 @@ const { title, description, licenseTitle, licensePath } = Astro.props;
                     <slot />
                 </main>
                 <aside class="w-full lg:w-72 lg:shrink-0">
-                    <div class="flex flex-col gap-6 lg:sticky lg:top-24">
+                    <!-- sticky 列限高: 让目录 (slot="sidebar") 在视口内收住, 超高部分交给它的内部滚动条。
+                         7.5rem = sticky 顶部偏移 (top-24 = 6rem) + 底部留白 (1.5rem)。 -->
+                    <div class="flex flex-col gap-6 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7.5rem)]">
                         <Sidebar />
                         <slot name="sidebar" />
                     </div>

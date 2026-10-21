@@ -274,7 +274,8 @@ html.Dark {
 
 /* ── 隐藏所有滚动条 (保留滚动功能) ──
    页面主体和内部滚动容器 (代码块 / 移动端抽屉等) 一律不显示滚动条;
-   鼠标滚轮 / 键盘 / 触摸滚动都照常可用。 */
+   鼠标滚轮 / 键盘 / 触摸滚动都照常可用。
+   确实需要让人看见滚动条的地方, 加 .slim-scrollbar 单独打开 (见下)。 */
 * {
     scrollbar-width: none;        /* Firefox */
     -ms-overflow-style: none;     /* 旧 Edge / IE */
@@ -284,6 +285,47 @@ html.Dark {
     display: none;
     width: 0;
     height: 0;                    /* Chrome / Edge / Safari */
+}
+
+/* ── 细滚动条: 把上面「默认隐藏」的滚动条按需请回来 ──
+   给确实需要滚动的容器用 (目前是侧边栏里的文章目录): 细、无轨道、滑块半透明,
+   颜色沿用 --scrollbar-thumb / --scrollbar-thumb-hover (日/夜各一份, 见 :root 与 html.Dark),
+   和毛玻璃面板的观感一致; 鼠标悬停时滑块稍微亮一点。
+   注意: 这里写成普通类而不是 @utility —— 上面的 * / ::-webkit-scrollbar 重置没有进 layer,
+   未分层样式优先级高于 utilities 层, 用 @utility 会被重置盖掉。 */
+.slim-scrollbar {
+    /* 标准属性: Chrome / Edge / Firefox 都认。它会让浏览器改用「非覆盖式」滚动条,
+       于是滑块一直可见; 颜色沿用日/夜的 --scrollbar-thumb, 轨道透明。 */
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+    -ms-overflow-style: auto;                            /* 旧 Edge / IE */
+}
+
+.slim-scrollbar::-webkit-scrollbar {
+    display: block;
+    width: 6px;
+    height: 6px;
+}
+
+/* 两端的小箭头 / 轨道底色 / 拐角: Chrome 默认都会画出来, 和毛玻璃面板不搭, 一律去掉 */
+.slim-scrollbar::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.slim-scrollbar::-webkit-scrollbar-track,
+.slim-scrollbar::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+.slim-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 999px;
+}
+
+.slim-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover);
 }
 
 /* ── 卡片光斑: 鼠标在卡片上移动时, 跟着指针走的那圈高亮描边 ──
