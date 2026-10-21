@@ -10,14 +10,14 @@ category: FPGA
 postID: 3723985a # 自动生成, 不要修改这个项目的值
 ---
 
-### 前言
+## 前言
 MDIO 接口是配置以太网 PHY 芯片片上寄存器的一种通用接口，几乎所有的以太网 PHY 芯片使用的都是 MDIO 接口来配置寄存器。
-### 接线方式
+## 接线方式
 - ETH_MDC: 时钟信号线，频率不大于 12.5MHz
 - ETH_MDIO: 双向数据线
 主从式、半双工通信，所有通信都是由主设备发起，从设备被动响应（和 IIC 类似）
-### 数据帧格式
-#### 读数据
+## 数据帧格式
+### 读数据
 | Preamble | ST  |   OP   | PHYAD | REGAD |   TA   |       DATA       | IDLE |
 | :------: | :-: | :----: | :---: | :---: | :----: | :--------------: | :--: |
 |  1...1   | 01  | **10** | AAAAA | RRRRR | **Z0** | DDDDDDDDDDDDDDDD |  Z   |
@@ -35,15 +35,15 @@ MDIO 接口是配置以太网 PHY 芯片片上寄存器的一种通用接口，�
 
 ![MDIO 读数据时序图](/img/posts/fpga_impl_interface/eth_mdio/mdio_reading.png)
 ![MDIO 读数据时序图-note](/img/posts/fpga_impl_interface/eth_mdio/mdio_reading_note.png)
-#### 写数据
+### 写数据
 | Preamble | ST  |   OP   | PHYAD | REGAD |   TA   |       DATA       | IDLE |
 | :------: | :-: | :----: | :---: | :---: | :----: | :--------------: | :--: |
 |  1...1   | 01  | **01** | AAAAA | RRRRR | **10** | DDDDDDDDDDDDDDDD |  Z   |
 
 在写数据时，MDIO 总线**全程由主设备控制**
 ![MDIO 写数据时序图](/img/posts/fpga_impl_interface/eth_mdio/mdio_writing.png)
-### 实现代码
-#### 双向 IO 口的驱动
+## 实现代码
+### 双向 IO 口的驱动
 在这里使用 `IOBUF` 原语驱动双向 IO 口。
 ```verilog
 IOBUF # (
@@ -74,7 +74,7 @@ assign eth_mdio = eth_mdio_dir ? eth_mdio_in : eth_mdio_out; // 三态门根据�
 
 //... 其它代码 ... 如时钟信号、驱动 eth_mdio_dir 的逻辑等等
 ```
-#### 时钟信号的产生
+### 时钟信号的产生
 和之前有一篇讲 ${post 52a1f482} 文章中的代码类似，也是产生一个双边沿的脉冲信号，然后根据这个双边沿脉冲信号去翻转 MDC 信号就得到了驱动时钟。
 ```verilog
 // MDC inv Generation, inv pulse signal is active-high when MDC rising edge and falling edge
@@ -108,7 +108,7 @@ always  @(posedge clk or negedge rst_n) begin
     end
 end
 ```
-#### 上升沿和下降沿的判断
+### 上升沿和下降沿的判断
 判断逻辑如下：
 - 当 `eth_mdc` 为**高电平**并且产生了 `eth_mdc_inv` 的脉冲信号，表示 `eth_mdc` 将会在下一个时钟周期**跳变到低电平**，此时则为 `eth_mdc` 的下降沿
 - 当 `eth_mdc` 为**低电平**并且产生了 `eth_mdc_inv` 的脉冲信号，表示 `eth_mdc` 将会在下一个时钟周期**跳变到高电平**，此时则为 `eth_mdc` 的上升沿
@@ -116,7 +116,7 @@ end
 wire eth_mdc_negedge =  eth_mdc & eth_mdc_inv;   // indicates MDC negedge
 wire eth_mdc_posedge = !eth_mdc & eth_mdc_inv;   // indicates MDC posedge
 ```
-#### 完整的 MDIO 驱动代码
+### 完整的 MDIO 驱动代码
 已折叠部分代码 (点击即可展开)
 ```verilog collapse={35-213}
 module mdio_dri # (

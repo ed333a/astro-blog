@@ -1,6 +1,6 @@
 ---
 title: 关于我
-description: 一个喜欢把界面做得好玩一点的开发者, 这里记录前端、Astro 与设计相关的东西。
+description: 
 type: about # 文档类型: post(文章) / about(关于我) —— 这个值决定内容渲染在哪个页面模板上
 ---
 

@@ -16,7 +16,7 @@ postID: 70562cef # 自动生成, 不要修改这个项目的值
 ## 部署 umami 实例
 这里采用 docker 安装，在这之前你需要在云服务器上安装好 `docker` 服务，推荐使用[宝塔面板](https://www.bt.cn/new/index.html)来一键安装 docker 服务，本篇基于宝塔面板来介绍。
 
-首先需要将 umami 的 github 仓库克隆下来，存放位置不做要求，你自己记得就行。我存放在了 `/www/wwwroot` 这个路径下
+首先需要将 umami 的 github 仓库克隆下来
 ```shell
 $ git clone https://github.com/umami-software/umami.git
 ```
@@ -26,7 +26,7 @@ $ git clone https://github.com/umami-software/umami.git
 
 以下内容不修改也是可以的，但是为了安全起见建议修改
 - **ports**: umami 实例的端口映射，建议修改一下**宿主机**的端口(冒号前面的)，不要用默认的端口。
-- **DATABASE_URL**: 格式为 `postgresql://用户名:密码@db:端口号/数据库名` 这里的用户名、密码、数据库名对应 `db` 中 的 `POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB` 这三个值，端口号目前我不知道怎么改，如果有知道的大佬可以在评论区评论以下（
+- **DATABASE_URL**: 格式为 `postgresql://用户名:密码@db:端口号/数据库名` 这里的用户名、密码、数据库名对应 `db` 中 的 `POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB` 这三个值，端口号目前我不知道怎么改，如果有知道的大佬可以在评论区评论一下（
 - **APP_SECRET**: 改成一串随机的字符串
 - **POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB**: 在上面已经提到了，是数据库的用户名、密码、数据库名。
 

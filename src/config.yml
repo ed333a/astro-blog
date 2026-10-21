@@ -120,14 +120,14 @@ background:
 # 调效果只改这个文件, 不用碰组件。
 frostedGlassStyle:
   # ── 1 背景模糊: backdrop-filter 里的滤镜函数 ──
-  blur: 5                 # 背景模糊强度 (px), 越大越糊 [0,60]
+  blur: 10                # 背景模糊强度 (px), 越大越糊 [0,60]
   saturate: 1.4           # 背景饱和度 (1 = 不变)
   brightnessLight: 0.85   # 背景亮度 (1 = 不变, 日间)
   brightnessDark: 0.9     # 背景亮度 (夜间)
 
   # ── 2 背景颜色与阴影: 玻璃面板自己的底子 (任何 CSS 颜色值, 支持带 alpha 的透明色) ──
   background:             # 玻璃面板的底色, 越不透明越「实」, 越透明越通透
-    light: 'rgba(255, 0, 0, 0.05)'
+    light: 'rgba(0, 0, 0, 0.10)'
     dark: 'rgba(18, 18, 24, 0.42)'
   border:                 # 面板描边 (同时用作顶部那道内高光)
     light: 'rgba(255, 255, 255, 0.30)'
@@ -183,6 +183,6 @@ comments:
   artalk:
     # 填写完整的网页链接格式, 即以 http(s):// 开头的链接格式 
     server: http://localhost:7890     # Artalk 后端地址
-    serverDev:  http://localhost:4008 # 在 Dev 环境的后端地址 (npm run dev)
-    site: '我的博客'  # 站点名称
+    serverDev:  http://localhost:4002 # 在 Dev 环境的后端地址 (npm run dev)
+    site: '硬件日记'  # 站点名称
     

@@ -15,7 +15,7 @@ ${note [fine]
 这篇解决方案适用于任何以 `Node.js` 构建的站点，是一篇通用教程。
 }
 
-### 前言
+## 前言
 
 今天我为博客更换了主要字体: 一款开源字体 [霞鹜文楷 GB](https://github.com/lxgw/LxgwWenKaiGB)。  
 ${github lxgw/LxgwWenKaiGB}
@@ -26,7 +26,7 @@ ${github lxgw/LxgwWenKaiGB}
 (图为原始 ttf 字体文件的大小)
 ![raw-ttf](/img/posts/blog/06/raw-ttf.png)
 
-### 优化方法
+## 优化方法
 起初, 我尝试了最直接的方式: 利用在线工具将 TTF 格式转换为更适合网页的 woff2 格式。  
 25 MB 的 TTF 转换后仍接近 10 MB。虽然体积已经减少了大约 60%, 但对一个网页来说, 10 MB 的字体资源依然过于庞大。
 
@@ -36,9 +36,9 @@ ${github lxgw/LxgwWenKaiGB}
 随后, 借助 AI 工具检索资料后发现: **字体文件中只有一小部分字符是网站实际会用到的**。因此, 我们可以先收集所有页面中用到的字符, 形成一个字符集合, 然后基于这个集合从原字体中生成一个「子集」 (subset) 。  
 这样一来, 原本 10 MB 左右的 woff2 字体还能进一步压缩 (当然也可以直接从 TTF 生成子集) 。
 
-### 字体子集化过程
+## 字体子集化过程
 
-#### Step.1 安装 Node 工具
+### Step.1 安装 Node 工具
 
 使用以下命令安装字体子集化所需的依赖: 
 
@@ -49,7 +49,7 @@ $ npm install -D subset-font glob jsdom
 - **glob**: 用于遍历构建后生成的 HTML 文件
 - **jsdom**: 从 HTML 页面中提取纯文本内容
 
-#### Step2. 存放完整字体文件
+### Step2. 存放完整字体文件
 
 将原始 TTF 字体放在任意位置, 只要后续脚本能够加载到即可。
 
@@ -68,7 +68,7 @@ public/
             *.ttf
 ```
 
-#### Step3. 创建构建后脚本
+### Step3. 创建构建后脚本
 该脚本会从构建好的页面 (即 `dist` 文件夹中的所有 HTML) 收集所有字符, 然后根据原始完整字体生成对应的字体子集, 并输出为 `woff2` 格式。
 将脚本保存到项目根目录的 `scripts` 文件夹中, 文件后缀为 `.mjs`。
 ```js
@@ -190,7 +190,7 @@ run().catch(err => {
 });
 ```
 
-#### Step4. 修改 `package.json` 构建命令
+### Step4. 修改 `package.json` 构建命令
 修改后 `scripts` 字段内容如下所示
 ```json
 {
@@ -203,7 +203,7 @@ run().catch(err => {
 
 命令运行顺序: `astro build -> node scripts/subset-font.mjs -> pagefind --site dist`
  
-#### Step5. 在 Astro 布局中动态切换字体路径
+### Step5. 在 Astro 布局中动态切换字体路径
 在 dev 模式下预览页面时需要使用完整字体来显示页面, 保证新输入的字符不会缺少字体。在这里使用端点 css 文件来实现这个功能, 这份 css 端点文件用于生成站点中所有用到的字体, 注意文件名格式必须是 `*.css.ts` 格式。
 
 ```ts
@@ -253,7 +253,7 @@ ${fontFaces}
 }
 ```
 
-#### Step6. 功能验证
+### Step6. 功能验证
 - **开发环境**: 运行 `npm run dev`, 浏览器会加载完整的字体文件, 在这时可以自由输入汉字, 不会存在某一字符字体缺失的情况。
 - **生产环境**: 
     - 运行 `npm run build`, 脚本会自动扫描 dist 文件夹中所有 HTML 文档, 生成仅包含所需字符的字体子集。配合 woff2 压缩, 最终字体文件大小可以控制在 100–300 KB。
@@ -262,14 +262,14 @@ ${fontFaces}
 图为生成好的子集字体文件, 可以看到文件大小来到了 203KB 和 235KB, 由于脚本中对文件进行了取哈希值操作, 所以文件名为 16 位哈希结果。
 ![generated-subset-font](/img/posts/blog/06/generated-subset-font.png)
 
-#### Step7. 应用 CSS 样式
+### Step7. 应用 CSS 样式
 在 `<head>...</head>` 标签中, 引用端点 css, 使网站能够使用定义的 `font-family`。
 
 ```html
 <link rel="stylesheet" href="/fonts.css" />
 ```
 
-#### 补充说明
+## 补充说明
 ${note [info]
 关于优化后的体积倍数计算: 
 - 原始 ttf 体积取 25MB

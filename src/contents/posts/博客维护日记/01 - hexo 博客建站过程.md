@@ -15,17 +15,17 @@ ${note [warn]
 注意: 文章中关于使用 hexo 框架建站的内容已不再适用于本站, 本站采用 [Astro](https://astro.build/) 框架搭建。相关内容仅作参考, 请勿直接用于 Astro 框架的博客网站。
 }
 
-### 关于 Hexo
+## 关于 Hexo
 **Hexo** 是一个基于 Node.js 编写的快速、简洁且高效的**博客框架**。它通过解析 Markdown 格式的源文件，结合主题模板，一键生成静态网页资源；用户可以将这些静态资源文件部署到如 Github Pages 的静态资源托管服务站点上，无需后端环境或数据库，即可拥有高性能、易于维护的个人博客站点。
 
-### 配置 Node.js 环境
+## 配置 Node.js 环境
 在安装 Hexo 之前，首先要配置 Node.js 环境，前往 [Node.js 中文网下载页面](https://nodejs.cn/download/) 下载适合你当前所使用的系统的 Node.js 安装包。
 
 ${note [warn]
 使用 Windows 10 或更高版本的系统时，通常建议 **直接下载安装包 [Windows 安装包(.msi)]** 进行安装，以免因 PowerShell 执行策略阻止未签名脚本运行，造成 npm 脚本无法正常执行。
 }
 
-### 安装 Hexo
+## 安装 Hexo
 安装好 Node.js 后，使用以下命令来全局安装 hexo
 ```shell
 $ npm install hexo-cli -g
@@ -41,7 +41,7 @@ $ hexo -v
 $ hexo: 无法将 “hexo” 项识别为 cmdlet、函数、脚本文件或可运行程序的名称。请检查名称的拼写，如果包括路径，请确保路径正确，然后再试一次。
 ```
 
-### 初始化 Hexo 目录
+## 初始化 Hexo 目录
 完成 Hexo 的安装后，在**适当的位置**创建一个文件夹，用来存放 hexo 的项目文件。
 ![](/img/posts/blog/01/hexo_project_folder.png)
 
@@ -82,7 +82,7 @@ $ hexo s -p 4001
 ```
 }
 
-### 生成静态资源
+## 生成静态资源
 使用以下命令可以生成部署到 Github Pages 的静态资源
 ```shell
 $ hexo g
