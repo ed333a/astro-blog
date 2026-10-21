@@ -5,6 +5,8 @@ import GlassElement from "../components/glass/GlassElement.astro";
 import LicenseNotice from "../components/LicenseNotice.astro";
 import TableOfContents from "../components/TableOfContents.astro";
 import { getSortedPosts } from "../objects/collections";
+import { commentsConfig } from "../objects/config";
+import ArtalkComment from "@/components/ArtalkComment.astro";
 
 /**
  * 文章详情 + 特殊页面 (About) 的公用路由。
@@ -116,4 +118,13 @@ const { title, description, category, dateText, tags, path, readingMinutes, word
     <p class="m-0 text-center text-xs text-ink/70">
         <a href="/blog" class="underline-offset-4 transition-opacity hover:underline hover:opacity-80">← 返回文章列表</a>
     </p>
+
+    {
+        commentsConfig.enable && commentsConfig.use.toLowerCase() === "artalk" &&
+        <GlassElement as="div" class="group flex flex-col gap-1 rounded-[var(--radius-card)] text-sm text-ink transition-[translate,background-color,border-color,box-shadow,color] duration-300 ease-out hover:-translate-y-[3px]">
+            <div id="comment-wrapper" class="mt-[20px] p-5 card-base">
+                <ArtalkComment></ArtalkComment>
+            </div>
+        </GlassElement>
+    }
 </PageShell>

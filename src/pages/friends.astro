@@ -1,9 +1,11 @@
 ---
 import PageShell from "../layouts/PageShell.astro";
 import GlassElement from "../components/glass/GlassElement.astro";
+import ArtalkComment from "@/components/ArtalkComment.astro";
 import { friendLinks } from "../objects/friendLinks";
 import { authorConfig, siteConfig } from "../objects/config";
 import { getAsset } from "@/objects/getAssetUrl";
+import { commentsConfig } from "../objects/config";
 
 // 交换友链用的站点信息 (长 / 短两版介绍)
 const siteIntroLong = "分享单片机、FPGA 开发, 和 PCB 设计经验, 记录嵌入式开发路上的成长点滴。";
@@ -104,20 +106,28 @@ const requirements = [
     </GlassElement>
 
     <!-- 申请友链 -->
-    <GlassElement class="flex flex-col gap-5 rounded-[var(--radius-card)] p-6 text-ink sm:p-8">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 class="m-0 text-xl font-bold">申请友链</h2>
-            <button
-                type="button"
-                data-copy-template
-                data-template={applyTemplate}
-                class="shrink-0 cursor-pointer rounded-full bg-black/20 px-5 py-2.5 text-sm font-semibold transition duration-300 ease-out hover:opacity-70 dark:bg-white/15"
-            >
-                <span data-copy-label>复制模板</span>
-            </button>
+    <GlassElement class="flex flex-col rounded-[var(--radius-card)] p-6 text-ink sm:p-8">
+        
+        <div class="flex flex-col">
+            <p class="m-0 text-xs font-semibold tracking-[0.2em] text-ink/70 uppercase">APPLY</p>
+            <div class="flex flex-wrap justify-between items-center">
+                <h2 class="m-0 text-xl font-bold">申请友链</h2>
+                <button
+                    type="button"
+                    data-copy-template
+                    data-template={applyTemplate}
+                    class="shrink-0 cursor-pointer rounded-full bg-black/20 px-5 py-2.5 text-sm font-semibold transition duration-300 ease-out hover:opacity-70 dark:bg-white/15"
+                >
+                    <span data-copy-label>复制模板</span>
+                </button>
+            </div>
         </div>
 
-        <pre class="m-0 overflow-x-auto rounded-2xl border border-ink/20 bg-black/20 p-4 font-mono text-xs leading-relaxed text-ink/90 dark:bg-white/10"><code>{applyTemplate}</code></pre>
+        <div class="mb-5">
+            <p>在页面最底部的评论区直接申请即可, 参考格式如下:</p>
+        </div>
+
+        <pre class="mb-5 overflow-x-auto rounded-2xl border border-ink/20 bg-black/20 p-4 font-mono text-xs leading-relaxed text-ink/90 dark:bg-white/10"><code>{applyTemplate}</code></pre>
 
         <div class="flex flex-col gap-2 text-xs leading-relaxed text-ink/70">
             <p class="m-0">
@@ -193,6 +203,15 @@ const requirements = [
             </GlassElement>
         ))}
     </div>
+
+    {
+        commentsConfig.enable && commentsConfig.use.toLowerCase() === "artalk" &&
+        <GlassElement as="div" class="group flex flex-col gap-1 rounded-[var(--radius-card)] text-sm text-ink transition-[translate,background-color,border-color,box-shadow,color] duration-300 ease-out hover:-translate-y-[3px]">
+            <div id="comment-wrapper" class="mt-[20px] p-5 card-base">
+                <ArtalkComment></ArtalkComment>
+            </div>
+        </GlassElement>
+    }
 </PageShell>
 
 <script>

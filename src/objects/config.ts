@@ -134,6 +134,17 @@ const backgroundSchema = z.object({
     blur : z.number().min(0).optional().default(0),
 });
 
+const commentsSchema = z.object({
+    enable: z.boolean(),
+    enableInDev: z.boolean(),
+    use: z.enum(["Artalk"]),
+    artalk: z.object({
+        server: z.string(),
+        serverDev: z.string(),
+        site: z.string(),
+    })
+});
+
 const configSchema = z.object({
     siteConfig: siteConfigSchema,
     background: backgroundSchema,
@@ -144,6 +155,7 @@ const configSchema = z.object({
     author: authorSchema,
     sidebar: sidebarSchema,
     repo: repoSchema.default({ fetch: true, timeout: 6000 }),
+    comments: commentsSchema,
 });
 
 type Config              = z.infer<typeof configSchema>
@@ -156,6 +168,7 @@ type CodeBlockConfig     = z.infer<typeof codeBlockSchema>
 type AuthorConfig        = z.infer<typeof authorSchema>
 type SidebarConfig       = z.infer<typeof sidebarSchema>
 type RepoConfig          = z.infer<typeof repoSchema>
+type CommentsConfig      = z.infer<typeof commentsSchema>
 
 // export const val
 export const config               : Config              = configSchema.parse(rawConfig);
@@ -168,4 +181,4 @@ export const themeConfig          : ThemeConfig         = config.theme;
 export const authorConfig         : AuthorConfig        = config.author;
 export const sidebarConfig        : SidebarConfig       = config.sidebar;
 export const repoConfig           : RepoConfig          = config.repo;
-
+export const commentsConfig       : CommentsConfig      = config.comments;
