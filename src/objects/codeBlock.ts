@@ -198,7 +198,7 @@ export function decorateCodeBlocks(html: string, options: CodeBlockOptions, lang
         //   · 行号 sticky 在左边, 关闭换行时 <pre> 横向滚动, 行号保持不动;
         //   · 行号从代码块最左边开始并带底色, 横向滚动时代码不会从行号左侧 / 后面透出来。
         const lineClasses = options.showLineNumber
-            ? ' flex [counter-increment:code-line] before:flex-none before:w-8 before:shrink-0 before:pr-3 before:text-right before:text-black/35 before:select-none before:content-[counter(code-line)] dark:before:text-white/35 before:sticky before:left-0 before:z-10 before:self-stretch before:bg-[var(--code-bg)] dark:before:bg-[var(--code-bg-dark)]'
+            ? ' flex [counter-increment:code-line] before:flex-none before:w-14 before:shrink-0 before:pr-3 before:text-right before:text-black/35 before:select-none before:content-[counter(code-line)] dark:before:text-white/35 before:sticky before:left-0 before:z-10 before:self-stretch before:bg-[var(--code-bg)] dark:before:bg-[var(--code-bg-dark)]'
             : "";
 
         // <code> 让宽度随内容撑开 (w-max), 这样 sticky 行号的包含块才有足够的横向空间;

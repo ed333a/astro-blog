@@ -80,6 +80,16 @@ const themeVars = [
         <link rel="alternate" type="application/rss+xml" title={`${siteConfig.title} RSS`} href="/rss.xml" />
         <meta name="generator" content={Astro.generator} />
         <link rel="stylesheet" href="/fonts.css" />
+        <!-- umami 统计跟踪代码 -->
+		{
+			import.meta.env.PROD &&
+			<script defer src="https://statistics.tyh123.top/script.js" data-website-id="cb9bb307-c9e3-4983-a3d9-7216220afea5"></script>
+		}
+
+		{
+			import.meta.env.DEV && console.log("Dev 模式预览页面中，将不会加载统计跟踪脚本。")
+		}
+		<!-- umami 统计跟踪代码结束 -->
     </head>
     <body class="min-h-full font-sans text-ink antialiased">
         <slot />
