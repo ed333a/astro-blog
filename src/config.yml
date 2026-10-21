@@ -182,7 +182,7 @@ comments:
   # artalk 评论系统配置
   artalk:
     # 填写完整的网页链接格式, 即以 http(s):// 开头的链接格式 
-    server: http://localhost:7890     # Artalk 后端地址
-    serverDev:  http://localhost:4002 # 在 Dev 环境的后端地址 (npm run dev)
+    server: https://artalk.tyh123.top/  # Artalk 后端地址
+    serverDev:  http://localhost:4002   # 在 Dev 环境的后端地址 (npm run dev)
     site: '硬件日记'  # 站点名称
     
