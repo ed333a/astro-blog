@@ -76,111 +76,131 @@ const linkTarget = (url: string) =>
     </GlassElement>
 </aside>
 
-<!-- 统计只在 astro:page-load 时刷新, 监听挂一次就够。
-     Swup 换页会重新执行这份内联脚本, 用一次性标记避免重复绑定 / 重复请求。 -->
-<script>
-    const CACHE_TTL = 60 * 60 * 1000; // 1 小时
-    const CACHE_KEY = "sidebar-stats-cache-v1"; // 带版本号，格式变化时改 v2 即可失效
+{
+    import.meta.env.PROD &&
+    <script>
+        import { statisticsConfig } from "@/objects/config"
+        
+        const CACHE_TTL = 60 * 60 * 1000; // 1 小时
+        const CACHE_KEY = "sidebar-stats-cache-v1"; // 带版本号，格式变化时改 v2 即可失效
 
-    const BLOG_STATS_API = "https://api.tyh123.top/blog_statistics.php";
-    const ARTALK_COMMENT_API =
-        "https://artalk.tyh123.top/api/v2/stats/site_comment";
+        const BLOG_STATS_API = statisticsConfig.umami;
+        const ARTALK_COMMENT_API = statisticsConfig.artalk;
 
-    const fmt = (n) =>
-        typeof n === "number" && Number.isFinite(n) ? n.toLocaleString("zh-CN") : "—";
+        const fmt = (n: string|number) =>
+            typeof n === "number" && Number.isFinite(n) ? n.toLocaleString("zh-CN") : "—";
 
-    function setStat(key, value) {
-        const el = document.querySelector(`[data-stat="${key}"]`);
-        if (el) el.textContent = fmt(value);
-    }
-
-    // ---------- 缓存读写 ----------
-    function readCache() {
-        try {
-            const raw = sessionStorage.getItem(CACHE_KEY);
-            if (!raw) return {};
-            const obj = JSON.parse(raw);
-            return obj && typeof obj === "object" ? obj : {};
-        } catch {
-            return {};
+        function setStat(key: string, value: string|number) {
+            const el = document.querySelector(`[data-stat="${key}"]`);
+            if (el) el.textContent = fmt(value);
         }
-    }
 
-    // 按字段各自打时间戳，避免一个接口失败拖累另一个的缓存
-    function writeCache(patch) {
-        try {
-            const now = Date.now();
-            const cache = readCache();
-            for (const [k, v] of Object.entries(patch)) {
-                cache[k] = { value: v, ts: now };
+        type UmamiStatistic = {
+            total_uv: number|string,
+            total_pv: number|string,
+            comments: number|string,
+        }
+
+        // ---------- 缓存读写 ----------
+        function readCache() {
+            try {
+                const raw = sessionStorage.getItem(CACHE_KEY);
+                if (!raw) return {};
+                const obj = JSON.parse(raw);
+                return obj && typeof obj === "object" ? obj : {};
+            } catch {
+                return {};
             }
-            sessionStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-        } catch {
-            /* 隐私模式等情况下静默失败 */
-        }
-    }
-
-    // 未过期则返回缓存值，否则返回 undefined
-    function getFresh(key) {
-        const entry = readCache()[key];
-        if (
-            entry &&
-            typeof entry.ts === "number" &&
-            Date.now() - entry.ts < CACHE_TTL
-        ) {
-            return entry.value;
-        }
-        return undefined;
-    }
-
-    // ---------- 主流程 ----------
-    function loadStats() {
-        const cachedPv = getFresh("total_pv");
-        const cachedUv = getFresh("total_uv");
-        const cachedComments = getFresh("comments");
-
-        // 命中缓存的立即上屏（不发请求）
-        if (cachedPv !== undefined) setStat("total_pv", cachedPv);
-        if (cachedUv !== undefined) setStat("total_uv", cachedUv);
-        if (cachedComments !== undefined) setStat("comments", cachedComments);
-
-        const needBlog = cachedPv === undefined || cachedUv === undefined;
-        const needComments = cachedComments === undefined;
-
-        if (needBlog) {
-            fetch(BLOG_STATS_API)
-                .then((r) => (r.ok ? r.json() : null))
-                .then((d) => {
-                    if (!d) return;
-                    setStat("total_pv", d.total_pv);
-                    setStat("total_uv", d.total_uv);
-                    writeCache({ total_pv: d.total_pv, total_uv: d.total_uv });
-                })
-                .catch(() => {});
         }
 
-        if (needComments) {
-            fetch(ARTALK_COMMENT_API)
-                .then((r) => (r.ok ? r.json() : null))
-                .then((d) => {
-                    if (!d || d.data == null) return;
-                    setStat("comments", d.data);
-                    writeCache({ comments: d.data });
-                })
-                .catch(() => {});
-        }
-    }
-
-    if (document.documentElement.dataset.sidebarStatsBound !== "1") {
-        document.documentElement.dataset.sidebarStatsBound = "1";
-
-        if (document.readyState === "complete") {
-            loadStats();
-        } else {
-            window.addEventListener("load", loadStats, { once: true });
+        // 按字段各自打时间戳，避免一个接口失败拖累另一个的缓存
+        function writeCache(patch: Partial<UmamiStatistic>) {
+            try {
+                const now = Date.now();
+                const cache = readCache();
+                for (const [k, v] of Object.entries(patch)) {
+                    cache[k] = { value: v, ts: now };
+                }
+                sessionStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+            } catch {
+                /* 隐私模式等情况下静默失败 */
+            }
         }
 
-        // 每次加载页面都要执行一次
-        document.addEventListener("astro:page-load", loadStats);
-    }
-</script>
+        // 未过期则返回缓存值，否则返回 undefined
+        function getFresh(key: string) {
+            const entry = readCache()[key];
+            if (
+                entry &&
+                typeof entry.ts === "number" &&
+                Date.now() - entry.ts < CACHE_TTL
+            ) {
+                return entry.value;
+            }
+            return undefined;
+        }
+
+        // ---------- 主流程 ----------
+        async function loadStats() {
+            const cachedPv = getFresh("total_pv");
+            const cachedUv = getFresh("total_uv");
+            const cachedComments = getFresh("comments");
+
+            if (cachedPv !== undefined) setStat("total_pv", cachedPv);
+            if (cachedUv !== undefined) setStat("total_uv", cachedUv);
+            if (cachedComments !== undefined) setStat("comments", cachedComments);
+
+            const needBlog = cachedPv === undefined || cachedUv === undefined;
+            const needComments = cachedComments === undefined;
+
+            // 只收集“确实拿到了”的字段
+            const patch: Partial<UmamiStatistic> = {};
+
+            if (needBlog) {
+                try {
+                    const r = await fetch(BLOG_STATS_API);
+                    if (r.ok) {
+                        const d: UmamiStatistic = await r.json();
+                        if (d) {
+                            setStat("total_pv", d.total_pv);
+                            setStat("total_uv", d.total_uv);
+                            patch.total_pv = d.total_pv;
+                            patch.total_uv = d.total_uv;
+                        }
+                    }
+                } catch { /* 忽略，不写缓存 */ }
+            }
+
+            if (needComments) {
+                try {
+                    const r = await fetch(ARTALK_COMMENT_API);
+                    if (r.ok) {
+                        const d = await r.json();
+                        if (d && d.data != null) {
+                            setStat("comments", d.data);
+                            patch.comments = d.data;   // 注意这里是 d.data，不是 d.comments
+                        }
+                    }
+                } catch { /* 忽略，不写缓存 */ }
+            }
+
+            if (Object.keys(patch).length > 0) {
+                writeCache(patch);   // 只写有效字段，未命中/失败的字段保持原缓存不动
+            }
+        }
+
+        if (document.documentElement.dataset.sidebarStatsBound !== "1") {
+            document.documentElement.dataset.sidebarStatsBound = "1";
+
+            if (document.readyState === "complete") {
+                loadStats();
+            } else {
+                window.addEventListener("load", loadStats, { once: true });
+            }
+
+            // 每次加载页面都要执行一次
+            document.addEventListener("astro:page-load", loadStats);
+        }
+    </script>
+}
+

@@ -205,7 +205,16 @@ const requirements = [
     </div>
 
     {
-        commentsConfig.enable && commentsConfig.use.toLowerCase() === "artalk" &&
+        import.meta.env.PROD && commentsConfig.enable && commentsConfig.use.toLowerCase() === "artalk" &&
+        <GlassElement as="div" class="group flex flex-col gap-1 rounded-[var(--radius-card)] text-sm text-ink transition-[translate,background-color,border-color,box-shadow,color] duration-300 ease-out hover:-translate-y-[3px]">
+            <div id="comment-wrapper" class="mt-[20px] p-5 card-base">
+                <ArtalkComment></ArtalkComment>
+            </div>
+        </GlassElement>
+    }
+
+    {
+        import.meta.env.DEV && commentsConfig.enableInDev && commentsConfig.use.toLowerCase() === "artalk" &&
         <GlassElement as="div" class="group flex flex-col gap-1 rounded-[var(--radius-card)] text-sm text-ink transition-[translate,background-color,border-color,box-shadow,color] duration-300 ease-out hover:-translate-y-[3px]">
             <div id="comment-wrapper" class="mt-[20px] p-5 card-base">
                 <ArtalkComment></ArtalkComment>

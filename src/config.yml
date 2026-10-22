@@ -170,6 +170,13 @@ theme:
   style: Dark
 
 #######################################
+# 统计 API
+#######################################
+statistics:
+  umami: https://api.tyh123.top/blog_statistics.php
+  artalk: https://artalk.tyh123.top/api/v2/stats/site_comment
+
+#######################################
 # 博客评论系统
 #######################################
 comments:

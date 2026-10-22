@@ -134,6 +134,11 @@ const backgroundSchema = z.object({
     blur : z.number().min(0).optional().default(0),
 });
 
+const statisticsSchema = z.object({
+    umami: z.string(),
+    artalk: z.string(),
+});
+
 const commentsSchema = z.object({
     enable: z.boolean(),
     enableInDev: z.boolean(),
@@ -155,6 +160,7 @@ const configSchema = z.object({
     author: authorSchema,
     sidebar: sidebarSchema,
     repo: repoSchema.default({ fetch: true, timeout: 6000 }),
+    statistics: statisticsSchema,
     comments: commentsSchema,
 });
 
@@ -168,6 +174,7 @@ type CodeBlockConfig     = z.infer<typeof codeBlockSchema>
 type AuthorConfig        = z.infer<typeof authorSchema>
 type SidebarConfig       = z.infer<typeof sidebarSchema>
 type RepoConfig          = z.infer<typeof repoSchema>
+type StatisticsConfig    = z.infer<typeof statisticsSchema>
 type CommentsConfig      = z.infer<typeof commentsSchema>
 
 // export const val
@@ -181,4 +188,5 @@ export const themeConfig          : ThemeConfig         = config.theme;
 export const authorConfig         : AuthorConfig        = config.author;
 export const sidebarConfig        : SidebarConfig       = config.sidebar;
 export const repoConfig           : RepoConfig          = config.repo;
+export const statisticsConfig     : StatisticsConfig    = config.statistics;
 export const commentsConfig       : CommentsConfig      = config.comments;
