@@ -2,6 +2,7 @@
 import GlassElement from "./glass/GlassElement.astro";
 import LicenseNotice from "./LicenseNotice.astro";
 import { siteConfig } from "../objects/config";
+import { absoluteSiteUrl } from "../objects/seo";
 
 interface Props {
     /** 当前页面的标题与路径: 有的话, 页脚里的版权信息会点名这一篇 */
@@ -11,19 +12,124 @@ interface Props {
 
 const { title, path } = Astro.props;
 const year = new Date().getFullYear();
+// 页脚展示的 sitemap 地址: 与 sitemap.xml.ts / robots.txt.ts 一样统一从 siteConfig.siteUrl 拼出来
+const sitemapUrl = absoluteSiteUrl("sitemap.xml");
+const linkClass = "font-semibold underline decoration-dotted underline-offset-4 transition-opacity hover:opacity-80";
 ---
 
 <!-- 窄屏页脚用 32px 圆角 (全宽面板用胶囊圆角会显得头重脚轻), 到 md 再回到 config.yml 的 --radius-footer。 -->
-<GlassElement as="footer" class="mt-auto flex flex-col items-center gap-3 rounded-[32px] px-8 py-6 text-sm text-ink sm:flex-row sm:items-start sm:justify-between sm:text-left md:rounded-[var(--radius-footer)]">
-    <div class="flex flex-col items-center gap-1.5 sm:items-start">
-        <p class="m-0 text-ink/85">© {year} {siteConfig.title} · {siteConfig.subtitle}</p>
-        <LicenseNotice title={title} path={path} compact />
+<GlassElement as="footer" class="mt-auto flex flex-col gap-4 rounded-[32px] px-8 py-6 text-sm text-ink md:rounded-[var(--radius-footer)]">
+    <div class="flex flex-col items-center gap-3 sm:flex-row sm:items-start sm:justify-between sm:text-left">
+        <div class="flex flex-col items-center gap-1.5 sm:items-start">
+            <p class="m-0 text-ink/85">© {year} {siteConfig.title} · {siteConfig.subtitle}</p>
+            <LicenseNotice title={title} path={path} compact />
+        </div>
+
+        <ul class="m-0 flex list-none flex-wrap justify-center gap-6 p-0 font-semibold">
+            <li><a href="/rss" class="transition-opacity hover:opacity-70">RSS</a></li>
+            <li><a href="/blog" class="transition-opacity hover:opacity-70">归档</a></li>
+            <li><a href="/about" class="transition-opacity hover:opacity-70">关于</a></li>
+            <li><a href="/sitemap.xml" target="_blank" rel="noopener" data-no-swup class={linkClass}>Sitemap</a></li>
+        </ul>
     </div>
 
-    <ul class="m-0 flex list-none flex-wrap justify-center gap-6 p-0 font-semibold">
-        <li><a href="/rss" class="transition-opacity hover:opacity-70">RSS</a></li>
-        <li><a href="/blog" class="transition-opacity hover:opacity-70">归档</a></li>
-        <li><a href="/about" class="transition-opacity hover:opacity-70">关于</a></li>
-    </ul>
+    <!-- 站点信息: 框架 / sitemap / 运行时间。
+         运行时间由下方的脚本每秒刷新一次 (页脚在 Swup 容器里会被整体替换, 所以脚本按 data 属性重新查找节点)。 -->
+    <div class="flex flex-col items-center gap-2 border-t border-ink/15 pt-4 text-center text-xs leading-relaxed text-ink/75 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-6 sm:gap-y-1 sm:text-left">
+        <p class="m-0">
+            博客框架:{' '}
+            <a href="https://github.com/withastro/astro" target="_blank" rel="noopener" title="Astro GitHub: https://github.com/withastro/astro" class={linkClass}>Astro</a>{' '}
+        </p>
+
+        <!-- <p class="m-0 max-w-full break-all">
+            <a href="/sitemap.xml" target="_blank" rel="noopener" data-no-swup class={linkClass}>Sitemap</a>
+        </p> -->
+
+        <p class="m-0">
+            博客已运行{' '}
+            <span
+                data-site-uptime
+                data-start={siteConfig.startDate}
+                class="font-mono font-semibold tabular-nums text-ink/85"
+            >计算中…</span>
+        </p>
+    </div>
 </GlassElement>
+
+
+<script>
+    // 页脚运行时间。
+    // 页脚位于 Swup 的 #swup-container 里, 每次换页都会被替换成新节点, 所以这里不直接引用
+    // 某个元素, 而是每秒重新查找 [data-site-uptime] 再刷新 —— 换页后最多 1 秒就会继续走字。
+    // 开始时间写在元素的 data-start 上 (来自 config.yml 的 siteConfig.startDate), 这里留一份兜底值。
+    //
+    // Swup 的 ScriptsPlugin 会在换页时重新执行被替换内容里的脚本, 所以用 window 上的标记做幂等:
+    // 无论这个脚本被跑几次, 定时器与事件监听都只会有一份。
+    const uptimeGlobal = window as unknown as { __siteUptimeStarted?: boolean };
+
+    if (!uptimeGlobal.__siteUptimeStarted) {
+        uptimeGlobal.__siteUptimeStarted = true;
+
+        const DEFAULT_START = "2026-04-13T12:00:00+08:00";
+        const pad = (value: number) => String(value).padStart(2, "0");
+
+        /** 在 date 上加若干个月; 月末会夹到目标月的最后一天 (1/31 + 1 月 → 2/28) */
+        const addMonths = (date: Date, amount: number): Date => {
+            const result = new Date(date.getTime());
+            const day = result.getDate();
+            result.setDate(1);
+            result.setMonth(result.getMonth() + amount);
+            const lastDay = new Date(result.getFullYear(), result.getMonth() + 1, 0).getDate();
+            result.setDate(Math.min(day, lastDay));
+            return result;
+        };
+
+        /**
+         * 把「建立时间 → 现在」拆成日历意义上的年 / 月 / 日 + 时 / 分 / 秒。
+         * 年、月按日历推进 (不拿 365/30 天硬除), 这样 4 月 13 日到 10 月 13 日正好是 6 个月;
+         * 时 / 分 / 秒取自「最后一个月纪念日」之后的剩余时长。
+         */
+        const formatUptime = (start: Date, now: Date): string => {
+            if (now.getTime() <= start.getTime()) return "0 年 0 月 0 日 00 时 00 分 00 秒";
+
+            let months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+            if (addMonths(start, months).getTime() > now.getTime()) months -= 1;
+            if (months < 0) months = 0;
+
+            const years      = Math.floor(months / 12);
+            const restMonths = months % 12;
+
+            let remainder = now.getTime() - addMonths(start, months).getTime();
+            const days = Math.floor(remainder / 86_400_000);
+            remainder -= days * 86_400_000;
+
+            const hours = Math.floor(remainder / 3_600_000);
+            remainder -= hours * 3_600_000;
+            const minutes = Math.floor(remainder / 60_000);
+            remainder -= minutes * 60_000;
+            const seconds = Math.floor(remainder / 1_000);
+
+            return `${years} 年 ${restMonths} 月 ${days} 日 ${pad(hours)} 小时 ${pad(minutes)} 分 ${pad(seconds)} 秒`;
+        };
+
+        const updateUptime = () => {
+            const now = new Date();
+
+            document.querySelectorAll<HTMLElement>("[data-site-uptime]").forEach((element) => {
+                const configured = element.dataset.start || DEFAULT_START;
+                const start = new Date(configured);
+                element.textContent = formatUptime(
+                    Number.isNaN(start.getTime()) ? new Date(DEFAULT_START) : start,
+                    now,
+                );
+            });
+        };
+
+        updateUptime();
+        setInterval(updateUptime, 1_000);
+
+        // Swup 换页后页脚是新节点: 立刻刷新一次, 不用等到下一秒
+        document.addEventListener("swup:page:view", updateUptime);
+    }
+</script>
 

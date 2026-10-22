@@ -24,9 +24,9 @@ const licenseLinkClasses = "font-semibold underline decoration-dotted underline-
      文章底部用完整版 (标题 + 许可 + 原文链接), 页脚用紧凑版 (一行文字)。 -->
 {license.enable && (compact ? (
     <p class="m-0 text-xs leading-relaxed text-ink/70">
-        {title ? `《${title}》` : "本站内容"}采用
-        <a href={license.url} class={licenseLinkClasses}> {license.name} </a>
-        许可协议, 转载请注明出处。
+        {title ? `《${title}》` : "本站内容"}采用{' '}
+        <a href={license.url} class={licenseLinkClasses}>{license.name}</a>
+        {' '}许可协议, 转载请注明出处。
     </p>
 ) : (
     <aside class="flex flex-col gap-2 rounded-2xl border border-ink/15 bg-black/10 p-4 text-xs leading-relaxed text-ink/85 dark:bg-white/5">

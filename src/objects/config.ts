@@ -50,6 +50,10 @@ const siteConfigSchema = z.object({
     subtitle   : z.string(),
     description: z.string(),
 
+    // 博客建立时间 (ISO 8601, 带时区): 页脚「运行时间」的起点。
+    // 给默认值是为了兼容还没有这一项的旧配置。
+    startDate  : z.string().min(1).default("2026-04-13T12:00:00+08:00"),
+
     // 文章链接格式, 可用的变量见 config.yml 里的注释 (解析逻辑在 objects/posts.ts)
     postPermalink: z.string().min(1),
 
