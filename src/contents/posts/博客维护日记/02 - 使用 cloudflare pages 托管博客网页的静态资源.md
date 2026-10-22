@@ -2,7 +2,6 @@
 title: "[blog-MT-02] - 使用 cloudflare pages 托管博客网页的静态资源"
 published: 2026-05-20 09:43:19
 tags:
-  - hexo
   - 经验分享
   - web
 category: 博客维护日记

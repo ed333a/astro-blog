@@ -17,6 +17,7 @@
     "@swup/astro": "^1.8.0",
     "artalk": "^2.9.1",
     "astro": "^7.3.5",
+    "pinyin-pro": "^3.29.5",
     "swup": "^4.10.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",

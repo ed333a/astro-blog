@@ -23,6 +23,9 @@ importers:
       astro:
         specifier: ^7.3.5
         version: 7.3.5(@types/node@26.6.5)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)
+      pinyin-pro:
+        specifier: ^3.29.5
+        version: 3.29.5
       swup:
         specifier: ^4.10.0
         version: 4.10.0
@@ -3188,6 +3191,9 @@ packages:
   pify@5.0.0:
     resolution: {integrity: sha512-eW/gHNMlxdSP6dmG6uJip6FXN0EQBwm2clYYd8Wul42Cwu/DK8HEftzsapcNdYe2MfLiIwZqsDk2RDEsTE79hA==}
     engines: {node: '>=10'}
+
+  pinyin-pro@3.29.5:
+    resolution: {integrity: sha512-Fk5YoRmtdHqJWqAuzYVG/NzvzeCbaG+ZEwbY6Nbps3QAIrvQQEtcm49frcyCM8i2b5najnzPDtYqrHRYTTiuwQ==}
 
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
@@ -7465,6 +7471,8 @@ snapshots:
   picomatch@4.0.7: {}
 
   pify@5.0.0: {}
+
+  pinyin-pro@3.29.5: {}
 
   pkg-dir@4.2.0:
     dependencies:

@@ -11,6 +11,9 @@
  * 之后缓存在内存里, 输入时纯本地过滤。页面切换由 Swup 接管, 导航栏在 #swup-container 之外,
  * 所以这里的脚本只会执行一次, 事件挂在 document 上即可。
  * 窄屏展开状态写在 <html data-search="open"> 上 (显示规则见 styles/global.css)。
+ *
+ * 支持中文 / 拼音 / 首字母: 拼音音节串由构建期写进索引 (objects/pinyinSearch.ts),
+ * 这里算成「全拼连写 / 首字母」两种形态后匹配, 打分规则见 objects/searchQuery.ts。
  */
 ---
 
@@ -44,7 +47,7 @@
             <input
                 data-search-input
                 type="search"
-                placeholder="搜索文章…"
+                placeholder="搜索文章 / 拼音…"
                 autocomplete="off"
                 spellcheck="false"
                 aria-label="搜索文章"
@@ -71,15 +74,12 @@
      Swup 换页会重新执行这份内联脚本, 重复绑定会让点一下「开 → 关」互相抵消,
      所以下面用 [data-search] 上的标记挡住第二次初始化。 -->
 <script>
-    interface SearchItem {
-        title   : string;
-        excerpt : string;
-        category: string;
-        tags    : string[];
-        dateText: string;
-        path    : string;
-        content : string;
-    }
+    import {
+        buildSearchEntries,
+        findMatches,
+        type SearchEntry,
+        type SearchItem,
+    } from "@/objects/searchQuery";
 
     const INDEX_URL   = "/search.json";
     const MAX_RESULTS = 8;
@@ -91,9 +91,9 @@
     if (box && input && results && box.dataset.searchBound !== "1") {
         box.dataset.searchBound = "1";
 
-        /** 构建期生成的索引; null = 还没请求过 */
-        let index: SearchItem[] | null = null;
-        let loading: Promise<SearchItem[]> | null = null;
+        /** 构建期生成的索引 (拼音形态已算好); null = 还没请求过 */
+        let entries: SearchEntry[] | null = null;
+        let loading: Promise<SearchEntry[]> | null = null;
         /** 索引请求是否失败过 (用来区分「空结果」和「没加载到」) */
         let failed = false;
         /** 当前结果里被键盘选中的那一项 */
@@ -138,7 +138,7 @@
         const normalize = (value: string) => value.toLocaleLowerCase("zh-CN");
 
         /** 第一次用到时才拉索引 (并缓存 promise, 输入很快时不会重复请求) */
-        const loadIndex = (): Promise<SearchItem[]> => {
+        const loadIndex = (): Promise<SearchEntry[]> => {
             loading ??= fetch(INDEX_URL)
                 .then((response) => {
                     if (!response.ok) {
@@ -152,51 +152,18 @@
                     return [] as SearchItem[];
                 })
                 .then((items) => {
-                    index = Array.isArray(items) ? items : [];
-                    return index;
+                    // 音节串 → 全拼连写 / 首字母 只在这里算一次, 之后的每次输入直接复用
+                    entries = buildSearchEntries(Array.isArray(items) ? items : []);
+                    return entries;
                 });
             return loading;
         };
 
-        /** 每个词都要命中 (空格分隔), 按命中位置加权: 标题 > 标签 > 分类 > 摘要 > 正文 */
-        const scoreItem = (item: SearchItem, terms: string[]): number => {
-            const title    = normalize(item.title);
-            const tags     = normalize(item.tags.join(" "));
-            const category = normalize(item.category);
-            const excerpt  = normalize(item.excerpt);
-            const content  = normalize(item.content);
-
-            let total = 0;
-            for (const term of terms) {
-                let score = 0;
-                if (title.includes(term)) score += title.startsWith(term) ? 120 : 100;
-                if (tags.includes(term)) score += 40;
-                if (category.includes(term)) score += 30;
-                if (excerpt.includes(term)) score += 15;
-                if (content.includes(term)) score += 5;
-
-                // 有一个词完全没命中就不算结果
-                if (score === 0) return 0;
-                total += score;
-            }
-            return total;
-        };
-
-        const findMatches = (query: string): SearchItem[] => {
-            if (!index) return [];
-            const terms = normalize(query).split(/\s+/).filter(Boolean);
-            if (terms.length === 0) return [];
-
-            return index
-                .map((item) => ({ item, score: scoreItem(item, terms) }))
-                .filter(({ score }) => score > 0)
-                // 分数高的在前; 同分按日期倒序 (新文章优先)
-                .sort((a, b) => b.score - a.score || b.item.dateText.localeCompare(a.item.dateText))
-                .slice(0, MAX_RESULTS)
-                .map(({ item }) => item);
-        };
-
-
+        /**
+         * 搜索 (原文 + 拼音, 打分规则见 objects/searchQuery.ts)。
+         * 索引还没到 / 还没加载成功时返回空数组, 由 renderResults 负责显示对应状态。
+         */
+        const search = (query: string): SearchItem[] => entries ? findMatches(entries, query, MAX_RESULTS) : [];
 
         /** 把 text 写进 parent, 命中的关键词用 <mark> 标出来 (纯 DOM 操作, 不拼 HTML) */
         const appendHighlighted = (parent: HTMLElement, text: string, terms: string[]) => {
@@ -258,7 +225,7 @@
             input.setAttribute("aria-expanded", "true");
             positionResults();
 
-            if (!index) {
+            if (!entries) {
                 showStatus("正在搜索…");
                 return;
             }
@@ -269,7 +236,7 @@
             }
 
             const terms   = normalize(keyword).split(/\s+/).filter(Boolean);
-            const matches = findMatches(keyword);
+            const matches = search(keyword);
 
             if (matches.length === 0) {
                 showStatus(`没有找到与「${keyword}」相关的文章。`);
@@ -381,7 +348,7 @@
             renderResults(input.value);
 
             // 索引还没到: 先显示「正在搜索…」, 到货后用当前输入重新渲染
-            if (input.value.trim() && !index) {
+            if (input.value.trim() && !entries) {
                 void loadIndex().then(() => {
                     if (input.value.trim()) renderResults(input.value);
                 });
