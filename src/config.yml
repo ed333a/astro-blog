@@ -34,7 +34,7 @@ siteConfig:
   # :title_pinyin ->  文章标题 (中文汉字转换为拼音)
   # :file_name    ->  文档的文件名称
   #==============================================
-  postPermalink: 'p/:postID'
+  postPermalink: 'posts/:postID'
   # 每页展示的文章数量
   postsPerPage: 6
   # 文章 ID 哈希的长度
