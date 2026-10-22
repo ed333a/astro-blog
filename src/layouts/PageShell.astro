@@ -13,8 +13,9 @@ import CodeBlockTools from "../components/CodeBlockTools.astro";
 import Sidebar from "../components/Sidebar.astro";
 import BackToTop from "../components/BackToTop.astro";
 import BodyBackground from "../components/BodyBackground.astro";
+import type { SeoOptions } from "../objects/seo";
 
-interface Props {
+interface Props extends SeoOptions {
     /** 浏览器标题 (Layout 会拼上站点名) */
     title?: string;
     description?: string;
@@ -23,10 +24,10 @@ interface Props {
     licensePath?: string;
 }
 
-const { title, description, licenseTitle, licensePath } = Astro.props;
+const { title, description, licenseTitle, licensePath, ...seo } = Astro.props;
 ---
 
-<Layout title={title} description={description}>
+<Layout title={title} description={description} {...seo}>
     <div class="relative flex min-h-screen flex-col gap-6 px-[var(--page-gutter)] pt-24 pb-6">
         <BodyBackground />
         <NavBar />

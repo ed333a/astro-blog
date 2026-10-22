@@ -1,10 +1,13 @@
 ---
 title: ETH-04 ARP 通信协议简介及实现代码
+description: ARP 协议用于根据 IP 地址查找对应的 MAC 地址。本文介绍 ARP 请求与应答流程、报文格式, 并给出 FPGA 上 Verilog 实现 ARP 通信的代码。
 published: 2026-04-16 11:25:17
 tags:
   - FPGA
   - Verilog
   - 嵌入式
+  - 通信接口
+  - 以太网
   - 经验分享
 category: FPGA
 postID: 424a6d95 # 自动生成, 不要修改这个项目的值

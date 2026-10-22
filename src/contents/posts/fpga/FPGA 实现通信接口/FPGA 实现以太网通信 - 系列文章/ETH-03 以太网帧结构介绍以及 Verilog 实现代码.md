@@ -1,10 +1,13 @@
 ---
 title: ETH-03 以太网帧结构介绍以及 Verilog 实现代码
+description: 介绍以太网帧的完整结构, 包括前导码、SFD、目的与源 MAC 地址、长度与类型、数据段、FCS 和帧间隙, 并附上 Verilog 收发实现代码。
 published: 2026-04-15 10:47:26
 tags:
   - FPGA
   - Verilog
   - 嵌入式
+  - 通信接口
+  - 以太网
   - 经验分享
 category: FPGA
 postID: 6ec21651 # 自动生成, 不要修改这个项目的值

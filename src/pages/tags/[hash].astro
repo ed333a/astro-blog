@@ -1,6 +1,7 @@
 ---
 import PageShell from "../../layouts/PageShell.astro";
 import ArticleCard from "../../components/ArticleCard.astro";
+import { siteConfig } from "../../objects/config";
 import { getSortedPosts } from "../../objects/collections";
 import { tagHash } from "../../objects/tags";
 
@@ -20,9 +21,23 @@ export async function getStaticPaths() {
 }
 
 const { tag, tagPosts } = Astro.props;
+
+// 标签 + 这些文章的分类, 一起作为页面关键词
+const keywordList = [
+    tag,
+    "文章标签",
+    ...tagPosts
+        .map((post) => post.data.category)
+        .filter((category): category is string => Boolean(category)),
+];
 ---
 
-<PageShell title={`标签: ${tag}`} description={`标签「${tag}」下的全部文章。`}>
+<PageShell
+    title={`标签: ${tag}`}
+    description={`${siteConfig.title} 中标签「${tag}」下的全部文章, 共 ${tagPosts.length} 篇。包含相关主题的技术笔记与经验分享。`}
+    path={`/tags/${tagHash(tag)}`}
+    keywords={keywordList}
+>
     <header slot="header" class="flex flex-col gap-2 pt-4">
         <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">Tag</p>
         <h1 class="m-0 text-3xl font-extrabold sm:text-4xl">#{tag}</h1>

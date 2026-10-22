@@ -1,6 +1,6 @@
 ---
 title: 关于我
-description: 
+description: 一个专注于单片机、FPGA 与 PCB 设计的嵌入式开发者, 这里有我的建站信息与联系方式。
 type: about # 文档类型: post(文章) / about(关于我) —— 这个值决定内容渲染在哪个页面模板上
 ---
 

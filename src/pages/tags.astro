@@ -1,6 +1,7 @@
 ---
 import PageShell from "../layouts/PageShell.astro";
 import GlassElement from "../components/glass/GlassElement.astro";
+import { siteConfig } from "../objects/config";
 import { getSortedPosts } from "../objects/collections";
 import { tagHash } from "../objects/tags";
 
@@ -24,9 +25,17 @@ const sizeClass = (count: number) => {
     if (ratio >= 0.3) return "text-base sm:text-lg";
     return "text-sm sm:text-base";
 };
+
+// 标签云本身就是一页关键词, 取出现次数最多的前 10 个作为 keywords
+const keywordList = tags.slice(0, 10).map(([tag]) => tag);
 ---
 
-<PageShell title="标签" description="所有文章标签的标签云。">
+<PageShell
+    title="标签"
+    description={`${siteConfig.title} 的全部文章标签, 共 ${tags.length} 个。按标签浏览 FPGA、STM32、嵌入式开发与博客维护等主题的文章。`}
+    path="/tags"
+    keywords={keywordList}
+>
     <header class="flex flex-col gap-2 pt-4">
         <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase text-shadow-contrast">Tags</p>
         <h1 class="m-0 text-3xl font-extrabold sm:text-4xl text-shadow-contrast">标签云</h1>

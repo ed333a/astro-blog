@@ -21,7 +21,12 @@ const readers = [
 ];
 ---
 
-<PageShell title="RSS 订阅" description={`订阅 ${siteConfig.title} 的文章更新。`}>
+<PageShell
+    title="RSS 订阅"
+    description={`订阅 ${siteConfig.title} 的文章更新, 通过 RSS 阅读器自动获取嵌入式开发、FPGA 与博客维护等最新内容。`}
+    path="/rss"
+    keywords={["RSS", "订阅", "RSS 阅读器", siteConfig.title]}
+>
     <header slot="header" class="flex flex-col gap-2 pt-4">
         <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase text-shadow-contrast">RSS</p>
         <h1 class="m-0 text-3xl font-extrabold sm:text-4xl text-shadow-contrast">RSS 订阅</h1>

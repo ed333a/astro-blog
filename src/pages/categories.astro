@@ -1,6 +1,7 @@
 ---
 import PageShell from "../layouts/PageShell.astro";
 import GlassElement from "../components/glass/GlassElement.astro";
+import { siteConfig } from "../objects/config";
 import { getSortedPosts } from "../objects/collections";
 
 // 按分类聚合文章: 分类里没写 category 的统一归到「未分类」。
@@ -14,9 +15,16 @@ for (const post of posts) {
     categoryMap.set(category, list);
 }
 const categories = [...categoryMap.entries()].sort((a, b) => a[0].localeCompare(b[0], "zh-CN"));
+// 分类名本身就是一组关键词
+const keywordList = categories.slice(0, 10).map(([category]) => category);
 ---
 
-<PageShell title="分类" description="按分类浏览所有文章。">
+<PageShell
+    title="分类"
+    description={`${siteConfig.title} 的文章分类, 共 ${categories.length} 个分类 / ${posts.length} 篇文章。按 FPGA、STM32、博客维护等分类浏览全部内容。`}
+    path="/categories"
+    keywords={keywordList}
+>
     <header slot="header" class="flex flex-col gap-2 pt-4">
         <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase text-shadow-contrast">Categories</p>
         <h1 class="m-0 text-3xl font-extrabold sm:text-4xl text-shadow-contrast">分类</h1>

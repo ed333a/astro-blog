@@ -1,8 +1,12 @@
 ---
 title: "[blog-MT-04] - 用 Umami 为博客搭建数据统计服务"
+description: 记录用 Docker 部署 Umami 数据统计服务的过程, 包括修改 docker-compose 配置、初始化数据库、进入后台并接入博客统计脚本。
 published: 2026-05-29 14:42:31
 tags:
   - umami
+  - 数据统计
+  - Docker
+  - 建站
   - 经验分享
   - web
 category: 博客维护日记

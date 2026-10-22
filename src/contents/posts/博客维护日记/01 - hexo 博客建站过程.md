@@ -1,8 +1,11 @@
 ---
 title: "[blog-MT-01] - 使用 Astro/Hexo 框架的博客建站过程"
+description: 记录从配置 Node.js 环境到安装 Hexo、初始化项目并生成静态页面的建站过程, 同时说明与 Astro 建站的差异和注意事项。
 published: 2026-05-19 22:33:31
 tags:
   - hexo
+  - Astro
+  - 建站
   - 经验分享
   - web
 category: 博客维护日记

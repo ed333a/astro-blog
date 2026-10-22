@@ -1,10 +1,12 @@
 ---
 title: FPGA 串口通信
+description: 从 UART 的异步通信原理出发, 介绍 TXD/RXD 交叉接线、起始位与停止位、奇偶校验和波特率, 并给出 FPGA 串口发送与接收模块的 Verilog 实现。
 published: 2026-04-17 14:08:17
 tags:
   - FPGA
   - Verilog
   - 嵌入式
+  - 通信接口
   - 经验分享
 category: FPGA
 postID: 96d23a91 # 自动生成, 不要修改这个项目的值

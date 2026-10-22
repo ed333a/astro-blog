@@ -5,7 +5,8 @@ draft: false
 description: 'TTF 格式的字体文件通常有十几 MB, 直接用在网站上会严重拖慢加载速度。本文记录了一套完整的字体优化流程: 从原始 TTF 字体出发, 通过子集化 (subsetting) 与 woff2 压缩, 最终输出体积仅为几百 KB 的网页字体。'
 postID: '7a651a2' # 自动生成, 不要修改这个项目的值
 tags:
-  - umami
+  - 字体优化
+  - woff2
   - 经验分享
   - web
 category: 博客维护日记

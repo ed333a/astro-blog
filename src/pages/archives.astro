@@ -1,6 +1,7 @@
 ---
 import PageShell from "../layouts/PageShell.astro";
 import GlassElement from "../components/glass/GlassElement.astro";
+import { siteConfig } from "../objects/config";
 import { getSortedPosts } from "../objects/collections";
 
 // 文章按时间倒序, 再按年份分组 (dateText 是 YYYY-MM-DD; 没写日期的归入「未标注」)。
@@ -16,7 +17,12 @@ for (const post of posts) {
 const years = [...yearMap.entries()];
 ---
 
-<PageShell title="归档" description="按时间线浏览所有文章。">
+<PageShell
+    title="归档"
+    description={`${siteConfig.title} 的文章归档, 共 ${posts.length} 篇文章。按年份和发布时间线浏览嵌入式开发、FPGA 与博客维护等全部内容。`}
+    path="/archives"
+    keywords={["文章归档", "技术博客", ...years.map(([year]) => (year === "未标注" ? "未标注日期" : `${year} 年`))]}
+>
     <header class="flex flex-col gap-2 pt-4">
         <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase text-shadow-contrast">Archives</p>
         <h1 class="m-0 text-3xl font-extrabold sm:text-4xl text-shadow-contrast">归档</h1>

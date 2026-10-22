@@ -1,10 +1,13 @@
 ---
 title: ETH-01 初识以太网的硬件组成
+description: 从 MAC 与 PHY 的分工讲起, 梳理以太网通信的硬件组成, 并对比 GMII 与 RGMII 接口的引脚数量、时钟频率和适用场景。
 published: 2026-04-13 15:14:06
 tags:
   - FPGA
   - Verilog
   - 嵌入式
+  - 通信接口
+  - 以太网
   - 经验分享
 category: FPGA
 postID: 4a0bb95d # 自动生成, 不要修改这个项目的值

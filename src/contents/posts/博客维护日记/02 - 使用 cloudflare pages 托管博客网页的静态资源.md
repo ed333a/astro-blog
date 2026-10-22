@@ -1,7 +1,10 @@
 ---
 title: "[blog-MT-02] - 使用 cloudflare pages 托管博客网页的静态资源"
+description: 介绍如何用 Cloudflare Pages 托管博客静态资源, 从导入 Git 仓库、配置构建设置到自动部署与访问域名绑定的完整步骤。
 published: 2026-05-20 09:43:19
 tags:
+  - Cloudflare Pages
+  - 建站
   - 经验分享
   - web
 category: 博客维护日记

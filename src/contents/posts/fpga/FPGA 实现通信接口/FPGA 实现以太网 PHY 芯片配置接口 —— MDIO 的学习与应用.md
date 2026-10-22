@@ -1,10 +1,13 @@
 ---
 title: FPGA 实现以太网 PHY 芯片配置接口 —— MDIO 的学习与应用
+description: MDIO 是以太网 PHY 芯片的寄存器配置接口。本文介绍 MDC/MDIO 接线、读写帧格式与时序细节, 并给出 FPGA 中配置 PHY 芯片的 Verilog 实现。
 published: 2026-04-18 15:18:25
 tags:
   - FPGA
   - Verilog
   - 嵌入式
+  - 通信接口
+  - 以太网
   - 经验分享
 category: FPGA
 postID: 3723985a # 自动生成, 不要修改这个项目的值

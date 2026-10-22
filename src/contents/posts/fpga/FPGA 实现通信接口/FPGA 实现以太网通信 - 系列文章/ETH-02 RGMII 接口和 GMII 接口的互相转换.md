@@ -1,10 +1,13 @@
 ---
 title: ETH-02 RGMII 接口和 GMII 接口的互相转换
+description: RGMII 采用双边沿传输数据, FPGA 只采上升沿会丢数据。本文说明如何用 Xilinx IDDR 与 ODDR 原语完成 RGMII 与 GMII 之间的互相转换。
 published: 2026-04-14 14:26:09
 tags:
   - FPGA
   - Verilog
   - 嵌入式
+  - 通信接口
+  - 以太网
   - 经验分享
 category: FPGA
 postID: db8d0357 # 自动生成, 不要修改这个项目的值
