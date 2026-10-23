@@ -155,9 +155,9 @@ function prepareDocument(document: RawDocument, options: MarkdownLoaderOptions):
     const declaredType = asString(document.data.type);
     const type: DocumentType = declaredType === "post" || declaredType === "about" ? declaredType : options.defaultType;
 
-    // 没有 postID 就按 title + description 算一个 (长度见 config.yml 的 siteConfig.postIDLehgth)
+    // 没有 postID 就按 title + description 算一个 (长度见 config.yml 的 siteConfig.hashLength)
     const postID = asString(document.data.postID)
-        ?? generatePostID(title, description, siteConfig.postIDLehgth);
+        ?? generatePostID(title, description, siteConfig.hashLength);
 
     const parsedDate = parsePostDate(asString(document.data.published));
 
@@ -261,7 +261,7 @@ async function sync(context: LoaderContext, options: MarkdownLoaderOptions): Pro
     const rootDirectory = fileURLToPath(rootUrl);
 
     // 内容层缓存的是「渲染结果 + 补全后的 data (postID / path 等)」, 而两者不只取决于 Markdown 正文,
-    // 还取决于 codeBlock 配置、postPermalink/postIDLehgth 等 siteConfig, 以及下面这些纯函数的实现:
+    // 还取决于 codeBlock 配置、postPermalink/hashLength 等 siteConfig, 以及下面这些纯函数的实现:
     //   · codeBlock.ts / markdownSegments.ts / postReference.ts  → 代码块外壳与正文里的引用替换
     //   · posts.ts / pinyin.ts                                   → 永久链接、postID 与拼音链接
     // Astro 内容层用 digest 判断条目是否变化: digest 不变时 store.set() 会直接返回 false,

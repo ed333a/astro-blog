@@ -41,8 +41,8 @@ siteConfig:
   postPermalink: 'posts/:postID'
   # 每页展示的文章数量
   postsPerPage: 6
-  # 文章 ID 哈希的长度
-  postIDLehgth: 12
+  # 哈希值结果取前多少位数据
+  hashLength: 12
   # 站点地址, 在文章底部的版权内容中用到
   siteUrl: https://blog.tyh123.top
   # 版权信息
@@ -50,6 +50,20 @@ siteConfig:
     enable: true
     name: CC-BY-NC-SA 4.0
     url: https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+  # umami 统计跟踪, 用于查看各项网页浏览数据
+  umami:
+    # 启用统计跟踪
+    enable: true
+    # 统计脚本地址
+    scriptSrc: 'https://statistics.tyh123.top/script.js'
+    # 网站 id
+    websiteID: 'cb9bb307-c9e3-4983-a3d9-7216220afea5'
+
+    # 是否在 Dev 环境下启用统计跟踪 (不建议和生产环境下的 websiteID 一致)
+    enableInDev: false
+    # Dev 环境下的网站 id, 不建议和生产环境下的 websiteID 一致
+    websiteID_Dev: ''
 
 #######################################
 # 作者信息
@@ -59,6 +73,7 @@ author:
   name: tyh123
   # 头像图片路径: 以 '/' 开头表示 public 目录下的资源; 留空则用名字首字母占位
   avatar: 'assets/img/avatars/avatar.jpg'
+  favIcon: 'assets/favicon.jpg'
   # 一句话介绍
   bio: 一个喜欢嵌入式的工作者
   # 社交媒体链接 (侧边栏展示)
@@ -69,12 +84,40 @@ author:
       url: /rss
 
 #######################################
-# 侧边栏统计 (评论 / 访问量等来自 API, 接入前先用静态占位)
+# 顶部导航栏链接
 #######################################
-sidebar:
-  comments: 12        # 评论数量
-  totalVisits: 34567  # 总访问量
-  visitors: 2345      # 访客数量
+# src   : 链接地址; 带协议 (http: / https: / mailto: …) 或以 // 开头时按外部链接处理, 新标签页打开
+# title : 显示文字 (图标在文字左侧)
+# icon  : 图标 id, 用 Iconify 的写法; 本站装的图标库是 Font Awesome 7, 即 fa7-solid:xxx
+#         图标名可以在 https://icon-sets.iconify.design/fa7-solid/ 查到
+#         不写 icon 时: 外部链接默认用 fa7-solid:arrow-up-right-from-square, 站内链接不显示图标
+# 移动端抽屉 (components/NavSidebar.astro) 也用这份配置, 两边不会走样。
+navBar:
+  links:
+    - src: /
+      title: 主页
+      icon: fa7-solid:house
+    - src: /blog
+      title: 文章
+      icon: fa7-solid:file-lines
+    - src: /tags
+      title: 标签
+      icon: fa7-solid:tags
+    - src: /categories
+      title: 分类
+      icon: fa7-solid:folder-tree
+    - src: /archives
+      title: 归档
+      icon: fa7-solid:box-archive
+    - src: /friends
+      title: 友链
+      icon: fa7-solid:link
+    - src: /about
+      title: 关于我
+      icon: fa7-solid:circle-user
+    - src: https://statistics.tyh123.top/share/FImjZEcRBfGrjPTH
+      title: 统计信息
+      icon: fa7-solid:arrow-up-right-from-square
 
 #######################################
 # 代码块渲染设置 (prismjs)

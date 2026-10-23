@@ -6,11 +6,9 @@
  */
 
 import { createHash } from "node:crypto";
-
-/** 标签在 URL 里的哈希长度 (十六进制字符数) */
-const TAG_HASH_LENGTH = 12;
+import { siteConfig } from "./config";
 
 /** 标签 → 稳定的短哈希 (URL 片段) */
-export function tagHash(tag: string, length = TAG_HASH_LENGTH): string {
+export function tagHash(tag: string, length = siteConfig.hashLength): string {
     return createHash("sha256").update(tag).digest("hex").slice(0, length);
 }

@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import { authorConfig, cardSpotlightConfig, frostedGlassConfig, siteConfig, themeConfig } from '../objects/config';
 import { absoluteSiteUrl, metaDescription, normalizeSitePath, siteOrigin, type SeoOptions } from '../objects/seo';
+import { getAsset } from '@/objects/getAssetUrl';
 
 interface Props extends SeoOptions {
     /** 页面标题: 不传就用「站点标题 · 副标题」 */
@@ -194,21 +195,22 @@ const themeVars = [
             })();
         </script>
 
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <link rel="icon" href="/favicon.ico" />
+        <!-- <link rel="icon" type="image/svg+xml" href="/favicon.svg" /> -->
+        <link rel="icon" href={getAsset(authorConfig.favIcon)} />
         <link rel="alternate" type="application/rss+xml" title={`${siteConfig.title} RSS`} href="/rss.xml" />
         <meta name="generator" content={Astro.generator} />
         <link rel="stylesheet" href="/fonts.css" />
         <!-- umami 统计跟踪代码 -->
 		{
-			import.meta.env.PROD &&
-			<script defer src="https://statistics.tyh123.top/script.js" data-website-id="cb9bb307-c9e3-4983-a3d9-7216220afea5"></script>
-		}
+            import.meta.env.PROD && siteConfig.umami.enable && 
+            <script defer src={siteConfig.umami.scriptSrc} data-website-id={siteConfig.umami.websiteID}></script>
+        }
 
-		{
-			import.meta.env.DEV && console.log("Dev 模式预览页面中，将不会加载统计跟踪脚本。")
-		}
-		<!-- umami 统计跟踪代码结束 -->
+        {
+            import.meta.env.DEV && siteConfig.umami.enableInDev &&
+            <script defer src={siteConfig.umami.scriptSrc} data-website-id={siteConfig.umami.websiteID_Dev}></script>
+        }
+        <!-- umami 统计跟踪代码结束 -->
     </head>
     <body class="min-h-full font-sans text-ink antialiased">
         <slot />

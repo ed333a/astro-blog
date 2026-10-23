@@ -1,6 +1,7 @@
 ---
 import GlassElement from "./glass/GlassElement.astro";
 import ThemeToggleButton from "./ThemeToggleButton.astro";
+import { Icon } from "astro-icon/components";
 import { navLinks } from "../objects/navLinks";
 ---
 
@@ -43,9 +44,12 @@ import { navLinks } from "../objects/navLinks";
                 <li>
                     <a
                         href={link.href}
-                        class="block rounded-2xl px-4 py-3 text-base font-semibold transition-colors duration-300 ease-out hover:bg-black/20 dark:hover:bg-white/15"
+                        {...(link.external ? { target: "_blank", rel: "noopener" } : {})}
+                        class="flex items-center gap-2.5 rounded-2xl px-4 py-3 text-base font-semibold transition-colors duration-300 ease-out hover:bg-black/20 dark:hover:bg-white/15"
                     >
-                        {link.label}
+                        {link.icon && <Icon name={link.icon} class="h-4 w-4 shrink-0" aria-hidden="true" />}
+                        <span>{link.label}</span>
+                        {link.external && <span class="sr-only">(在新标签页打开)</span>}
                     </a>
                 </li>
             ))}

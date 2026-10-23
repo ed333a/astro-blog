@@ -3,6 +3,7 @@ import GlassElement from "./glass/GlassElement.astro";
 import NavSidebar from "./NavSidebar.astro";
 import SearchBox from "./SearchBox.astro";
 import ThemeToggleButton from "./ThemeToggleButton.astro";
+import { Icon } from "astro-icon/components";
 import { navLinks } from "../objects/navLinks";
 ---
 
@@ -16,9 +17,28 @@ import { navLinks } from "../objects/navLinks";
 
         <!-- 桌面端: 导航链接 + 主题切换 -->
         <div class="hidden items-center gap-4 md:flex xl:gap-5">
-            <ul class="m-0 flex list-none gap-4 p-0 xl:gap-6">
+            <!-- 链接来自 config.yml 的 navBar.links (图标在文字左侧, Font Awesome 7)。
+                 8 个条目 + 图标在 768px 宽度下也放得下, 靠的是字号随断点递进 (13 → 14 → 15px)
+                 和图标尺寸同步放大 (12 → 14 → 16px); 间距只在 xl 才放开。 -->
+            <ul class="m-0 flex list-none gap-2.5 p-0 xl:gap-5">
                 {navLinks.map((link) => (
-                    <li><a href={link.href} class="text-[15px] font-semibold transition-opacity hover:opacity-70">{link.label}</a></li>
+                    <li>
+                        <a
+                            href={link.href}
+                            {...(link.external ? { target: "_blank", rel: "noopener" } : {})}
+                            class="flex items-center gap-1 text-[13px] font-semibold transition-opacity duration-300 ease-out hover:opacity-70 lg:text-sm xl:gap-1.5 xl:text-[15px]"
+                        >
+                            {link.icon && (
+                                <Icon
+                                    name={link.icon}
+                                    class="h-3 w-3 shrink-0 lg:h-3.5 lg:w-3.5 xl:h-4 xl:w-4"
+                                    aria-hidden="true"
+                                />
+                            )}
+                            <span>{link.label}</span>
+                            {link.external && <span class="sr-only">(在新标签页打开)</span>}
+                        </a>
+                    </li>
                 ))}
             </ul>
 

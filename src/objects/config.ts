@@ -61,8 +61,8 @@ const siteConfigSchema = z.object({
     postsPerPage: z.number().int().min(1),
 
     // 自动生成的文章 ID 长度.
-    // 注意: 键名沿用 config.yml 里的原始拼写 (postIDLehgth), 不是笔误 —— 改名会让老配置直接失效
-    postIDLehgth: z.number().int().min(1).max(64),
+    // 注意: 键名沿用 config.yml 里的原始拼写 (hashLength), 不是笔误 —— 改名会让老配置直接失效
+    hashLength: z.number().int().min(1).max(64),
 
     // 站点地址, 拼接文章链接用于版权声明
     siteUrl: z.string().min(1),
@@ -72,6 +72,15 @@ const siteConfigSchema = z.object({
         enable: z.boolean(),
         name  : z.string(),
         url   : z.string(),
+    }),
+
+    umami: z.object({
+        enable: z.boolean(),
+        scriptSrc: z.string(),
+        websiteID: z.string(),
+        
+        enableInDev: z.boolean(),
+        websiteID_Dev: z.string().optional(),
     }),
 });
 
@@ -92,17 +101,12 @@ const codeBlockSchema = z.object({
 const authorSchema = z.object({
     name       : z.string(),      // 作者名称
     avatar     : z.string(),      // 头像路径 (public 下以 / 开头; 留空显示首字母)
+    favIcon   : z.string(),      // 
     bio        : z.string(),      // 一句话介绍
     socialLinks: z.array(z.object({
         name: z.string(),
         url : z.string(),
     })),
-});
-
-const sidebarSchema = z.object({
-    comments   : z.number().int().min(0),   // 评论数量
-    totalVisits: z.number().int().min(0),   // 总访问量
-    visitors   : z.number().int().min(0),   // 访客数量
 });
 
 // 仓库卡片 (${github owner/repo} / ${gitee owner/repo}): 是否在构建期请求 API 以及超时
@@ -143,6 +147,17 @@ const statisticsSchema = z.object({
     artalk: z.string(),
 });
 
+// 顶部导航栏链接 (见 config.yml 的 navBar):
+//   · icon 是 Iconify 的图标 id (本站用 Font Awesome 7: fa7-solid:xxx), 省略则这一条只显示文字;
+//   · src 带协议 (http: / mailto: …) 或以 // 开头时按外部链接处理 (见 objects/navLinks.ts)。
+const navBarSchema = z.object({
+    links: z.array(z.object({
+        src  : z.string().min(1),
+        title: z.string().min(1),
+        icon : z.string().min(1).optional(),
+    })).default([]),
+});
+
 const commentsSchema = z.object({
     enable: z.boolean(),
     enableInDev: z.boolean(),
@@ -155,6 +170,7 @@ const commentsSchema = z.object({
 });
 
 const configSchema = z.object({
+    navBar: navBarSchema.default({ links: [] }),
     siteConfig: siteConfigSchema,
     background: backgroundSchema,
     codeBlock: codeBlockSchema,
@@ -162,7 +178,6 @@ const configSchema = z.object({
     cardSpotlight: cardSpotlightSchema,
     theme: themeConfigSchema,
     author: authorSchema,
-    sidebar: sidebarSchema,
     repo: repoSchema.default({ fetch: true, timeout: 6000 }),
     statistics: statisticsSchema,
     comments: commentsSchema,
@@ -176,10 +191,10 @@ type ThemeConfig         = z.infer<typeof themeConfigSchema>
 type SiteConfig          = z.infer<typeof siteConfigSchema>
 type CodeBlockConfig     = z.infer<typeof codeBlockSchema>
 type AuthorConfig        = z.infer<typeof authorSchema>
-type SidebarConfig       = z.infer<typeof sidebarSchema>
 type RepoConfig          = z.infer<typeof repoSchema>
 type StatisticsConfig    = z.infer<typeof statisticsSchema>
 type CommentsConfig      = z.infer<typeof commentsSchema>
+type NavBarConfig        = z.infer<typeof navBarSchema>
 
 // export const val
 export const config               : Config              = configSchema.parse(rawConfig);
@@ -190,7 +205,7 @@ export const frostedGlassConfig   : FrostedGlassConfig  = config.frostedGlassSty
 export const cardSpotlightConfig  : CardSpotlightConfig = config.cardSpotlight;
 export const themeConfig          : ThemeConfig         = config.theme;
 export const authorConfig         : AuthorConfig        = config.author;
-export const sidebarConfig        : SidebarConfig       = config.sidebar;
 export const repoConfig           : RepoConfig          = config.repo;
 export const statisticsConfig     : StatisticsConfig    = config.statistics;
 export const commentsConfig       : CommentsConfig      = config.comments;
+export const navBarConfig         : NavBarConfig        = config.navBar;

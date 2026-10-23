@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import swup from '@swup/astro';
+import icon from 'astro-icon';
 
 // https://astro.build/config
 export default defineConfig({
@@ -23,6 +24,12 @@ export default defineConfig({
             updateBodyClass: false,
             globalInstance: true,
         }),
+        // 图标: 用 Iconify 的图标 id (config.yml 里写 fa7-solid:xxx), 构建期就内联成 SVG,
+        // 没有运行时脚本 / 字体文件, 也不会先闪一下再出图标。
+        // 本站装的图标集是 Font Awesome 7 (@iconify-json/fa7-solid)。
+        // 不写 include 时 astro-icon 会把已安装的整套图标读进构建进程 (只在构建期, 不进页面体积);
+        // 想缩短构建时间可以改成 include: { "fa7-solid": ["house", "file-lines", ...] }。
+        icon(),
     ],
     vite: {
         // Tailwind CSS v4 (样式入口: src/styles/global.css)

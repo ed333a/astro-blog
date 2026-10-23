@@ -74,7 +74,7 @@ export function parsePostDate(raw?: string | null): ParsedPostDate | undefined {
 }
 
 /**
- * 生成文章 ID: title + description 的哈希, 取 config.yml 里 siteConfig.postIDLehgth 位。
+ * 生成文章 ID: title + description 的哈希, 取 config.yml 里 siteConfig.hashLength 位。
  * 模板注释里提到 ID 要用引号包起来 (防止被当成数字), 所以这里也保证结果里至少有一个字母 ——
  * 否则像 "0123456789abcdef" 那样纯数字的片段容易被 YAML/JSON 解析成 number。
  */
