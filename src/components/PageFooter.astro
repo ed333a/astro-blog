@@ -19,13 +19,13 @@ const linkClass = "font-semibold underline decoration-dotted underline-offset-4 
 
 <!-- 窄屏页脚用 32px 圆角 (全宽面板用胶囊圆角会显得头重脚轻), 到 md 再回到 config.yml 的 --radius-footer。 -->
 <GlassElement as="footer" class="mt-auto flex flex-col gap-4 rounded-[32px] px-8 py-6 text-sm text-ink md:rounded-[var(--radius-footer)]">
-    <div class="flex flex-col items-center gap-3 sm:flex-row sm:items-start sm:justify-between sm:text-left">
+    <div class="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:justify-between sm:text-left">
         <div class="flex flex-col items-center gap-1.5 sm:items-start">
             <p class="m-0 text-ink/85">© {year} {siteConfig.title} · {siteConfig.subtitle}</p>
             <LicenseNotice title={title} path={path} compact />
         </div>
 
-        <ul class="m-0 flex list-none flex-wrap justify-center gap-6 p-0 font-semibold">
+        <ul class="m-0 flex justify-end items-center gap-6 p-0 font-semibold w-[35%]">
             <li><a href="/rss" class="transition-opacity hover:opacity-70">RSS</a></li>
             <li><a href="/blog" class="transition-opacity hover:opacity-70">归档</a></li>
             <li><a href="/about" class="transition-opacity hover:opacity-70">关于</a></li>

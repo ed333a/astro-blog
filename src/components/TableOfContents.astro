@@ -34,6 +34,7 @@ const items = headings.filter((heading) => heading.depth >= 2 && heading.depth <
                 <li>
                     <a
                         href={`#${heading.slug}`}
+                        data-no-swup
                         class:list={[
                             "block rounded-lg text-sm leading-relaxed transition-colors duration-300 ease-out hover:bg-black/20 dark:hover:bg-white/15",
                             heading.depth === 3 ? "pl-4 text-ink/80" : "font-medium text-ink/95",
