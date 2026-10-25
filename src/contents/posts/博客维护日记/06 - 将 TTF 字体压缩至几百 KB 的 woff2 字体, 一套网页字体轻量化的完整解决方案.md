@@ -445,8 +445,13 @@ ${note [warn]
 cn-font-split 的 FFI 二进制 (`libffi-*.dll` / `.so`) 不随 npm 包分发, 靠安装时的 postinstall 脚本从 GitHub 下载。而 pnpm 默认会**阻止**依赖的 postinstall 脚本, 需要在 `pnpm-workspace.yaml` 里显式放行:
 
 ```yaml
+# pnpm 版本 11+
 allowBuilds:
   cn-font-split: true
+
+# pnpm 版本 10
+onlyBuiltDependencies:
+  - cn-font-split
 ```
 
 否则构建时加载二进制会报 `cannot open shared object file: No such file or directory` (Linux) 或 `win32=193` (Windows)。

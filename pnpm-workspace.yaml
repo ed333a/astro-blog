@@ -2,16 +2,10 @@
 # cn-font-split 的二进制 (.so/.dll) 不随 npm 包分发, 靠 postinstall 从 GitHub 下载对应平台的文件。
 allowBuilds:
   cn-font-split: true
-  esbuild: true
-  koffi: true
-  protobufjs: true
 
 # cloudflare 使用的是 pnpm10, 上面的 allowBuilds 适用于 pnpm11+
 onlyBuiltDependencies:
   - cn-font-split
-  - esbuild
-  - koffi
-  - protobufjs
 
 minimumReleaseAgeExclude:
   - astro@7.3.5
