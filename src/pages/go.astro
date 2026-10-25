@@ -1,0 +1,153 @@
+---
+import PageShell from "../layouts/PageShell.astro";
+import GlassElement from "../components/glass/GlassElement.astro";
+import { externalLinksConfig, siteConfig } from "../objects/config";
+
+// 静态站点在构建期拿不到 ?url= 查询串, 所以这里只把「配置」算好, 目标地址交给前端从
+// location.search 读取。链接改写 (外链 → /go?url=...) 依然全部在渲染阶段完成。
+const { enable, autoRedirect, delay, trustedDomains } = externalLinksConfig;
+const countdown = Math.max(0, Math.floor(delay));
+
+const siteHost = (() => { try { return new URL(siteConfig.siteUrl).hostname.toLowerCase(); } catch { return ""; } })();
+const trustedList = [...trustedDomains.map((d) => d.trim().toLowerCase()).filter(Boolean), siteHost].filter(Boolean);
+
+const proxyConfig = JSON.stringify({ enable, autoRedirect, delay: countdown, trusted: trustedList });
+---
+
+<PageShell title="站外跳转" description="即将离开本站，跳转到站外链接。" noindex>
+    <!-- 中转提示卡 (目标地址等动态字段由下方脚本填充) -->
+    <GlassElement
+        as="section"
+        data-go-root
+        data-go-config={proxyConfig}
+        class="flex flex-col gap-5 rounded-[var(--radius-card)] p-6 text-ink sm:p-8"
+    >
+        <header class="flex flex-col gap-2">
+            <p class="m-0 text-xs font-semibold tracking-[0.25em] text-ink/80 uppercase">Leaving site</p>
+            <h1 class="m-0 text-2xl font-extrabold">即将离开本站</h1>
+        </header>
+
+        <p class="m-0 text-sm leading-relaxed text-ink/85">
+            你正在访问站外链接，该站点不受本站控制，请注意保护个人信息与财产安全。
+        </p>
+
+        <div class="flex flex-col gap-1.5 rounded-xl border border-ink/15 bg-black/10 p-3 dark:bg-white/5">
+            <span class="text-[11px] font-medium text-ink/60">目标地址（<span data-go-host></span>）</span>
+            <code data-go-url class="max-w-full break-all font-mono text-xs leading-relaxed text-ink/90"></code>
+        </div>
+
+        {autoRedirect && (
+            <div data-go-countdown-block class="flex flex-col gap-2">
+                <div class="flex items-center justify-between text-xs text-ink/70">
+                    <span>
+                        将在{' '}
+                        <strong data-go-countdown-label class="font-semibold tabular-nums text-ink">{countdown}s</strong>{' '}
+                        后自动跳转
+                    </span>
+                </div>
+                <div class="h-1.5 w-full overflow-hidden rounded-full bg-black/15 dark:bg-white/10">
+                    <div data-go-progress class="h-full w-full rounded-full bg-ink/60" style="width:100%"></div>
+                </div>
+            </div>
+        )}
+
+        <div class="flex flex-wrap items-center gap-3">
+            <a
+                data-go-continue
+                href="#"
+                rel="noopener"
+                class="inline-flex items-center gap-2 rounded-full bg-black/85 px-5 py-2.5 text-sm font-semibold text-white transition duration-300 ease-out hover:opacity-85 dark:bg-white/90 dark:text-black"
+            >
+                继续访问
+            </a>
+            <a
+                href="/"
+                class="inline-flex items-center gap-2 rounded-full bg-black/15 px-5 py-2.5 text-sm font-semibold text-ink transition duration-300 ease-out hover:opacity-75 dark:bg-white/15"
+            >
+                返回首页
+            </a>
+        </div>
+    </GlassElement>
+
+    <!-- 无效链接提示 (默认隐藏, 由脚本判断后切换) -->
+    <GlassElement
+        as="section"
+        data-go-error
+        hidden
+        class="flex flex-col items-center gap-4 rounded-[var(--radius-card)] p-8 text-center text-ink"
+    >
+        <h1 class="m-0 text-xl font-extrabold">无效的跳转链接</h1>
+        <p class="m-0 text-sm text-ink/75">这个跳转地址不合法，已阻止跳转。</p>
+        <a href="/" class="text-sm font-semibold underline underline-offset-4 hover:opacity-75">返回首页</a>
+    </GlassElement>
+</PageShell>
+
+<script is:inline>
+    // 中转页逻辑: 从查询串读目标地址, 校验后填充 DOM、启动倒计时 / 立即跳转。
+    // 用 is:inline 让它在首次加载与 Swup 换页时都执行; 每次导航进来都是新节点, 不会重复倒计时。
+    (() => {
+        const root = document.querySelector("[data-go-root]");
+        const errorCard = document.querySelector("[data-go-error]");
+        if (!root || !errorCard) return;
+
+        const cfg = (() => {
+            try { return JSON.parse(root.getAttribute("data-go-config") || "{}"); } catch { return {}; }
+        })();
+
+        const target = (new URLSearchParams(window.location.search).get("url") || "").trim();
+
+        const hostOf = (url) => { try { return new URL(url).hostname.toLowerCase(); } catch { return ""; } };
+        const isTrusted = (host) => (cfg.trusted || []).some((p) => {
+            if (p === host) return true;
+            if (p.startsWith("*.") || p.startsWith(".")) {
+                const base = p.replace(/^\*\./, "");
+                return host === base || host.endsWith("." + base);
+            }
+            return false;
+        });
+
+        const valid = /^https?:\/\//i.test(target);
+
+        if (!valid) {
+            root.hidden = true;
+            errorCard.hidden = false;
+            return;
+        }
+
+        // 功能关闭 / 受信任的地址: 直接跳 (正常情况下这类链接不会走到 /go)
+        if (cfg.enable === false || isTrusted(hostOf(target))) {
+            window.location.replace(target);
+            return;
+        }
+
+        const hostEl = root.querySelector("[data-go-host]");
+        const urlEl = root.querySelector("[data-go-url]");
+        const continueBtn = root.querySelector("[data-go-continue]");
+        const bar = root.querySelector("[data-go-progress]");
+        const label = root.querySelector("[data-go-countdown-label]");
+
+        if (hostEl) hostEl.textContent = hostOf(target);
+        if (urlEl) urlEl.textContent = target;
+        if (continueBtn) continueBtn.setAttribute("href", target);
+
+        const go = () => window.location.replace(target);
+
+        if (!cfg.autoRedirect || !(cfg.delay > 0)) return;
+
+        const startedAt = Date.now();
+        const totalMs = cfg.delay * 1000;
+        const tick = () => {
+            // 页面被 Swup 换掉后停止, 避免离开中转页后还被定时器拽走
+            if (!root.isConnected) return;
+            const elapsed = Date.now() - startedAt;
+            const remain = Math.max(0, totalMs - elapsed);
+            const remainSec = Math.ceil(remain / 1000);
+            const percent = Math.min(100, (elapsed / totalMs) * 100);
+            if (bar) bar.style.width = `${100 - percent}%`;
+            if (label) label.textContent = `${remainSec}s`;
+            if (remain <= 0) go();
+            else requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+    })();
+</script>

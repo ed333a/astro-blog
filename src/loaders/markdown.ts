@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 import { parse as parseYaml } from "yaml";
 import type { Loader, LoaderContext } from "astro/loaders";
 
-import { codeBlockConfig, siteConfig } from "../objects/config";
+import { codeBlockConfig, externalLinksConfig, siteConfig } from "../objects/config";
 import {
     buildPostPath,
     estimateReadingMinutes,
@@ -34,6 +34,7 @@ import { replacePostReferences, type PostReferenceTarget } from "../objects/post
 import { replaceNotes } from "../objects/note";
 import { replaceRepositories, type RepoMeta } from "../objects/repo";
 import { collectCodeFenceLanguages, decorateCodeBlocks, replaceTabsInCodeBlocks } from "../objects/codeBlock";
+import { rewriteExternalLinksInHtml } from "../objects/externalLinks";
 
 /** 文档类型: 决定内容渲染在哪个页面模板上 */
 export type DocumentType = "post" | "about";
@@ -270,6 +271,7 @@ async function sync(context: LoaderContext, options: MarkdownLoaderOptions): Pro
     const renderSource = [
         JSON.stringify(codeBlockConfig),
         JSON.stringify(siteConfig),
+        JSON.stringify(externalLinksConfig),
         readFileSync(new URL("../objects/codeBlock.ts", import.meta.url), "utf-8"),
         readFileSync(new URL("../objects/markdownSegments.ts", import.meta.url), "utf-8"),
         readFileSync(new URL("../objects/postReference.ts", import.meta.url), "utf-8"),
@@ -277,6 +279,7 @@ async function sync(context: LoaderContext, options: MarkdownLoaderOptions): Pro
         readFileSync(new URL("../objects/repo.ts", import.meta.url), "utf-8"),
         readFileSync(new URL("../objects/posts.ts", import.meta.url), "utf-8"),
         readFileSync(new URL("../objects/pinyin.ts", import.meta.url), "utf-8"),
+        readFileSync(new URL("../objects/externalLinks.ts", import.meta.url), "utf-8"),
         // loader 自身的实现也参与渲染结果: 新增 wordCount 这类字段时, 旧缓存必须失效重算
         readFileSync(fileURLToPath(import.meta.url), "utf-8"),
     ].join("\n");
@@ -344,14 +347,15 @@ async function sync(context: LoaderContext, options: MarkdownLoaderOptions): Pro
 
         // 再套一层代码块外壳: 工具栏 (复制 / 折行 / 折叠) + 行号 + 折叠渐变
         const languages = collectCodeFenceLanguages(body);
-        const html = decorateCodeBlocks(rendered.html, {
+        // 外链代理: 正文渲染成 HTML 后, 把非受信任的站外 <a> 统一改写成 /go 中转链接
+        const html = rewriteExternalLinksInHtml(decorateCodeBlocks(rendered.html, {
             showLineNumber      : codeBlockConfig.showLineNumber,
             foldAt              : codeBlockConfig.fold_at,
             wordwrap            : codeBlockConfig.wordwrap,
             wordWrapToggleButton: codeBlockConfig.wordWrapToggleButton,
             copyButton          : codeBlockConfig.copyButton,
             fontSize            : codeBlockConfig.fontSize,
-        }, languages);
+        }, languages));
 
         context.store.set({
             id          : document.id,

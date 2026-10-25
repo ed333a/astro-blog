@@ -6,6 +6,7 @@
  * 由 components/NavBar.astro / NavSidebar.astro 里的 <Icon> 在构建期内联成 SVG。
  */
 import { navBarConfig } from "./config";
+import { rewriteExternalUrl } from "./externalLinks";
 
 export interface NavLink {
     href : string;
@@ -24,11 +25,13 @@ const EXTERNAL_ICON = "fa7-solid:arrow-up-right-from-square";
 
 export const navLinks: NavLink[] = navBarConfig.links.map(({ src, title, icon }) => {
     const external = EXTERNAL_PATTERN.test(src);
+    // 外链经过 /go 代理后变成站内链接, 不再新标签页打开 (external 只对「仍直连」的外链为 true)
+    const href = rewriteExternalUrl(src);
 
     return {
-        href    : src,
+        href,
         label   : title,
         icon    : icon ?? (external ? EXTERNAL_ICON : undefined),
-        external,
+        external: external && href === src,
     };
 });

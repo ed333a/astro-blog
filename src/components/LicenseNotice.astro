@@ -1,6 +1,7 @@
 ---
 import { siteConfig,authorConfig } from "../objects/config";
 import { absoluteUrl } from "../objects/posts";
+import { rewriteExternalUrl } from "../objects/externalLinks";
 
 interface Props {
     /** 正文标题 (compact 模式下用来在页脚里点名) */
@@ -16,6 +17,7 @@ interface Props {
 const { title, path, publishDate, compact = false } = Astro.props;
 const { license } = siteConfig;
 const originalUrl = path ? absoluteUrl(path) : undefined;
+const licenseHref = rewriteExternalUrl(license.url);
 
 const licenseLinkClasses = "font-semibold underline decoration-dotted underline-offset-4 transition-opacity hover:opacity-80";
 ---
@@ -25,7 +27,7 @@ const licenseLinkClasses = "font-semibold underline decoration-dotted underline-
 {license.enable && (compact ? (
     <p class="m-0 text-xs leading-relaxed text-ink/70">
         {title ? `《${title}》` : "本站内容"}采用{' '}
-        <a href={license.url} class={licenseLinkClasses}>{license.name}</a>
+        <a href={licenseHref} class={licenseLinkClasses}>{license.name}</a>
         {' '}许可协议, 转载请注明出处。
     </p>
 ) : (
@@ -34,7 +36,7 @@ const licenseLinkClasses = "font-semibold underline decoration-dotted underline-
         <p>本文作者: {authorConfig.name}, 于 {publishDate} 发布</p>
         <p class="m-0">
             本文《{title ?? "未命名"}》采用
-            <a href={license.url} class={licenseLinkClasses}> {license.name} </a>
+            <a href={licenseHref} class={licenseLinkClasses}> {license.name} </a>
             许可协议, 转载请注明出处。
         </p>
         {originalUrl && (

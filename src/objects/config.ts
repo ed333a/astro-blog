@@ -173,6 +173,18 @@ const commentsSchema = z.object({
     })
 });
 
+// 站外链接代理 (见 config.yml 的 externalLinks):
+//   · enable         : 是否开启外链代理 (关闭后外部链接直接跳转, 不再经过中转页)
+//   · autoRedirect   : 是否在中转页自动跳转 (关闭后需要手动点「继续访问」)
+//   · delay          : 自动跳转前等待的秒数 (等待期间用进度条展示)
+//   · trustedDomains : 受信任的域名, 命中后直接跳转、不走中转页 (支持 *.example.com / .example.com 匹配子域)
+const externalLinksSchema = z.object({
+    enable        : z.boolean().default(true),
+    autoRedirect  : z.boolean().default(true),
+    delay         : z.number().min(0).max(60).default(5),
+    trustedDomains: z.array(z.string()).default([]),
+});
+
 const configSchema = z.object({
     navBar: navBarSchema.default({ links: [] }),
     siteConfig: siteConfigSchema,
@@ -185,6 +197,7 @@ const configSchema = z.object({
     repo: repoSchema.default({ fetch: true, timeout: 6000 }),
     statistics: statisticsSchema,
     comments: commentsSchema,
+    externalLinks: externalLinksSchema.default({ enable: true, autoRedirect: true, delay: 5, trustedDomains: [] }),
 });
 
 type Config              = z.infer<typeof configSchema>
@@ -199,6 +212,7 @@ type RepoConfig          = z.infer<typeof repoSchema>
 type StatisticsConfig    = z.infer<typeof statisticsSchema>
 type CommentsConfig      = z.infer<typeof commentsSchema>
 type NavBarConfig        = z.infer<typeof navBarSchema>
+type ExternalLinksConfig = z.infer<typeof externalLinksSchema>
 
 // export const val
 export const config               : Config              = configSchema.parse(rawConfig);
@@ -213,3 +227,4 @@ export const repoConfig           : RepoConfig          = config.repo;
 export const statisticsConfig     : StatisticsConfig    = config.statistics;
 export const commentsConfig       : CommentsConfig      = config.comments;
 export const navBarConfig         : NavBarConfig        = config.navBar;
+export const externalLinksConfig  : ExternalLinksConfig = config.externalLinks;

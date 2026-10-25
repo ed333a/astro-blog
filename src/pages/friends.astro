@@ -6,6 +6,7 @@ import { friendLinks } from "../objects/friendLinks";
 import { authorConfig, siteConfig } from "../objects/config";
 import { getAsset } from "@/objects/getAssetUrl";
 import { commentsConfig } from "../objects/config";
+import { rewriteExternalUrl, rewriteExternalLinksInHtml } from "../objects/externalLinks";
 
 // 交换友链用的站点信息 (长 / 短两版介绍)
 const siteIntroLong = "分享单片机、FPGA 开发, 和 PCB 设计经验, 记录嵌入式开发路上的成长点滴。";
@@ -50,6 +51,19 @@ const requirements = [
     { title: "访问体验",    desc: "站点应能稳定访问, 并尽量保证国内访问体验。少量广告可以理解, 但请不要出现遮挡内容、强制跳转或影响阅读的弹窗。" },
     { title: "文章数量",    desc: "直接申请建议已有 10 篇以上文章; 若此前我们已有多次互动, 或者您的站点内容丰富, 质量较高, 这一条可以豁免。" },
 ];
+
+// 友链外链经过 /go 代理后变成站内链接, 不再新标签页打开
+const displayGroups = friendLinks.map((group) => ({
+    ...group,
+    "link-list": group["link-list"].map((friend) => {
+        const href = rewriteExternalUrl(friend.link);
+        return {
+            ...friend,
+            href,
+            directExternal: /^https?:\/\//i.test(friend.link) && href === friend.link,
+        };
+    }),
+}));
 ---
 
 <PageShell
@@ -156,7 +170,7 @@ const requirements = [
                         <!-- desc 按 HTML 渲染: 支持 <strong> / <em> / <mark> / <code> / <a> 等标签 -->
                         <span
                             class="[&_strong]:font-bold [&_em]:italic [&_mark]:rounded [&_mark]:bg-amber-300/80 [&_mark]:px-1 [&_mark]:text-black [&_code]:rounded [&_code]:bg-black/25 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.85em] [&_a]:font-semibold [&_a]:underline [&_a]:decoration-dotted [&_a]:underline-offset-4 dark:[&_code]:bg-white/15"
-                            set:html={item.desc}
+                            set:html={rewriteExternalLinksInHtml(item.desc)}
                         ></span>
                     </span>
                 </li>
@@ -165,7 +179,7 @@ const requirements = [
     </GlassElement>
 
     <div class="flex flex-col gap-3">
-        {friendLinks.map((group) => (
+        {displayGroups.map((group) => (
             <GlassElement class="flex flex-col gap-5 rounded-[var(--radius-card)] p-6 text-ink sm:p-7">
                 <div class="flex flex-col gap-1">
                     <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -179,9 +193,8 @@ const requirements = [
                     {group["link-list"].map((friend) => (
                         <li>
                             <a
-                                href={friend.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                                href={friend.href}
+                                {...(friend.directExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                                 class="flex h-full items-start gap-3 rounded-2xl bg-black/10 p-3 transition duration-300 ease-out hover:bg-black/15 dark:bg-white/5 dark:hover:bg-white/10"
                             >
                                 {friend.cover || friend.icon

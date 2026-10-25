@@ -1,8 +1,14 @@
 ---
 import '@/styles/artalk.css'
+import { externalLinksConfig, siteConfig } from '@/objects/config';
+
+const proxyPath = '/go';
+const siteHost = (() => { try { return new URL(siteConfig.siteUrl).hostname.toLowerCase(); } catch { return ''; } })();
+const trustedDomains = [...externalLinksConfig.trustedDomains.map((d) => d.trim().toLowerCase()).filter(Boolean), siteHost].filter(Boolean);
+const proxyConfigJson = JSON.stringify({ path: proxyPath, enabled: externalLinksConfig.enable, trusted: trustedDomains });
 ---
 
-<div id="comments"></div>
+<div id="comments" data-proxy-config={proxyConfigJson}></div>
 
 <script>
     import Artalk from 'artalk';
@@ -132,4 +138,44 @@ import '@/styles/artalk.css'
         if (artalk) artalk.destroy();
         if (observer) observer.disconnect();
     });
+</script>
+
+<script is:inline>
+    // Artalk 评论里的外链是客户端渲染的, 服务端改不了 —— 这里兜底: 点击时转到 /go 中转页。
+    // 只处理 #comments 里的链接 (文章正文等其它外链已在渲染阶段改写完毕)。
+    (() => {
+        if (document.documentElement.dataset.commentProxyBound === "1") return;
+        document.documentElement.dataset.commentProxyBound = "1";
+
+        const readConfig = () => {
+            const el = document.getElementById("comments");
+            if (!el) return null;
+            try { return JSON.parse(el.getAttribute("data-proxy-config") || ""); } catch { return null; }
+        };
+        const cfg = readConfig();
+        if (!cfg || !cfg.enabled) return;
+
+        const hostOf = (url) => { try { return new URL(url, location.origin).hostname.toLowerCase(); } catch { return ""; } };
+        const isTrusted = (host) => (cfg.trusted || []).some((p) => {
+            if (p === host) return true;
+            if (p.startsWith("*.") || p.startsWith(".")) {
+                const base = p.replace(/^\*\./, "");
+                return host === base || host.endsWith("." + base);
+            }
+            return false;
+        });
+
+        document.addEventListener("click", (event) => {
+            const anchor = event.target && event.target.closest ? event.target.closest("a[href]") : null;
+            if (!anchor) return;
+            const comments = document.getElementById("comments");
+            if (!comments || !comments.contains(anchor)) return;
+            const href = anchor.getAttribute("href") || "";
+            if (!/^https?:\/\//i.test(href)) return;
+            if (isTrusted(hostOf(href))) return;
+            event.preventDefault();
+            event.stopPropagation();
+            window.location.href = `${cfg.path}?url=${encodeURIComponent(href)}`;
+        }, true);
+    })();
 </script>

@@ -120,6 +120,20 @@ navBar:
       icon: fa7-solid:arrow-up-right-from-square
 
 #######################################
+# 站外链接跳转提示
+#######################################
+# 给博客里的外部链接统一加一层「跳转中转页」, 提醒访客即将离开本站。
+# enable         : 是否开启外链代理 (关闭后外部链接直接跳转, 不再经过中转页)
+# autoRedirect   : 是否在中转页自动跳转 (关闭后需要手动点击「继续访问」)
+# delay          : 自动跳转前等待的秒数, 等待期间用进度条展示
+# trustedDomains : 受信任的域名, 命中后直接跳转、不走中转页; 支持 *.example.com / .example.com 匹配子域
+externalLinks:
+  enable: true
+  autoRedirect: true
+  delay: 5
+  trustedDomains: []
+
+#######################################
 # 代码块渲染设置 (prismjs)
 #######################################
 codeBlock:

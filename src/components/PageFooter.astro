@@ -3,6 +3,7 @@ import GlassElement from "./glass/GlassElement.astro";
 import LicenseNotice from "./LicenseNotice.astro";
 import { siteConfig } from "../objects/config";
 import { absoluteSiteUrl } from "../objects/seo";
+import { rewriteExternalUrl } from "../objects/externalLinks";
 
 interface Props {
     /** 当前页面的标题与路径: 有的话, 页脚里的版权信息会点名这一篇 */
@@ -38,7 +39,7 @@ const linkClass = "font-semibold underline decoration-dotted underline-offset-4 
     <div class="flex flex-col items-center gap-2 border-t border-ink/15 pt-4 text-center text-xs leading-relaxed text-ink/75 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-6 sm:gap-y-1 sm:text-left">
         <p class="m-0">
             博客框架:{' '}
-            <a href="https://github.com/withastro/astro" target="_blank" rel="noopener" title="Astro GitHub: https://github.com/withastro/astro" class={linkClass}>Astro</a>{' '}
+            <a href={rewriteExternalUrl("https://github.com/withastro/astro")} target="_blank" rel="noopener" title="Astro GitHub: https://github.com/withastro/astro" class={linkClass}>Astro</a>{' '}
         </p>
 
         <!-- <p class="m-0 max-w-full break-all">

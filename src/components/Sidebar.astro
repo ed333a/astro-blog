@@ -3,6 +3,7 @@ import GlassElement from "./glass/GlassElement.astro";
 import { authorConfig } from "../objects/config";
 import { getSortedPosts } from "../objects/collections";
 import { getAsset } from "@/objects/getAssetUrl";
+import { rewriteExternalUrl } from "../objects/externalLinks";
 
 // 本地统计照常构建时计算
 const posts = await getSortedPosts();
@@ -22,8 +23,11 @@ const stats = [
     { key: "total_uv",   label: "访客",     value: null },
 ];
 
-const linkTarget = (url: string) =>
-    url.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {};
+// 社交链接: 外链经 /go 代理后变成站内链接, 不再新标签页打开
+const socialItems = socialLinks.map((link) => {
+    const href = rewriteExternalUrl(link.url);
+    return { ...link, href, external: link.url.startsWith("http") && href === link.url };
+});
 ---
 
 <!-- 右侧边栏: 作者信息 + 社交链接 + 站点统计。
@@ -43,14 +47,14 @@ const linkTarget = (url: string) =>
         </div>
 
         <!-- 社交链接 -->
-        {socialLinks.length > 0 && (
+        {socialItems.length > 0 && (
             <ul class="m-0 flex list-none flex-wrap gap-2 p-0">
-                {socialLinks.map((link) => (
+                {socialItems.map((link) => (
                     <li>
                         <a
-                            href={link.url}
+                            href={link.href}
                             class="inline-flex items-center gap-1.5 rounded-full bg-black/20 px-3 py-1 text-xs font-semibold transition duration-300 ease-out hover:opacity-70 dark:bg-white/15"
-                            {...linkTarget(link.url)}
+                            {...(link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                         >
                             {link.name}
                         </a>
