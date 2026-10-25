@@ -19,7 +19,7 @@ const fontConfigs = [
     // file: 完整字体的文件地址, 相对于 fontRoot, 不要添加后缀名, 
     // weight: 字体的字重, 控制字体粗细, 
     // style: normal, 正常, italic, 斜体
-    { family: 'LXGWWenKaiMonoGB'        , file: 'lxgw-wenkai-gb/LXGWWenKaiMonoGB-Regular'        , weight: 400, style: "normal", },
+    // 中文大字体 LXGWWenKaiMonoGB 改由 scripts/split-font.mjs 按 unicode-range 分片, 不在这里子集化。
     { family: 'JetBrainsMono'           , file: 'jetbrains-mono/JetBrainsMono-Regular'           , weight: 400, style: "normal", },
     { family: 'JetBrainsMono-Italic'    , file: 'jetbrains-mono/JetBrainsMono-Italic'            , weight: 400, style: "italic", },
 ];

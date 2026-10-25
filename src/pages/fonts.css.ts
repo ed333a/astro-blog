@@ -5,10 +5,16 @@ export async function GET() {
     const fullFontType = "ttf";
     const subSetType = "woff2";
     // 字体配置, 可直接从脚本中复制过来
+    // 中文大字体 LXGWWenKaiMonoGB:
+    //   dev  模式 → 用完整 TTF 本地加载 (开发时直接读 public/fonts);
+    //   prod 模式 → 不在这里生成, 改由 scripts/split-font.mjs 按 unicode-range 分片
+    //              (见 Layout.astro 对 result.css 的引入), 以覆盖构建期未知的动态文本 (如评论)。
     const fontWeights = [
-        { family: 'LXGWWenKaiMonoGB'        , file: 'lxgw-wenkai-gb/LXGWWenKaiMonoGB-Regular'        , weight: 400, style: "normal", },
-        { family: 'JetBrainsMono'           , file: 'jetbrains-mono/JetBrainsMono-Regular'           , weight: 400, style: "normal", },
-        { family: 'JetBrainsMono-Italic'    , file: 'jetbrains-mono/JetBrainsMono-Italic'            , weight: 400, style: "italic", },
+        ...(isDev
+            ? [{ family: 'LXGWWenKaiMonoGB' , file: 'lxgw-wenkai-gb/LXGWWenKaiMonoGB-Regular', weight: 400, style: "normal" }]
+            : []),
+        { family: 'JetBrainsMono'           , file: 'jetbrains-mono/JetBrainsMono-Regular'  , weight: 400, style: "normal", },
+        { family: 'JetBrainsMono-Italic'    , file: 'jetbrains-mono/JetBrainsMono-Italic'   , weight: 400, style: "italic", },
     ];
     const fontFaces = fontWeights.map(({ family, file, weight, style }) => {
         const url = isDev

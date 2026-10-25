@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev --reload --host",
-    "build": "astro build && node scripts/subset-font.mjs",
+    "build": "astro build && node scripts/split-font.mjs && node scripts/subset-font.mjs",
     "preview": "astro preview",
     "astro": "astro"
   },
@@ -35,6 +35,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "cn-font-split": "^7.4.3",
     "glob": "^13.0.6",
     "jsdom": "^30.1.3",
     "subset-font": "^2.9.0"
