@@ -1,7 +1,9 @@
 # 允许这些依赖运行 postinstall 脚本 (pnpm 默认会阻止依赖的构建脚本)。
 # cn-font-split 的二进制 (.so/.dll) 不随 npm 包分发, 靠 postinstall 从 GitHub 下载对应平台的文件。
 allowBuilds:
-  esbuild: false
   cn-font-split: true
+  esbuild: true
+  koffi: true
+  protobufjs: true
 minimumReleaseAgeExclude:
   - astro@7.3.5
