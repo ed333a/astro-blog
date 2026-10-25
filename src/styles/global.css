@@ -562,3 +562,17 @@ html.is-animating .transition-swup-fade {
         translate: 0 0;
     }
 }
+
+/* ── 背景图无感切换 ──
+   跳页时背景图随机换图, 用和 Swup 一样的 200ms opacity 过渡淡入淡出,
+   避免直接硬切闪一下 (淡入淡出逻辑见 components/BodyBackground.astro 的脚本)。 */
+#bg-image-layer {
+    transition: opacity 200ms ease;
+}
+
+/* 「减少动态效果」: 背景图直接切换 */
+@media (prefers-reduced-motion: reduce) {
+    #bg-image-layer {
+        transition: none;
+    }
+}

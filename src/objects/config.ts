@@ -118,7 +118,11 @@ const repoSchema = z.object({
 // 背景图片 / 背景色 (见 config.yml 的 background, 由 components/BodyBackground.astro 消费)
 const backgroundImageSchema = z.object({
     enable    : z.boolean(),
-    url       : z.string(),
+    src       : z.string(),
+    // 仅当 src 指向文件夹时生效: 为 true 时前端从 /backgrounds.json 里随机挑一张 (见 components/BodyBackground.astro)
+    random    : z.boolean().default(false),
+    // 是否在每次跳转页面时重新随机背景图 (仅当 src 为文件夹且 random 为 true 时生效)
+    randomEveryPage: z.boolean().default(false),
     svgColor  : z.string().optional(),
     "repeat-x": z.boolean(),
     "repeat-y": z.boolean(),

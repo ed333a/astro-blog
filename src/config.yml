@@ -133,17 +133,28 @@ codeBlock:
   fontSize: 15                # 代码字体大小 (px)
 
 #######################################
-# 背景图片
+# 博客的背景图设置
 #######################################
 background: 
+  # 背景图片
   image:
     enable: true    # 是否启用背景 
-    url: 'assets/img/blog_bg/bg8.svg'       # 背景图片地址, 使用 "/" 表示路径相对于 public 目录, 否则相对于 src 目录
-    svgColor: '#000000'                     # 当背景图为纯色的 SVG 图片时, 可以设置此项来自定义 svg 颜色
-    repeat-x: true                          # 控制图片在水平方向上重复
-    repeat-y: false                         # 控制图片在垂直方向上重复
-    fill: false                             # 控制图片铺满整个页面, 这个值启用后上面两个选项将会失效
-    scale: 40                               # 背景图片缩放 (%): 对应 background-size / mask-size; 数值越大图案越大, 不写则用默认尺寸
+    ###################################
+    # 背景图片的存放路径, 支持文件/文件夹
+    # 若提供文件夹, 则 random 配置项生效 
+    # 
+    # 使用 "/" 表示路径相对于 public 目录, 否则相对于 src 目录
+    ###################################
+    src: 'assets/img/blog_bg'
+    # 控制是否随机展示文件夹中的背景图片, 仅当 src 所提供的路径为文件夹时生效
+    random: true
+    # 是否在每次跳转页面时重新随机一张背景图 (仅当 src 为文件夹且 random 为 true 时生效)
+    randomEveryPage: true
+    svgColor: '#000000'         # 当背景图为纯色的 SVG 图片时, 可以设置此项来自定义 svg 颜色
+    repeat-x: true              # 控制图片在水平方向上重复
+    repeat-y: false             # 控制图片在垂直方向上重复
+    fill: false                 # 控制图片铺满整个页面, 这个值启用后上面两个选项将会失效
+    scale: 40                   # 背景图片缩放 (%): 对应 background-size / mask-size; 数值越大图案越大, 不写则用默认尺寸
   # 背景色设置
   color:
     enable: true    # 启用背景色

@@ -7,15 +7,25 @@
  *   · 两层都 fixed 铺满视口, 位于内容之后 (PageShell 里以 -z-10 挂在最底层)。
  */
 import { backgroundConfig } from "../objects/config";
-import { getAsset } from "../objects/getAssetUrl";
+import { getAsset, getAssetsInFolder } from "../objects/getAssetUrl";
 
 const bgImgCfg = backgroundConfig.image;
 const bgColorCfg = backgroundConfig.color;
-const bgUrl = getAsset(bgImgCfg.url);
-const bgSvgColor = bgImgCfg.svgColor;
 const bgBlur = backgroundConfig.blur ?? 0;
+const bgSvgColor = bgImgCfg.svgColor;
 
-// ── 图片层样式 ──
+// ── 判断 src 指向的是文件还是文件夹 ──
+// getAssetsInFolder 只返回图片文件, 传一个文件路径时拿不到任何东西 → 空数组。
+const folderImages = bgImgCfg.enable ? getAssetsInFolder(bgImgCfg.src) : [];
+const isFolder = folderImages.length > 0;
+// 文件夹 + random → 前端随机; 文件夹但没开 random → 固定用文件夹里的第一张;
+// 文件路径 → 直接就是那一张。
+const useRandom = isFolder && bgImgCfg.random;
+const bgUrl = bgImgCfg.enable
+    ? (useRandom ? "" : isFolder ? folderImages[0] : getAsset(bgImgCfg.src))
+    : "";
+
+// ── 图片层样式 (单图 / 固定图; useRandom 时由前端脚本按同样的规则生成) ──
 let imageLayerStyle = "";
 if (bgImgCfg.enable && bgUrl) {
     if (bgImgCfg.fill) {
@@ -74,14 +84,132 @@ const styleVars = [
 
 // 只有配置了模糊才加 filter (避免 blur(0px) 产生多余层叠上下文)
 const blurClass = bgBlur > 0 ? "blur-[var(--bg-blur)]" : "";
+
+// 图片层是否渲染: 启用背景图且 (有单图 / 或走前端随机)
+const showImageLayer = bgImgCfg.enable && (useRandom || !!bgUrl);
+
+// 交给前端脚本的配置 (随机模式下, 前端要按同样的规则拼出图片层样式)
+const randomConfig = JSON.stringify({
+    svgColor       : bgImgCfg.svgColor ?? "",
+    repeatX        : bgImgCfg["repeat-x"],
+    repeatY        : bgImgCfg["repeat-y"],
+    fill           : bgImgCfg.fill,
+    scale          : bgImgCfg.scale ?? null,
+    randomEveryPage: bgImgCfg.randomEveryPage,
+});
 ---
 
 <div class="pointer-events-none fixed inset-0 -z-10 bg-page" aria-hidden="true">
     {hasColorLayer ? (
         <div class:list={["absolute inset-0", colorLayerClass, blurClass]} style={styleVars}>
-            {imageLayerStyle && <div class="absolute inset-0" style={imageLayerStyle}></div>}
+            {showImageLayer && (useRandom ? (
+                <div id="bg-image-layer" class="absolute inset-0" data-bg-config={randomConfig}></div>
+            ) : (
+                <div id="bg-image-layer" class="absolute inset-0" style={imageLayerStyle}></div>
+            ))}
         </div>
     ) : (
-        imageLayerStyle && <div class="absolute inset-0" style={imageLayerStyle}></div>
+        showImageLayer && (useRandom ? (
+            <div id="bg-image-layer" class="absolute inset-0" data-bg-config={randomConfig}></div>
+        ) : (
+            <div id="bg-image-layer" class="absolute inset-0" style={imageLayerStyle}></div>
+        ))
     )}
 </div>
+
+{useRandom && (
+    <script>
+        // 文件夹随机背景: fetch /backgrounds.json → 随机挑一张 → 按 config.yml 的规则拼样式。
+        // 背景层在 #swup-container 之外, 元素不会随换页重建; 用 data-bg-ready 挡住 Swup
+        // updateHead 重跑脚本时的二次抽卡 (和 SearchBox 的 searchBound 一个思路)。
+        (() => {
+            const layer = document.getElementById("bg-image-layer");
+            if (!layer || layer.dataset.bgReady === "1") return;
+            layer.dataset.bgReady = "1";
+
+            type BgConfig = {
+                svgColor?: string;
+                repeatX?: boolean;
+                repeatY?: boolean;
+                fill?: boolean;
+                scale?: number | null;
+                randomEveryPage?: boolean;
+            };
+            const cfg: BgConfig = (() => {
+                try { return JSON.parse(layer.dataset.bgConfig || "{}"); }
+                catch { return {}; }
+            })();
+
+            // 淡入淡出时长, 和 Swup 的过渡时长保持一致 (见 global.css 的 #bg-image-layer)
+            const FADE_MS = 200;
+            const reduceMotion = typeof window.matchMedia === "function"
+                && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+            let images: string[] = [];
+
+            const setBackground = (url: string) => {
+                layer.style.cssText = buildImageStyle(url, cfg);
+            };
+
+            const apply = (first = false) => {
+                if (images.length === 0) return;
+                const url = images[Math.floor(Math.random() * images.length)];
+                // 首次加载 / 减少动态效果: 直接显示, 不做淡入淡出
+                if (first || reduceMotion) {
+                    setBackground(url);
+                    return;
+                }
+                // 无感切换: 先淡出 → 换图 → 再淡入 (opacity 过渡见 global.css)
+                layer.style.opacity = "0";
+                window.setTimeout(() => {
+                    setBackground(url);
+                    layer.style.opacity = "0";
+                    void layer.offsetWidth; // 强制 reflow, 让 opacity 从 0 开始过渡
+                    layer.style.opacity = "1";
+                }, FADE_MS);
+            };
+
+            fetch("/backgrounds.json")
+                .then((res) => res.json())
+                .then((data) => {
+                    images = Array.isArray(data) ? data : [];
+                    apply(true); // 首次加载直接显示一张
+                })
+                .catch(() => {});
+
+            // 每次跳转页面都重新随机 (config.yml 的 randomEveryPage 控制)
+            if (cfg.randomEveryPage) {
+                document.addEventListener("swup:page:view", () => apply(false));
+            }
+
+            /** 和上面服务端拼 imageLayerStyle 的规则保持一致 */
+            function buildImageStyle(url: string, c: BgConfig) {
+                let style = "";
+                if (c.fill) {
+                    style = "background-size: cover; background-repeat: no-repeat;";
+                } else if (c.repeatX && c.repeatY) {
+                    style = "background-repeat: repeat;";
+                } else if (c.repeatX) {
+                    style = "background-repeat: repeat-x;";
+                } else if (c.repeatY) {
+                    style = "background-repeat: repeat-y;";
+                } else {
+                    style = "background-repeat: no-repeat;";
+                }
+
+                if (c.scale != null) {
+                    style += `background-size: ${c.scale}%; -webkit-mask-size: ${c.scale}%; mask-size: ${c.scale}%;`;
+                }
+
+                if (url.endsWith("svg") && c.svgColor) {
+                    style += `-webkit-mask-image: url(${url}); mask-image: url(${url}); background-position: center;`;
+                    style += `background-color: ${c.svgColor};`;
+                } else {
+                    style += `background-image: url(${url}); background-position: center;`;
+                }
+                return style;
+            }
+
+        })();
+    </script>
+)}
