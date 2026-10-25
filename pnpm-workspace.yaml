@@ -5,5 +5,13 @@ allowBuilds:
   esbuild: true
   koffi: true
   protobufjs: true
+
+# cloudflare 使用的是 pnpm10, 上面的 allowBuilds 适用于 pnpm11+
+onlyBuiltDependencies:
+  - cn-font-split
+  - esbuild
+  - koffi
+  - protobufjs
+
 minimumReleaseAgeExclude:
   - astro@7.3.5
