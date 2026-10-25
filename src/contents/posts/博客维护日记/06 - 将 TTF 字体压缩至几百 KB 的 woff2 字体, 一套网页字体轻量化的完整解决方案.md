@@ -437,21 +437,30 @@ const fontWeights = [
 
 命令运行顺序: `astro build -> node scripts/split-font.mjs -> node scripts/subset-font.mjs`
 
-### 两个需要注意的坑
+### 三个需要注意的坑
 
 ${note [warn]
-**1. cn-font-split 的二进制依赖需要额外下载 (国内网络)**
+**1. 二进制不随 npm 包分发, 需要放行 postinstall**
 
-cn-font-split 的 FFI 二进制 (`libffi-*.dll` / `.so`) 不随 npm 包分发, 安装时的 postinstall 会从 GitHub 下载。国内直连 GitHub 极慢, 下载可能被截断 (DLL 只剩约 1.9MB), 运行时加载会报 `win32=193 (不是有效的 Win32 应用程序)`。
+cn-font-split 的 FFI 二进制 (`libffi-*.dll` / `.so`) 不随 npm 包分发, 靠安装时的 postinstall 脚本从 GitHub 下载。而 pnpm 默认会**阻止**依赖的 postinstall 脚本, 需要在 `pnpm-workspace.yaml` 里显式放行:
 
-若遇到 DLL 加载失败, 用镜像重新下载即可:
+```yaml
+allowBuilds:
+  cn-font-split: true
+```
+
+否则构建时加载二进制会报 `cannot open shared object file: No such file or directory` (Linux) 或 `win32=193` (Windows)。
+
+**2. 国内网络下载二进制可能被截断**
+
+postinstall 从 GitHub 下载二进制, 国内直连极慢, 下载可能被截断 (DLL 只剩约 1.9MB), 运行时加载报 `win32=193 (不是有效的 Win32 应用程序)`。用镜像重新下载即可:
 
 ```powershell
 set CN_FONT_SPLIT_GH_HOST=https://ik.imagekit.io/github
 npx cn-font-split i default
 ```
 
-**2. Windows 下进程退出时的访问冲突**
+**3. Windows 下进程退出时的访问冲突**
 
 cn-font-split 在 Windows 上退出进程时, Rust DLL 的卸载阶段会触发访问冲突 (退出码 `0xC0000005`)。分片本身其实已经完成, 只需在脚本末尾用 `process.exit(0)` 显式退出即可规避 (见上面的 split-font.mjs 代码)。
 }
