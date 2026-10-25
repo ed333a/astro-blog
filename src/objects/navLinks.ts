@@ -15,6 +15,8 @@ export interface NavLink {
     icon?: string;
     /** 外部链接: 新标签页打开, 配置里没写图标时默认用「外链」图标 */
     external: boolean;
+    /** 经 /go 代理的链接: 走整页加载 (带 data-no-swup, 跳过 Swup 过渡) */
+    noSwup?: boolean;
 }
 
 /** 带协议 (http: / mailto: …) 或以 // 开头的, 都算站外链接 (站内用的是 /xxx 这种相对路径) */
@@ -33,5 +35,6 @@ export const navLinks: NavLink[] = navBarConfig.links.map(({ src, title, icon })
         label   : title,
         icon    : icon ?? (external ? EXTERNAL_ICON : undefined),
         external: external && href === src,
+        noSwup  : external && href !== src,
     };
 });

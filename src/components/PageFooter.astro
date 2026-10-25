@@ -16,6 +16,10 @@ const year = new Date().getFullYear();
 // 页脚展示的 sitemap 地址: 与 sitemap.xml.ts / robots.txt.ts 一样统一从 siteConfig.siteUrl 拼出来
 const sitemapUrl = absoluteSiteUrl("sitemap.xml");
 const linkClass = "font-semibold underline decoration-dotted underline-offset-4 transition-opacity hover:opacity-80";
+// 页脚 Astro 外链: 受信任则直连新标签页, 否则走 /go 中转 (整页加载)
+const astroOriginalUrl = "https://github.com/withastro/astro";
+const astroHref = rewriteExternalUrl(astroOriginalUrl);
+const astroProxied = astroHref !== astroOriginalUrl;
 ---
 
 <!-- 窄屏页脚用 32px 圆角 (全宽面板用胶囊圆角会显得头重脚轻), 到 md 再回到 config.yml 的 --radius-footer。 -->
@@ -39,7 +43,12 @@ const linkClass = "font-semibold underline decoration-dotted underline-offset-4 
     <div class="flex flex-col items-center gap-2 border-t border-ink/15 pt-4 text-center text-xs leading-relaxed text-ink/75 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-6 sm:gap-y-1 sm:text-left">
         <p class="m-0">
             博客框架:{' '}
-            <a href={rewriteExternalUrl("https://github.com/withastro/astro")} target="_blank" rel="noopener" title="Astro GitHub: https://github.com/withastro/astro" class={linkClass}>Astro</a>{' '}
+            <a
+                href={astroHref}
+                {...(astroProxied ? { "data-no-swup": "" } : { target: "_blank", rel: "noopener" })}
+                title="Astro GitHub: https://github.com/withastro/astro"
+                class={linkClass}
+            >Astro</a>{' '}
         </p>
 
         <!-- <p class="m-0 max-w-full break-all">

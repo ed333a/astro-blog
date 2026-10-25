@@ -26,7 +26,7 @@ const stats = [
 // 社交链接: 外链经 /go 代理后变成站内链接, 不再新标签页打开
 const socialItems = socialLinks.map((link) => {
     const href = rewriteExternalUrl(link.url);
-    return { ...link, href, external: link.url.startsWith("http") && href === link.url };
+    return { ...link, href, external: link.url.startsWith("http") && href === link.url, noSwup: href !== link.url };
 });
 ---
 
@@ -55,6 +55,7 @@ const socialItems = socialLinks.map((link) => {
                             href={link.href}
                             class="inline-flex items-center gap-1.5 rounded-full bg-black/20 px-3 py-1 text-xs font-semibold transition duration-300 ease-out hover:opacity-70 dark:bg-white/15"
                             {...(link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                            {...(link.noSwup ? { "data-no-swup": "" } : {})}
                         >
                             {link.name}
                         </a>

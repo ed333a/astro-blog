@@ -131,7 +131,10 @@ externalLinks:
   enable: true
   autoRedirect: true
   delay: 5
-  trustedDomains: []
+  trustedDomains: 
+  - github.com
+  - gitee.com
+  - statistics.tyh123.top
 
 #######################################
 # 代码块渲染设置 (prismjs)

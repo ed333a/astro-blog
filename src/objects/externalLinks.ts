@@ -89,6 +89,8 @@ export function rewriteExternalLinksInHtml(html: string): string {
         return tag
             .replace(/href="[^"]*"/i, `href="${rewritten}"`)
             .replace(/\s+target="[^"]*"/i, "")
-            .replace(/\s+rel="[^"]*"/i, "");
+            .replace(/\s+rel="[^"]*"/i, "")
+            // data-no-swup: 中转页以完整页面加载, 跳过 Swup 过渡 (否则 /go 页的脚本时序对不上, 自动跳转不生效)
+            .replace(/>$/, ' data-no-swup>');
     });
 }

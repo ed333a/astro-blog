@@ -61,6 +61,7 @@ const displayGroups = friendLinks.map((group) => ({
             ...friend,
             href,
             directExternal: /^https?:\/\//i.test(friend.link) && href === friend.link,
+            proxied: href !== friend.link,
         };
     }),
 }));
@@ -195,6 +196,7 @@ const displayGroups = friendLinks.map((group) => ({
                             <a
                                 href={friend.href}
                                 {...(friend.directExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                                {...(friend.proxied ? { "data-no-swup": "" } : {})}
                                 class="flex h-full items-start gap-3 rounded-2xl bg-black/10 p-3 transition duration-300 ease-out hover:bg-black/15 dark:bg-white/5 dark:hover:bg-white/10"
                             >
                                 {friend.cover || friend.icon

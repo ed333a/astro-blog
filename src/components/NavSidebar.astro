@@ -45,6 +45,7 @@ import { navLinks } from "../objects/navLinks";
                     <a
                         href={link.href}
                         {...(link.external ? { target: "_blank", rel: "noopener" } : {})}
+                        {...(link.noSwup ? { "data-no-swup": "" } : {})}
                         class="flex items-center gap-2.5 rounded-2xl px-4 py-3 text-base font-semibold transition-colors duration-300 ease-out hover:bg-black/20 dark:hover:bg-white/15"
                     >
                         {link.icon && <Icon name={link.icon} class="h-4 w-4 shrink-0" aria-hidden="true" />}

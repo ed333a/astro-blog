@@ -26,6 +26,7 @@ import { navLinks } from "../objects/navLinks";
                         <a
                             href={link.href}
                             {...(link.external ? { target: "_blank", rel: "noopener" } : {})}
+                            {...(link.noSwup ? { "data-no-swup": "" } : {})}
                             class="flex items-center gap-1 text-[13px] font-semibold transition-opacity duration-300 ease-out hover:opacity-70 lg:text-sm xl:gap-1.5 xl:text-[15px]"
                         >
                             {link.icon && (
