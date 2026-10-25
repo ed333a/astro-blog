@@ -32,6 +32,9 @@ async function run() {
         const outDir = path.join(distRoot, family);
         const input = new Uint8Array(fs.readFileSync(file).buffer);
 
+        // 确保输出路径存在
+        if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+
         console.log(`⏳ 分片字体 '${family}' -> ${outDir} ...`);
         await fontSplit({
             input,
