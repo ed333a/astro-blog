@@ -3,6 +3,16 @@ import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import swup from '@swup/astro';
 import icon from 'astro-icon';
+import { readFileSync } from 'node:fs';
+import { parse } from 'yaml';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import { unified } from '@astrojs/markdown-remark';
+
+// LaTeX 数学公式: 是否开启来自 config.yml 的 siteConfig.latex.enable。
+// 开启时用 remark-math 解析 $...$ / $$...$$, 再用 rehype-katex 渲染成 HTML (样式见 layouts/Layout.astro)。
+const rawConfig = parse(readFileSync(new URL('./src/config.yml', import.meta.url), 'utf-8'));
+const latexEnabled = rawConfig?.siteConfig?.latex?.enable ?? true;
 
 // https://astro.build/config
 export default defineConfig({
@@ -36,6 +46,16 @@ export default defineConfig({
         plugins: [tailwindcss()],
     },
     markdown: {
+        // 行内 $...$ / 块级 $$...$$ 数学公式: 用 @astrojs/markdown-remark 的 unified 处理器
+        // (Astro 7 默认的 Sätteri 处理器不支持 remark/rehype 插件, 需要用 unified 才能跑 remark-math / rehype-katex)
+        ...(latexEnabled
+            ? {
+                processor: unified({
+                    remarkPlugins: [remarkMath],
+                    rehypePlugins: [rehypeKatex],
+                }),
+            }
+            : {}),
         // 代码块配色 (见 config.yml 的 codeBlock): 日间 github-light, 夜间 github-dark。
         // 双主题下 shiki 会把两套颜色都写进每个 token 的行内样式里 —— 行内是日间配色,
         // 夜间那份放在 --shiki-dark-* 变量里, 由 styles/global.css 的 shiki-theme 工具类

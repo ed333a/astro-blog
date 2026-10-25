@@ -42,7 +42,7 @@ const socialItems = socialLinks.map((link) => {
                 : <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black/20 text-lg font-bold dark:bg-white/15">{name.trim().charAt(0).toUpperCase()}</span>}
             <div class="flex min-w-0 flex-col gap-0.5">
                 <p class="m-0 truncate text-base font-bold">{name}</p>
-                {bio && <p class="m-0 truncate text-xs leading-relaxed text-ink/80">{bio}</p>}
+                {bio && <p class="m-0 text-xs leading-relaxed text-ink/80">{bio}</p>}
             </div>
         </div>
 
@@ -55,7 +55,6 @@ const socialItems = socialLinks.map((link) => {
                             href={link.href}
                             class="inline-flex items-center gap-1.5 rounded-full bg-black/20 px-3 py-1 text-xs font-semibold transition duration-300 ease-out hover:opacity-70 dark:bg-white/15"
                             {...(link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                            {...(link.noSwup ? { "data-no-swup": "" } : {})}
                         >
                             {link.name}
                         </a>

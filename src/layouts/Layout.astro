@@ -3,6 +3,7 @@ import '../styles/global.css';
 import { authorConfig, cardSpotlightConfig, frostedGlassConfig, siteConfig, themeConfig } from '../objects/config';
 import { absoluteSiteUrl, metaDescription, normalizeSitePath, siteOrigin, type SeoOptions } from '../objects/seo';
 import { getAsset } from '@/objects/getAssetUrl';
+import 'katex/dist/katex.min.css';
 
 interface Props extends SeoOptions {
     /** 页面标题: 不传就用「站点标题 · 副标题」 */

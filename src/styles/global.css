@@ -535,6 +535,13 @@ html {
     scroll-margin-top: 6rem;
 }
 
+/* ── KaTeX 数学公式: 块级公式超宽时横向滚动, 不撑破卡片 ── */
+.markdown-body .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5em 0;
+}
+
 /* ── 页面过渡 (Swup, 参考 fuwari 模板) ──
    @swup/astro 接管站内跳转, 只替换 #swup-container 里的内容 (见 PageShell)。
    导航栏 / 背景 / 返回顶部都在容器外, 所以背景完全不动, 也没有快照/黑屏问题。

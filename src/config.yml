@@ -51,6 +51,10 @@ siteConfig:
     name: CC-BY-NC-SA 4.0
     url: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
+  # Latex 数学公式渲染
+  latex:
+    enable: true
+
   # umami 统计跟踪, 用于查看各项网页浏览数据
   umami:
     # 启用统计跟踪

@@ -74,6 +74,11 @@ const siteConfigSchema = z.object({
         url   : z.string(),
     }),
 
+    // LaTeX 数学公式渲染 (行内 $...$ / 块级 $$...$$, 由 astro.config.mjs 的 remark-math / rehype-katex 消费)
+    latex: z.object({
+        enable: z.boolean(),
+    }).default({ enable: true }),
+
     umami: z.object({
         enable: z.boolean(),
         scriptSrc: z.string(),
