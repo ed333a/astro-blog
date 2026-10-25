@@ -23,20 +23,20 @@ const { class: className } = Astro.props;
         className,
     ]}
 >
-    <span class="hidden items-center gap-1.5 theme-light:flex">
+    <span class="hidden items-center gap-1.5 theme-light:flex shrink-0 whitespace-nowrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="h-4 w-4" aria-hidden="true">
             <circle cx="12" cy="12" r="4"></circle>
             <path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.5 1.5m11.2 11.2 1.5 1.5m0-14.2-1.5 1.5M6.4 17.6l-1.5 1.5"></path>
         </svg>
         亮色
     </span>
-    <span class="hidden items-center gap-1.5 theme-dark:flex">
+    <span class="hidden items-center gap-1.5 theme-dark:flex shrink-0 whitespace-nowrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
             <path d="M21 12.79A8.5 8.5 0 1 1 11.21 3a6.5 6.5 0 0 0 9.79 9.79Z"></path>
         </svg>
         暗色
     </span>
-    <span class="hidden items-center gap-1.5 theme-auto:flex">
+    <span class="hidden items-center gap-1.5 theme-auto:flex shrink-0 whitespace-nowrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4" aria-hidden="true">
             <circle cx="12" cy="12" r="9"></circle>
             <path d="M12 3a9 9 0 0 1 0 18Z" fill="currentColor" stroke="none"></path>

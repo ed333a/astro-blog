@@ -25,7 +25,7 @@ const linkClass = "font-semibold underline decoration-dotted underline-offset-4 
             <LicenseNotice title={title} path={path} compact />
         </div>
 
-        <ul class="m-0 flex justify-end items-center gap-6 p-0 font-semibold w-[35%]">
+        <ul class="m-0 flex shrink-0 items-center justify-end gap-6 whitespace-nowrap p-0 font-semibold">
             <li><a href="/rss" class="transition-opacity hover:opacity-70">RSS</a></li>
             <li><a href="/blog" class="transition-opacity hover:opacity-70">归档</a></li>
             <li><a href="/about" class="transition-opacity hover:opacity-70">关于</a></li>
@@ -73,43 +73,26 @@ const linkClass = "font-semibold underline decoration-dotted underline-offset-4 
         const DEFAULT_START = "2026-04-13T12:00:00+08:00";
         const pad = (value: number) => String(value).padStart(2, "0");
 
-        /** 在 date 上加若干个月; 月末会夹到目标月的最后一天 (1/31 + 1 月 → 2/28) */
-        const addMonths = (date: Date, amount: number): Date => {
-            const result = new Date(date.getTime());
-            const day = result.getDate();
-            result.setDate(1);
-            result.setMonth(result.getMonth() + amount);
-            const lastDay = new Date(result.getFullYear(), result.getMonth() + 1, 0).getDate();
-            result.setDate(Math.min(day, lastDay));
-            return result;
-        };
-
         /**
-         * 把「建立时间 → 现在」拆成日历意义上的年 / 月 / 日 + 时 / 分 / 秒。
-         * 年、月按日历推进 (不拿 365/30 天硬除), 这样 4 月 13 日到 10 月 13 日正好是 6 个月;
-         * 时 / 分 / 秒取自「最后一个月纪念日」之后的剩余时长。
+         * 把「建立时间 → 现在」的时长拆成 天 / 时 / 分 / 秒。
+         * 直接按毫秒差折算 (86_400_000ms = 1 天), 与日历无关。
          */
         const formatUptime = (start: Date, now: Date): string => {
-            if (now.getTime() <= start.getTime()) return "0 年 0 月 0 日 00 时 00 分 00 秒";
+            const diff = now.getTime() - start.getTime();
+            if (diff <= 0) return "0天00时00分00秒";
 
-            let months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
-            if (addMonths(start, months).getTime() > now.getTime()) months -= 1;
-            if (months < 0) months = 0;
+            const days    = Math.floor(diff / 86_400_000);
+            let remainder = diff % 86_400_000;
 
-            const years      = Math.floor(months / 12);
-            const restMonths = months % 12;
+            const hours   = Math.floor(remainder / 3_600_000);
+            remainder %= 3_600_000;
 
-            let remainder = now.getTime() - addMonths(start, months).getTime();
-            const days = Math.floor(remainder / 86_400_000);
-            remainder -= days * 86_400_000;
-
-            const hours = Math.floor(remainder / 3_600_000);
-            remainder -= hours * 3_600_000;
             const minutes = Math.floor(remainder / 60_000);
-            remainder -= minutes * 60_000;
+            remainder %= 60_000;
+
             const seconds = Math.floor(remainder / 1_000);
 
-            return `${years} 年 ${restMonths} 月 ${days} 日 ${pad(hours)} 小时 ${pad(minutes)} 分 ${pad(seconds)} 秒`;
+            return `${days}天${pad(hours)}时${pad(minutes)}分${pad(seconds)}秒`;
         };
 
         const updateUptime = () => {
