@@ -76,7 +76,7 @@ author:
   # 作者名称
   name: tyh123
   # 头像图片路径: 以 '/' 开头表示 public 目录下的资源; 留空则用名字首字母占位
-  avatar: 'assets/img/avatars/avatar.jpg'
+  avatar: '/img/avatar.jpg'
   favIcon: 'assets/favicon.jpg'
   # 一句话介绍
   bio: 一个喜欢嵌入式的工作者
