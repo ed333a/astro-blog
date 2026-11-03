@@ -20,16 +20,16 @@ postID: 96d23a91 # 自动生成, 不要修改这个项目的值
 UART 通信需要两根信号线来实现，分别是 TXD 和 RXD。TXD 用来发送数据；RXD 用来接收数据。在发送数据时，将并行的 8 比特数据按比特在一条数据线上逐个传输。在接收数据时，将接收到的串行数据按比特解串成并行数据。**发送时低位先发。**
 
 需要注意的是，两个串口设备通信时，不能把各自的 TXD 和 RXD 直接对应相连（即 TXD 接 TXD、RXD 接 RXD），而应该交叉连接：一个设备的 TXD 接另一个设备的 RXD，同时这个设备的 RXD 接另一个设备的 TXD。具体连接方式如下图所示。
-![串口接线方式](/img/posts/fpga_impl_interface/uart/wiring.png)
+![串口接线方式](../../../../assets/img/posts/fpga_impl_interface/uart/wiring.png)
 
 ## 串口通信数据格式
 如下图所示，下图为**一个字节数据 (字符帧)** 的传输格式
-![异步串口通信数据格式图](/img/posts/fpga_impl_interface/uart/data_format.png)
+![异步串口通信数据格式图](../../../../assets/img/posts/fpga_impl_interface/uart/data_format.png)
 - **起始位**：标志着一帧数据的开始，该位**固定为 0**
 - **数据位**：一帧数据中的**有效数据**，在串口设置中可配置为 5、6、7、8 位
 - **校验位**：分为**奇校验**和**偶校验**。为了使得整体 1 的个数为对应的奇数/偶数，在该位补齐对应的 0 或 1，例图如下：
-	- ![串口校验位-奇校验图例](/img/posts/fpga_impl_interface/uart/parity_odd.png)
-	- ![串口校验位-偶校验图例](/img/posts/fpga_impl_interface/uart/parity_even.png)
+	- ![串口校验位-奇校验图例](../../../../assets/img/posts/fpga_impl_interface/uart/parity_odd.png)
+	- ![串口校验位-偶校验图例](../../../../assets/img/posts/fpga_impl_interface/uart/parity_even.png)
 	- 总结一下就是：奇偶校验是为了让传输的数据（包含校验位）中 1 的个数为奇数/偶数。如果传输字节中 1 的个数为 偶数/奇数，则校验位的数据为 1，否则为 0。
 - **停止位**：标志着一个数据帧的结束。该位**固定为 1**
 ## 波特率
@@ -39,19 +39,7 @@ UART 通信需要两根信号线来实现，分别是 TXD 和 RXD。TXD 用来�
 ## 实现代码
 ### 串口发送模块
 该模块负责串口数据的发送，已折叠部分代码 (点击折叠内容即可打开)
-```verilog collapse={30-164}
-// FILE_HEADER_HEADER-------------------------------------------------------------------------------
-// Copyright (c) 2026, Mr. Tian. All rights reserved.
-//--------------------------------------------------------------------------------------------------
-// FILE NAME        : uart_tx.v
-// AUTHOR           : Mr. Tian
-// DESCRIPTION      : UART transmitter
-//--------------------------------------------------------------------------------------------------
-// REVISION HISTORY :
-//  Rev: (2026-05-06) - Mr. Tian
-//          Initial release.
-// FILE_HEADER_FOOTER-------------------------------------------------------------------------------
-
+```verilog
 module uart_tx # (
     parameter   CLOCK_FREQ  =   32'd100_000_000 ,   //  输入时钟频率 (200MHz)
     parameter   BAUD_RATE   =   32'd115200      ,   //  波特率
@@ -209,18 +197,7 @@ endmodule
 ```
 ### 串口接收模块
 该模块负责串口数据的接收，已折叠部分代码 (点击折叠内容即可打开)
-```verilog collapse={30-185}
-// FILE_HEADER_HEADER-------------------------------------------------------------------------------
-// Copyright (c) 2026, Mr. Tian. All rights reserved.
-//--------------------------------------------------------------------------------------------------
-// FILE NAME        : uart_rx.v
-// AUTHOR           : Mr. Tian
-// DESCRIPTION      : UART receiver
-//--------------------------------------------------------------------------------------------------
-// REVISION HISTORY :
-//  Rev: (2026-05-06) - Mr. Tian
-//          Initial release.
-// FILE_HEADER_FOOTER-------------------------------------------------------------------------------
+```verilog
 module uart_rx # (
     parameter   CLOCK_FREQ  =   32'd100_000_000 ,   //  输入时钟频率 (200MHz)
     parameter   BAUD_RATE   =   32'd115200      ,   //  波特率
@@ -402,17 +379,6 @@ endmodule
 ### 封装后的串口顶层
 为了方便使用，直接将发送模块和接收模块作为两个子模块封装到一个顶层模块中。
 ```verilog
-// FILE_HEADER_HEADER-------------------------------------------------------------------------------
-// Copyright (c) 2026, Mr. Tian. All rights reserved.
-//--------------------------------------------------------------------------------------------------
-// FILE NAME        : uart.v
-// AUTHOR           : Mr. Tian
-// DESCRIPTION      : Top level UART module encapsulating TX and RX
-//--------------------------------------------------------------------------------------------------
-// REVISION HISTORY :
-//  Rev: (2026-05-06) - Mr. Tian
-//          Initial release.
-// FILE_HEADER_FOOTER-------------------------------------------------------------------------------
 module uart # (
     parameter               CLOCK_FREQ  =   32'd100_000_000 ,   //  输入时钟频率 (200MHz)
     parameter               BAUD_RATE   =   32'd115200      ,   //  波特率
@@ -473,17 +439,6 @@ endmodule
 ### 回环测试(工程顶层)代码
 在这里我使用的开发板型号为 `XC7K325TFFG900-2`，时钟输入为差分信号输入
 ```verilog
-// FILE_HEADER_HEADER-------------------------------------------------------------------------------
-// Copyright (c) 2026, Mr. Tian. All rights reserved.
-//--------------------------------------------------------------------------------------------------
-// FILE NAME        : uart_loopback_top.v
-// AUTHOR           : Mr. Tian.
-// DESCRIPTION      : Top module for uart loopback
-//--------------------------------------------------------------------------------------------------
-// REVISION HISTORY :
-//  Rev: (2026-05-06) - Mr. Tian.
-//          Initial release.
-// FILE_HEADER_FOOTER-------------------------------------------------------------------------------
 module uart_loopback_top # (
     parameter   CLOCK_FREQ  =   32'd200_000_000 ,   //  输入时钟频率 (200MHz)
     parameter   BAUD_RATE   =   32'd115200      ,   //  波特率

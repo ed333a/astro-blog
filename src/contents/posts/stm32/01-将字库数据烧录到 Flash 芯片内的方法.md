@@ -103,7 +103,7 @@ file.close()
 - 选择我们之前生成的 GBK_INDEX.txt 文件
 - 点击 `开始生成` 按钮，选择好保存路径后，等待软件生成完成。
 
-![generate_index_data](/img/posts/STM32/01/generate_index_data.gif)
+![generate_index_data](../../../assets/img/posts/STM32/01/generate_index_data.gif)
 
 ## 计算汉字字模数据的偏移地址
 在这之前，我们已经生成了**连续的 `23940` 个 GBK 编码的中文字符**，并且对每个字符都取模生成了对应的字模数据，每个中文字符的字模数据都是 32 个字节。所以在生成的字库数据中，每个**汉字的字模数据都是连续存储的**，我们需要根据汉字的编码值来计算出它的字模数据在 Flash 中的偏移地址。
@@ -127,11 +127,11 @@ file.close()
 <!-- 丢 8147 -->
 使用 [十六进制编辑器](https://hexed.it/) 打开我们生成的字库文件，按下 `Ctrl+G` 输入 `0x046840` 这个位置，之后按下回车跳转到这个位置，从这个位置开始，连续读取 32 个字节，就是汉字 "啊" 的字模数据了。
 
-![goto_address1](/img/posts/STM32/01/goto_address1.png)
+![goto_address1](../../../assets/img/posts/STM32/01/goto_address1.png)
 
 选中这些数据，把它复制下来，粘贴到 [字模验证工具网站](https://www.23bei.com/tool/553.html) 中 (注意选择对应的取模参数，数据排列和取模方式)，从图中可以看到我们的字模数据是正确的。
 
-![font_data_validation](/img/posts/STM32/01/font_data_validation.png)
+![font_data_validation](../../../assets/img/posts/STM32/01/font_data_validation.png)
 
 > 刚刚验证的是汉字 "啊" 的字模数据，它的位码大于了 0x7F，验证的是 [小结](#小结) 中 "若位码大于 0x7F" 这一部分的计算结果。下面以汉字 "丢" 为例子验证 "位码小于 0x7F" 这一部分的计算结果。
 > 汉字 "丢" 的 GBK 编码为 `0x8147`，根据 GBK 编码的规则，计算过程如下：

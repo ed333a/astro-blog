@@ -15,7 +15,7 @@ postID: 4a0bb95d # 自动生成, 不要修改这个项目的值
 
 ## 以太网通信的硬件组成
 下面是一张硬件组成图例
-![以太网通信的硬件组成](/img/posts/fpga_impl_interface/ethernet_impl/eth-01/ethernet_hardware_components.png)
+![以太网通信的硬件组成](../../../../../assets/img/posts/fpga_impl_interface/ethernet_impl/eth-01/ethernet_hardware_components.png)
 主要由 **MAC (Media Access Control，媒体访问控制器)** 和 **PHY(Physical Layer，物理层接口)** 两大部分组成。
 - **MAC**：通常由嵌入式设备（如单片机、FPGA 等）实现，负责数据的打包、寻址、CRC 校验等逻辑控制功能。
 - **PHY**：一般作为一颗**独立的板载芯片**，负责网络自协商、数据编解码等物理层相关工作。
@@ -25,7 +25,7 @@ postID: 4a0bb95d # 自动生成, 不要修改这个项目的值
 RGMII 和 GMII 都是连接 MAC 层与 PHY 层的芯片间接口，主要区别在于引脚数量和传输效率。
 ### GMII (Gigabit Media Independent Interface)
 GMII 是千兆以太网接口的完整实现，也是早期 MII 接口的升级版（MII 最高支持 100Mbps）。
-![GMII 接口](/img/posts/fpga_impl_interface/ethernet_impl/eth-01/gmii_interface.png)
+![GMII 接口](../../../../../assets/img/posts/fpga_impl_interface/ethernet_impl/eth-01/gmii_interface.png)
 - **数据宽度**：8 位（发送和接收各 8 条数据线）
 - **时钟频率**：
     - 1000 Mbps 模式：125 MHz
@@ -43,7 +43,7 @@ GMII 是千兆以太网接口的完整实现，也是早期 MII 接口的升级�
 > **注意**：GMII 的发送时钟 `TX_CLK` 可能来自 MAC，也可能来自 PHY（取决于模式），这一点与 MII 略有差异。
 ### RGMII (Reduced GMII)
 RGMII 是为了解决 GMII 引脚过多问题而设计的**精简版**接口，是目前大多数 SoC、交换芯片和 PHY 芯片的首选。它采用的是 **DDR(Double Data Rate)** 模式传输的数据，即时钟的上升沿和下降沿均为有效数据。 
-![RGMII 接口](/img/posts/fpga_impl_interface/ethernet_impl/eth-01/rgmii_interface.png)
+![RGMII 接口](../../../../../assets/img/posts/fpga_impl_interface/ethernet_impl/eth-01/rgmii_interface.png)
 - **数据宽度**：4 位（发送和接收各 4 条数据线）
 - **时钟频率**：
     - 1000 Mbps 模式：125 MHz（双沿采样，等效 250 Mbps per pin）
@@ -64,7 +64,7 @@ RGMII 是为了解决 GMII 引脚过多问题而设计的**精简版**接口，�
 ## 实现以太网通信的模块框图 (UDP 通信)
 模块以实现 UDP 回环测试为目标，整体模块框图如下图所示。
 接下来的系列文章根据以下模块框图逐步推进。
-![UDP 通信模块框图](/img/posts/fpga_impl_interface/ethernet_impl/eth-01/udp_module_diagram.png)
+![UDP 通信模块框图](../../../../../assets/img/posts/fpga_impl_interface/ethernet_impl/eth-01/udp_module_diagram.png)
 **注意**：`Protocol SW` 模块的作用是在 ARP 协议与 IP 协议之间进行切换。若将 ARP 协议和 IP 协议直接连接到 MAC 发送层，会**导致多重驱动问题**，这在 FPGA 设计中是不允许的。
 
 > 简单来说，`Protocol SW` 模块正是**为了避免因多重驱动而引发时序违例**所设计的。

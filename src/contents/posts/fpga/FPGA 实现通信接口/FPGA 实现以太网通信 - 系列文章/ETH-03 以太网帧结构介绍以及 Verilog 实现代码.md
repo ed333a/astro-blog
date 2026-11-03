@@ -19,7 +19,7 @@ postID: 6ec21651 # 自动生成, 不要修改这个项目的值
 理解以太网帧的组成是我们开始学习以太网 ARP、ICMP、UDP 等上层协议的基础。
 ## 以太网帧的组成 (格式)
 数据格式如下图所示。
-![以太网数据帧结构](/img/posts/fpga_impl_interface/ethernet_impl/eth-03/ethII_frame_format.png)
+![以太网数据帧结构](../../../../../assets/img/posts/fpga_impl_interface/ethernet_impl/eth-03/ethII_frame_format.png)
 - **前导码 (Preamble)**：固定的 **7 字节 0x55**，二进制表现为 0 和 1 交替。
 - **帧起始界定符 (SFD)**：全称：Start Frame Delimiter。固定的 **1 字节 0xD5**，二进制表现为 `1101_1010`
 - **目的 MAC 地址**：即接收端的物理 MAC 地址，占用 6 个字节，MAC 地址从应用上可分为以下三种类型

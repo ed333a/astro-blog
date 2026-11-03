@@ -10,6 +10,58 @@
 - `src/config.yml` (博客的主题配置)
 - `src/friendLinks.yml` (友情链接)
 
+## 目录结构
+
+下方的目录结构仅列出一些必要的文件夹或文件，并非全部结构
+
+```text
+[ROOT]
+  ├─ public --------------- 公共资源文件夹
+  ├─ scripts -------------- 存放字体子集化, 以及 Unicode 分片脚本.
+  └─ src
+      ├─ assets ----------- astro 内部资源的存放位置
+      ├─ contents
+      │   ├─ pages
+      │   │   └─ about.md - about 页面的内容
+      │   └─ posts -------- 文章存放目录
+      ├─ icons ------------ 图标文件的存放位置
+      ├─ config.yml ------- 配置文件
+      └─ friendLinks.yml -- 友链数据
+```
+
+## Markdown 文档存放位置
+- `[ROOT]/src/contents/pages/about.md`: 关于页面中的自我介绍内容。
+- `[ROOT]/src/contents/posts`: 文章的存放目录。所有的文章都要放在这里，可以用文件夹进行任意分级的存放而不影响文章的加载。
+
+## 文章的 Frontmatter
+下面的这些值**全部都是可选的**
+```yaml
+title: 文章标题 (可选, 默认用文件名代替)
+description: 文章描述 (可选)
+
+# 有两个值可以选: about/post, 这个值决定文章渲染在哪个页面模板上
+# (可选, 默认 post)
+type: post
+
+# 文章分类
+# (可选, 默认不分类)
+category: 分类
+
+# 文章标签
+# (可选, 默认无标签)
+tags:
+  - tag1
+  - tag2
+
+# 发布日期, 格式为: YYYY-MM-DD HH:mm:ss, 例: 2026-11-03 15:25:48
+# (可选, 默认无日期)
+published: 2026-11-03 15:25:48
+
+# 草稿: true 时不参与构建 (也不会成为 ${post ...} 引用的目标)
+# (可选, 默认 false)
+draft: false
+```
+
 ## 文档内的嵌入代码
 ### 展示 git 仓库
 语法

@@ -24,9 +24,9 @@ IP 协议目前常用的上层协议如下:
 以上三种协议都是基于 **IP 协议** 运行的。
 ## IP 协议格式
 ### MAC 帧
-![MAC-FRAME](/img/posts/fpga_impl_interface/ethernet_impl/eth-05/mac-frame.png)
+![MAC-FRAME](../../../../../assets/img/posts/fpga_impl_interface/ethernet_impl/eth-05/mac-frame.png)
 ### IP 首部格式
-![](/img/posts/fpga_impl_interface/ethernet_impl/eth-05/ip-format.png)
+![](../../../../../assets/img/posts/fpga_impl_interface/ethernet_impl/eth-05/ip-format.png)
 - **版本 (4 bits)**: IP 版本号, IPv4 = 4, IPv6 = 6.
 - **首部长度 (4 bits)**: 以 32bit (4 字节) 为一个单位的首部长度, 首部长度一般填 5, 即 20 字节的长度.
 - **服务类型 (8 bits)**: 默认为 0 就行, 用于一般服务.
@@ -48,7 +48,7 @@ IP 协议目前常用的上层协议如下:
 IP 首部校验和用于检测 IP 数据报首部在传输过程中是否出现错误。它只覆盖 IP 首部（不包括数据部分）, 且采用 **16 位反码求和** 算法。
 
 假设我们的 IP 首部数据经过填充后如下图所示。
-![](/img/posts/fpga_impl_interface/ethernet_impl/eth-05/ip-header-filled.png)
+![](../../../../../assets/img/posts/fpga_impl_interface/ethernet_impl/eth-05/ip-header-filled.png)
 ### 计算前的准备
 1. **将校验和字段清零**: 在计算校验和之前, IP 首部中的 "首部校验和" 字段 (16 位) 必须设置为 `0x0000`, 保证此段不参与计算。
 2. **将所有数据按照每 16-bit(2 字节) 为划分为一个半字(Half-Word)**: 将整个 IP 首部 (通常是 20 字节, 不含选项, 或更多带选项的情况) 按每 2 字节为一个单位, 拆分成若干个 **半字**。

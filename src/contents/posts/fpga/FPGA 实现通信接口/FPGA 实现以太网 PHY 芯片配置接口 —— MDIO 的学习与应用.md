@@ -36,15 +36,15 @@ MDIO 接口是配置以太网 PHY 芯片片上寄存器的一种通用接口，�
 
 > 在读数据操作时，**直到 TA 阶段之前，数均由主设备(FPGA)驱动**，TA 阶段第**一个时钟周期**主设备控制 MDIO 为高阻态，释放总线，从**第二个时钟周期**开始，**从设备接管 MDIO**，数据为低电平，表示数据将在**下一个时钟周期**开始发送。
 
-![MDIO 读数据时序图](/img/posts/fpga_impl_interface/eth_mdio/mdio_reading.png)
-![MDIO 读数据时序图-note](/img/posts/fpga_impl_interface/eth_mdio/mdio_reading_note.png)
+![MDIO 读数据时序图](../../../../assets/img/posts/fpga_impl_interface/eth_mdio/mdio_reading.png)
+![MDIO 读数据时序图-note](../../../../assets/img/posts/fpga_impl_interface/eth_mdio/mdio_reading_note.png)
 ### 写数据
 | Preamble | ST  |   OP   | PHYAD | REGAD |   TA   |       DATA       | IDLE |
 | :------: | :-: | :----: | :---: | :---: | :----: | :--------------: | :--: |
 |  1...1   | 01  | **01** | AAAAA | RRRRR | **10** | DDDDDDDDDDDDDDDD |  Z   |
 
 在写数据时，MDIO 总线**全程由主设备控制**
-![MDIO 写数据时序图](/img/posts/fpga_impl_interface/eth_mdio/mdio_writing.png)
+![MDIO 写数据时序图](../../../../assets/img/posts/fpga_impl_interface/eth_mdio/mdio_writing.png)
 ## 实现代码
 ### 双向 IO 口的驱动
 在这里使用 `IOBUF` 原语驱动双向 IO 口。

@@ -24,7 +24,7 @@ postID: 52a1f482 # 自动生成, 不要修改这个项目的值
 > 关于片选信号线：从机设备片选信号线为高电平时，不会接收来自 MOSI 数据线上的数据，同时设备本身也不会输出任何数据。
 
 下面是一张多设备共享 SPI 通信的连接方式图
-![SPI 一主多从接线方式](/img/posts/fpga_impl_interface/spi/spi_wiring.png)
+![SPI 一主多从接线方式](../../../../assets/img/posts/fpga_impl_interface/spi/spi_wiring.png)
 ## 半双工 SPI (三线式) 通信
 该种接线方式将数据接口 (MISO、MOSI) 整合成了一个双向数据接口 (SDIO)，不是标准的 SPI 形式，这种 SPI 通信**只支持半双工通信**，但这是一种**常用和被广泛支持的变体**，通常称为 "三线 SPI" 或 "半双工 SPI"。三线式 SPI 通信同样支持多设备共享 SDIO 总线。
 
@@ -39,7 +39,7 @@ postID: 52a1f482 # 自动生成, 不要修改这个项目的值
 
 > **关于 SDIO 如何切换数据方向**：这个要看具体的芯片数据手册，每款芯片的数据手册对于换向的时机都是不一样的。如我调试时的某款 ADC 芯片 SDIO 通信时序如下 (**高位先发**)：
 >
-> ![SPI-SDIO通信时序](/img/posts/fpga_impl_interface/spi/spi_sdio_timing.png)
+> ![SPI-SDIO通信时序](../../../../assets/img/posts/fpga_impl_interface/spi/spi_sdio_timing.png)
 >
 > 
 > | bit     | 功能        | 功能介绍                                                          |
@@ -177,10 +177,10 @@ wire    update_edge         = (CPHA == 0) ? spi_sclk_negedge : spi_sclk_posedge 
 wire    sample_edge         = (CPHA == 0) ? spi_sclk_posedge : spi_sclk_negedge ;
 ```
 
-## 完整的 SPI 代码
-代码较长，已对 `50-238` 行的代码内容进行折叠操作
+## 完整的 SPI 代码, 以及搭建仿真测试
 
-```verilog collapse={50-237}
+### 完整代码
+```verilog
 module spi_master #(
     parameter                       DATA_WIDTH          = 5'd24             , // data width, [1bit RW ctrl, 15 bits register addr, 8 bits data]
     parameter                       CPOL                = 1'b0              , // Clock polarity
@@ -420,6 +420,74 @@ end
 
 endmodule
 ```
+
+### 仿真测试平台
+```verilog
+`timescale 1ns/1ps
+
+module spi_master_tb;
+
+// 产生 100MHz 的时钟
+localparam CLOCK_PERIOD = 10;
+
+reg clk;
+initial clk = 0;
+always #(CLOCK_PERIOD/2) clk=~clk;
+
+reg             rst_n           ;
+reg     [23:0]  dat_tx          ;
+wire    [23:0]  dat_rx          ;
+reg             start_op        ;
+wire            spi_end         ;
+wire            spi_sclk        ;
+wire            spi_cs_n        ;
+reg             spi_miso        ;
+wire            spi_mosi        ;
+wire    [ 7:0]  data_bit_cnt    ;
+
+initial begin
+    rst_n       <=  1'b0        ;
+    dat_tx      <=  24'h79BC    ;   //  待发送数据
+    start_op    <=  1'b0        ;
+    spi_miso    <=  1'b0        ;
+    #(CLOCK_PERIOD*10)
+    rst_n       <=  1'b1        ;   //  释放复位信号
+    #(CLOCK_PERIOD*10)
+    start_op    <=  1'b1        ;   //  等待 10 个时钟周期后触发发送信号
+    #CLOCK_PERIOD
+    start_op    <=  1'b0        ;   //  释放发送信号
+
+end
+
+//  实例例化
+spi_master # (
+    .DATA_WIDTH         (   8'd24   ),
+    .CPOL               (   1'b0    ),
+    .CPHA               (   1'b0    ),
+    .CLK_DIV            (   8'd10   ),  // 输入的 100MHz 时钟进行 10 分频, 得到 10MHz 的 SPI 时钟
+    .MOSI_IDLE_STATE    (   1'b0    ), 
+    .CONTINUOUS_CLK     (   1'b0    )
+) dut (
+    .clk                (   clk             ),
+    .rst_n              (   rst_n           ),
+    .dat_tx             (   dat_tx          ),
+    .dat_rx             (   dat_rx          ),
+    .start_op           (   start_op        ),
+    .spi_end            (   spi_end         ),
+    .spi_sclk           (   spi_sclk        ),
+    .spi_cs_n           (   spi_cs_n        ),
+    .spi_miso           (   spi_miso        ),
+    .spi_mosi           (   spi_mosi        ),
+    .data_bit_cnt       (   data_bit_cnt    )
+);
+    
+endmodule
+```
+
+### 仿真波形图
+完整的仿真波形图如下:
+![modelsim_full_wave](../../../../assets/img/posts/fpga_impl_interface/spi/modelsim_full_wave.png)
+
 ## 实现三线式 SPI 通信
 SDIO 通信完全不需要从头开始编写代码，以上方提供的 `spi_master` 模块的代码作为基础，将其作为一个子模块封装到顶层模块，再用 IOBUF 原语实现一个双向 IO 即可。
 

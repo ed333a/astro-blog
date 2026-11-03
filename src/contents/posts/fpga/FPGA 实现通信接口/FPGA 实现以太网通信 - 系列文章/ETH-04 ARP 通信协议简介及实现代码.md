@@ -18,7 +18,7 @@ postID: 424a6d95 # 自动生成, 不要修改这个项目的值
 
 在以太网环境中，设备之间的通信**依赖于 MAC 地址**，但上层应用通常**只知道目标设备的 IP 地址**。ARP 协议通过 "一问一答" 的机制，解决了 "**已知 IP 地址，如何找到对应 MAC 地址**" 的问题，确保数据能够正确封装并送达目标设备。
 
-![ARP 协议图](/img/posts/fpga_impl_interface/ethernet_impl/eth-04/arp_block_diagram.png)
+![ARP 协议图](../../../../../assets/img/posts/fpga_impl_interface/ethernet_impl/eth-04/arp_block_diagram.png)
 
 其工作过程简述如下：主机 A 发送数据时，按照以太网帧格式封装，但将目标 MAC 地址设置为**广播地址（FF:FF:FF:FF:FF:FF）**。这样，局域网内所有主机都会收到该数据包。只有 IP 地址与目标匹配的主机 B 会响应，将自己的 MAC 地址发送给主机 A，从而完成地址解析。其他非对应 IP 的主机则自动忽略该广播包。
 
@@ -35,10 +35,10 @@ postID: 424a6d95 # 自动生成, 不要修改这个项目的值
 ### ARP 协议数据格式
 #### 以太网帧格式
 ARP 协议的以太网帧数据格式如下图所示，ARP 数据位于以太网数据帧中的数据段部分。
-![ARP 协议 MAC 帧](/img/posts/fpga_impl_interface/ethernet_impl/eth-04/arp_format_mac.png)
+![ARP 协议 MAC 帧](../../../../../assets/img/posts/fpga_impl_interface/ethernet_impl/eth-04/arp_format_mac.png)
 #### ARP 数据报格式
 ARP 数据报位于以太网帧中的数据段中，它的格式如下图所示。
-![ARP 数据报格式](/img/posts/fpga_impl_interface/ethernet_impl/eth-04/arp_format.png)
+![ARP 数据报格式](../../../../../assets/img/posts/fpga_impl_interface/ethernet_impl/eth-04/arp_format.png)
 - **硬件类型**：指定底层网络硬件类型。对于以太网，值为 **1 `(0x0001)`**。
 - **协议类型**：要映射的协议地址类型，**ARP协议的上层协议为IP协议**，因此该协议类型为IP协议，其值为 0x0800。
 - **硬件地址长度**：硬件地址（MAC地址）的长度，以字节为单位。对于以太网上 IP 地址的 ARP 请求或者应答来说，该值为6。

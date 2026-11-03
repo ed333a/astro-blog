@@ -53,11 +53,11 @@ IDDR #(
 - **R/S**：复位/置位信号，只能使用其中之一 (置1)，或全部不使用 (置 0)。复位信号使得 Q1/Q2 输出 0，置位信号使得 Q1/Q2 输出 1。
 ### IDDR 数据对齐方式
 - **OPPOSITE_EDGE**：数据对齐的基本模式，该模式实现了基本的 DDR 功能，**但是输出的数据 Q1/Q2 在单个时钟周期内不能同时有效**，对逻辑设计不友好，已经较少使用。下图为该模式下的时序图例。
-- ![IDDR_CLK_EDGE_OPPOSITE_EDGE](/img/posts/fpga_impl_interface/ethernet_impl/eth-02/IDDR_CLK_EDGE_OPPOSITE_EDGE.png)
+- ![IDDR_CLK_EDGE_OPPOSITE_EDGE](../../../../../assets/img/posts/fpga_impl_interface/ethernet_impl/eth-02/IDDR_CLK_EDGE_OPPOSITE_EDGE.png)
 - **SAME_EDGE**：数据在同一个时钟沿提供给内部逻辑，能有效避免时序冲突。缺点是**两个数据之间有一个时钟周期的延迟差异**，在逻辑上需要处理 "错位"。下图为该模式下的时序图例。
-- ![IDDR_CLK_EDGE_SAME_EDGE](/img/posts/fpga_impl_interface/ethernet_impl/eth-02/IDDR_CLK_EDGE_SAME_EDGE.png)
+- ![IDDR_CLK_EDGE_SAME_EDGE](../../../../../assets/img/posts/fpga_impl_interface/ethernet_impl/eth-02/IDDR_CLK_EDGE_SAME_EDGE.png)
 - **SAME_EDGE_PIPELINED**：完美的数据对齐，两个输出 Q1/Q2 在**相同的钟沿同时有效**。代价则是引入了额外的延时，通常是 2 个时钟周期。下图为该模式下的时序图例。
-- ![IDDR_CLK_EDGE_SAME_EDGE_PIPELINED](/img/posts/fpga_impl_interface/ethernet_impl/eth-02/IDDR_CLK_EDGE_SAME_EDGE_PIPELINED.png)
+- ![IDDR_CLK_EDGE_SAME_EDGE_PIPELINED](../../../../../assets/img/posts/fpga_impl_interface/ethernet_impl/eth-02/IDDR_CLK_EDGE_SAME_EDGE_PIPELINED.png)
 通过时序图我们可以看到 `IDDR` 原语在 `SAME_EDGE_PIPELINED` 对齐模式下满足了我们的数据对齐要求，所以在这里我们使用 `SAME_EDGE_PIPELINED` 对齐方式。
 ## ODDR (Output Double Data Rate)
 `ODDR` 的作用正好与 `IDDR` 是相反的，它通过在**时钟的上升沿更新 `Q1/Q2` 的值**，之后输出双边沿变化的 DDR 信号。
@@ -90,9 +90,9 @@ ODDR #(
 - **R/S**：复位/置位信号，只能使用其中之一 (置1)，或全部不使用 (置 0)。复位信号使得 Q1/Q2 输出置 0，置位信号使得 Q1/Q2 输出置 1。
 ### ODDR 数据对齐方式
 - **OPPOSITE_EDGE**：在该模式下时钟的两个边沿都用于从 FPGA 逻辑捕获数据，从而实现两倍数据的吞吐量。这种方式要求内部逻辑**必须提供两个数据流**：D1 数据流**与上升沿对齐**，D2 数据流**与下降沿对齐**, (或提前半个周期来保持数据的稳定)。该方式通常要求使用下降沿的触发器来驱动，容易导致时序违例。该模式的时序图例如下。
-- ![ODDR_CLK_EDGE_OPPOSITE_EDGE](/img/posts/fpga_impl_interface/ethernet_impl/eth-02/ODDR_CLK_EDGE_OPPOSITE_EDGE.png)
+- ![ODDR_CLK_EDGE_OPPOSITE_EDGE](../../../../../assets/img/posts/fpga_impl_interface/ethernet_impl/eth-02/ODDR_CLK_EDGE_OPPOSITE_EDGE.png)
 - **SAME_EDGE**：在该模式下，D1/D2 都可以由上升沿触发的逻辑产生，DDR 内部会自动把 D2 对齐到下降沿进行输出，从而避免了跨边沿的约束，时序宽松，设计更加简单。该模式的图例如下。
-- ![ODDR_CLK_EDGE_SAME_EDGE](/img/posts/fpga_impl_interface/ethernet_impl/eth-02/ODDR_CLK_EDGE_SAME_EDGE.png)
+- ![ODDR_CLK_EDGE_SAME_EDGE](../../../../../assets/img/posts/fpga_impl_interface/ethernet_impl/eth-02/ODDR_CLK_EDGE_SAME_EDGE.png)
 ## TX_CTRL 的转换
 在 RGMII 接口中，`TX_CTL`是一个集成了 GMII 接口中 `TX_EN`(发送使能) 和 `TX_ER`(发送错误) 功能的复合信号，通过将这两个信号编码在了同一个时钟周期内，传递了两个控制信息。
 

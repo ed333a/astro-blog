@@ -37,7 +37,7 @@ $ npm install hexo-cli -g
 ```shell
 $ hexo -v
 ```
-![](/img/posts/blog/01/cmd_hexo_v.png)
+![](../../../assets/img/posts/blog/01/cmd_hexo_v.png)
 
 在此次安装过程中，我的控制台中提示了以下内容，这种情况一般是在安装 Node.js 时没有配置好系统变量。将 `%appdata%/npm` 这个路径添加到系统变量中即可 (复制到文件资源管理器中的地址栏，然后获得绝对路径)。
 ```shell
@@ -46,7 +46,7 @@ $ hexo: 无法将 “hexo” 项识别为 cmdlet、函数、脚本文件或可�
 
 ## 初始化 Hexo 目录
 完成 Hexo 的安装后，在**适当的位置**创建一个文件夹，用来存放 hexo 的项目文件。
-![](/img/posts/blog/01/hexo_project_folder.png)
+![](../../../assets/img/posts/blog/01/hexo_project_folder.png)
 
 ${note [fine]
 **这里的文件夹仅作为演示使用，无须严格按照图中所示的路径创建，你可以依照自己的文件管理习惯自己创建**
@@ -57,7 +57,7 @@ ${note [fine]
 $ hexo init
 ```
 之后 Hexo 将会在文件夹下初始化一些必要文件，如图所示。
-![](/img/posts/blog/01/hexo_project_init.png)
+![](../../../assets/img/posts/blog/01/hexo_project_init.png)
 
 ${note [warn]
 Hexo 初始化时会从 Github 克隆一个模板仓库，有时受限于网络波动等因素，你可能无法完成初始化，此时请考虑**使用网络代理**或其它方式完成初始化。
@@ -74,7 +74,7 @@ $ hexo s
 ```
 
 然后在浏览器中输入控制台输出的地址 `localhost:4000` 即可预览你的 hexo 页面 
-![](/img/posts/blog/01/hexo_page_hello_world.png)
+![](../../../assets/img/posts/blog/01/hexo_page_hello_world.png)
 
 ${note [fine]
 当默认端口被占用时，你可以在命令后面增加参数 `-p [端口号]` 来指定一个未占用的端口。
