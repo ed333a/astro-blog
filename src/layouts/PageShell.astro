@@ -10,6 +10,7 @@ import Layout from "./Layout.astro";
 import NavBar from "../components/NavBar.astro";
 import PageFooter from "../components/PageFooter.astro";
 import CodeBlockTools from "../components/CodeBlockTools.astro";
+import ImageLightbox from "../components/ImageLightbox.astro";
 import Sidebar from "../components/Sidebar.astro";
 import BackToTop from "../components/BackToTop.astro";
 import BodyBackground from "../components/BodyBackground.astro";
@@ -52,5 +53,7 @@ const { title, description, licenseTitle, licensePath, ...seo } = Astro.props;
         </div>
         <CodeBlockTools />
         <BackToTop />
+        <!-- 图片灯箱: 和返回顶部一样在 #swup-container 之外, 换页时不会重建 (正文图片靠事件委托接上) -->
+        <ImageLightbox />
     </div>
 </Layout>

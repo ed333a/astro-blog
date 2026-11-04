@@ -1,0 +1,228 @@
+---
+/**
+ * 文章图片灯箱: 点正文里的图片 → 全屏查看大图。
+ *
+ * 为什么不给每张图片都套一层组件? 正文是 Markdown 渲染出来的裸 <img>, 构建期没法逐个改写,
+ * 所以这里沿用站内「事件委托 + data-* 状态」的写法 (和 CodeBlockTools / BackToTop 一致):
+ *   · 点击 .markdown-body 里的图片 → 打开灯箱;
+ *   · 灯箱里点击图片 → 在「适应窗口」和「原始尺寸」之间切换 (原图比屏幕大时可以滚动查看细节);
+ *   · 点遮罩 / 空白 / 关闭按钮 / 按 Esc → 关闭。
+ *
+ * 这个组件挂在 PageShell 里、位于 #swup-container 之外 —— 元素不会随换页被替换,
+ * 所以事件只绑一次 (html.dataset.imageLightboxBound 挡住 Swup 换页时的重复执行),
+ * 换页后由 swup:page:view 把还开着的灯箱收起来。
+ *
+ * 正文图片本身的样子 (居中 / 限高 / 放大镜指针) 在 global.css 的 markdown-body 工具类里。
+ */
+---
+
+
+<div
+    data-image-lightbox
+    data-open="false"
+    role="dialog"
+    aria-modal="true"
+    aria-label="图片预览"
+    inert
+    class="fixed inset-0 z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-200 ease-out data-[open=true]:opacity-100 data-[open=true]:pointer-events-auto"
+>
+    <!-- 遮罩: 深色 + 模糊, 夜里再压暗一点, 和站内其他浮层同一观感 -->
+    <div data-lightbox-backdrop class="absolute inset-0 bg-black/55 backdrop-blur-md dark:bg-black/75"></div>
+
+    <!-- 顶部工具条: 说明文字 (图片的 alt) + 查看原图 + 关闭。
+         工具条自身比图片靠上层, 点它不会触发「点空白关闭」。 -->
+    <div data-lightbox-toolbar class="absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-3 p-3 sm:p-5">
+        <p
+            data-lightbox-caption
+            class="m-0 max-w-[55%] truncate rounded-full bg-black/45 px-3 py-1.5 text-xs text-white/85 backdrop-blur-sm empty:hidden"
+        ></p>
+
+        <div class="flex shrink-0 items-center gap-2">
+            <a
+                data-lightbox-original
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-no-swup
+                class="flex h-9 items-center rounded-full bg-black/45 px-3.5 text-xs font-semibold text-white/90 backdrop-blur-sm transition-colors hover:bg-black/65 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70"
+            >查看原图</a>
+
+            <button
+                type="button"
+                data-lightbox-close
+                aria-label="关闭图片预览"
+                title="关闭 (Esc)"
+                class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-black/45 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/65 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70"
+            >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true">
+                    <path d="M18 6 6 18"></path>
+                    <path d="m6 6 12 12"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- 图片容器: 原始尺寸比视口大时由这一层滚动 (slim-scrollbar 让滚动条可见)。
+         w-max + min-w-full / min-h-full: 图片比视口大时容器跟着变大 (能滚到每条边),
+         比视口小时容器仍撑满视口, 交给 flex 居中。 -->
+    <div data-lightbox-scroller class="slim-scrollbar relative h-full w-full overflow-auto overscroll-contain">
+        <div class="flex min-h-full w-max min-w-full items-center justify-center px-4 py-16 sm:px-10 sm:py-20">
+            <img
+                data-lightbox-image
+                alt=""
+                decoding="async"
+                draggable="false"
+                class="max-h-[calc(100dvh-8rem)] max-w-[92vw] cursor-zoom-in rounded-xl object-contain shadow-2xl select-none transition-[max-height,max-width] duration-300 ease-out data-[zoomed=true]:max-h-none data-[zoomed=true]:max-w-none data-[zoomed=true]:cursor-zoom-out"
+            />
+        </div>
+    </div>
+
+    <p class="pointer-events-none absolute inset-x-0 bottom-3 z-10 m-0 text-center text-[11px] text-white/60">点击图片切换缩放 · Esc 关闭</p>
+</div>
+
+<script>
+    // 正文图片灯箱的交互。事件委托 → 换页后新文章里的图片不用重新绑定。
+    // 与站内其他脚本一致: 状态只存在 DOM 上 (data-open / data-zoomed / html[data-lightbox]),
+    // 视觉全部交给上面的工具类和 global.css, 脚本不直接写样式。
+
+    const html = document.documentElement;
+
+    const IMAGE_SELECTOR = ".markdown-body img";
+    const FOCUSABLE_SELECTOR = "a[href], button:not([disabled])";
+
+    /** 打开灯箱前的焦点, 关闭时还回去 */
+    let lastFocused: HTMLElement | null = null;
+
+    function getLightbox(): HTMLElement | null {
+        return document.querySelector<HTMLElement>("[data-image-lightbox]");
+    }
+
+    /**
+     * <a> 包着图片时该不该拦下来看大图:
+     *   · 链接就是这张图 (href 与 src 相同, 或以图片扩展名结尾) → 拦下来, 用灯箱看;
+     *   · 其它链接 (徽章 / 外链) → 交给浏览器, 不破坏原有的跳转。
+     */
+    function isImageLink(href: string, image: HTMLImageElement): boolean {
+        if (!href) return false;
+        if (href === image.getAttribute("src")) return true;
+        return /\.(?:png|jpe?g|gif|webp|avif|svg)(?:[?#].*)?$/i.test(href);
+    }
+
+    function openLightbox(source: HTMLImageElement): void {
+        const lightbox = getLightbox();
+        const image = lightbox?.querySelector<HTMLImageElement>("[data-lightbox-image]");
+        if (!lightbox || !image) return;
+
+        const src = source.currentSrc || source.src;
+        const caption = lightbox.querySelector<HTMLElement>("[data-lightbox-caption]");
+        const original = lightbox.querySelector<HTMLAnchorElement>("[data-lightbox-original]");
+
+        image.src = src;
+        image.alt = source.alt || "";
+        delete image.dataset.zoomed; // 每次都从「适应窗口」开始
+
+        if (caption) caption.textContent = source.alt?.trim() ?? "";
+        if (original) original.href = src;
+
+        lastFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+        lightbox.dataset.open = "true";
+        lightbox.inert = false; // inert 收起时挡住工具条按钮的焦点, 打开后要放开 (见模板根元素)
+        html.dataset.lightbox = "open"; // 锁页面滚动 (见 global.css)
+        lightbox.querySelector<HTMLElement>("[data-lightbox-scroller]")?.scrollTo({ top: 0, left: 0 });
+
+        // 焦点移到关闭按钮: 键盘 / 读屏用户能立刻知道弹出了什么, Tab 也不会留在正文里
+        lightbox.querySelector<HTMLElement>("[data-lightbox-close]")?.focus({ preventScroll: true });
+    }
+
+    function closeLightbox(): void {
+        const lightbox = getLightbox();
+        if (!lightbox || lightbox.dataset.open !== "true") return;
+
+        lightbox.dataset.open = "false";
+        lightbox.inert = true;
+        delete html.dataset.lightbox;
+
+        lastFocused?.focus({ preventScroll: true });
+        lastFocused = null;
+    }
+
+    /** 适应窗口 ⇄ 原始尺寸: 超大图切到原始尺寸后靠容器滚动查看细节 */
+    function toggleZoom(lightbox: HTMLElement): void {
+        const image = lightbox.querySelector<HTMLElement>("[data-lightbox-image]");
+        if (!image) return;
+        if (image.dataset.zoomed === "true") delete image.dataset.zoomed;
+        else image.dataset.zoomed = "true";
+    }
+
+    if (html.dataset.imageLightboxBound !== "1") {
+        html.dataset.imageLightboxBound = "1";
+
+        document.addEventListener("click", (event) => {
+            const target = event.target as HTMLElement | null;
+            if (!target) return;
+
+            const lightbox = getLightbox();
+
+            // ① 灯箱内部: 关闭按钮 / 遮罩 → 关闭; 图片 → 切换缩放; 工具条 (查看原图) → 放行; 其余空白 → 关闭
+            if (lightbox && lightbox.contains(target)) {
+                if (target.closest("[data-lightbox-close]") || target.closest("[data-lightbox-backdrop]")) {
+                    closeLightbox();
+                    return;
+                }
+
+                if (target.closest("[data-lightbox-image]")) {
+                    toggleZoom(lightbox);
+                    return;
+                }
+
+                if (target.closest("[data-lightbox-toolbar]")) return;
+
+                closeLightbox();
+                return;
+            }
+
+            // ② 正文图片: 点开看大图 (仓库卡片里的头像属于卡片链接, 不参与)
+            const image = target.closest<HTMLImageElement>(IMAGE_SELECTOR);
+            if (!image || image.closest(".repo-card")) return;
+
+            const anchor = image.closest("a");
+            if (anchor && !isImageLink(anchor.getAttribute("href") ?? "", image)) return;
+            if (anchor) event.preventDefault();
+
+            openLightbox(image);
+        });
+
+        document.addEventListener("keydown", (event) => {
+            const lightbox = getLightbox();
+            if (!lightbox || lightbox.dataset.open !== "true") return;
+
+            if (event.key === "Escape") {
+                event.preventDefault();
+                closeLightbox();
+                return;
+            }
+
+            if (event.key !== "Tab") return;
+
+            // 焦点圈在灯箱内: 遮罩虽然盖住页面, 但 Tab 仍会跑到背后正文的链接上
+            const focusable = Array.from(lightbox.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+            if (focusable.length === 0) return;
+
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            const active = document.activeElement;
+
+            if (event.shiftKey && (active === first || !lightbox.contains(active))) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && (active === last || !lightbox.contains(active))) {
+                event.preventDefault();
+                first.focus();
+            }
+        });
+
+        // Swup 换页 (包括浏览器前进/后退) 时灯箱元素不会重建, 手动收起, 免得遮罩留在新页面上
+        document.addEventListener("swup:page:view", closeLightbox);
+    }
+</script>

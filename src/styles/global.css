@@ -486,8 +486,17 @@ html.Dark {
         @apply my-8 border-ink/20;
     }
 
+    /* 图片: 不超出正文宽度; 特别高的长截图再限一下高度 (70vh), 免得一张图占满好几屏,
+       想看细节就点开灯箱放大 (components/ImageLightbox.astro)。 */
     & img {
-        @apply my-5 max-w-full rounded-2xl;
+        @apply my-5 h-auto max-h-[70vh] w-auto max-w-full cursor-zoom-in rounded-2xl transition-[filter] duration-300 ease-out hover:brightness-105;
+    }
+
+    /* 独立成段的图片 (最常见: `![](xxx.png)` 单独占一行) 居中显示。
+       只挑「段落里只有这一张图」的情况, 正文里跟着文字走的行内小图保持原样。 */
+    & p > img:only-child,
+    & p > a:only-child > img:only-child {
+        @apply mx-auto block;
     }
 
     /* 表格: 只画横线, 和玻璃面板的观感更接近 */
@@ -517,9 +526,10 @@ html.Dark {
         @apply mb-0;
     }
 
-    /* 仓库卡片内部的头像: 不要套用正文 img 的大边距/圆角 */
+    /* 仓库卡片内部的头像: 不要套用正文 img 的边距/圆角/限高与尺寸, 保持 32×32 的圆形;
+       整张卡片本身就是链接, 所以指针用 pointer 而不是「点击放大」的 zoom-in。 */
     & .repo-card img {
-        @apply my-0 rounded-full;
+        @apply my-0 h-8 w-8 max-h-none max-w-none shrink-0 cursor-pointer rounded-full object-cover;
     }
 }
 
@@ -540,6 +550,13 @@ html {
     overflow-x: auto;
     overflow-y: hidden;
     padding: 0.5em 0;
+}
+
+/* ── 图片灯箱 (components/ImageLightbox.astro) ──
+   灯箱打开时锁住页面滚动, 让滚轮 / 触控都作用在灯箱里的原图上。
+   全站滚动条本身是 0 宽 (见上面「隐藏所有滚动条」), 所以加 overflow: hidden 不会让页面横移。 */
+html[data-lightbox="open"] {
+    overflow: hidden;
 }
 
 /* ── 页面过渡 (Swup, 参考 fuwari 模板) ──
