@@ -1,7 +1,7 @@
 ---
 title: '[blog-MT-05] 使用 Obsidian 来编写笔记'
 publishedAt: 2026-06-05 09:13:26
-draft: true
+draft: false
 description: '记录把 Obsidian 配置成博客写作环境的完整过程: 直接打开 src 目录作为仓库, 用 CSS 片段隐藏与写作无关的工程目录, 并把文章图片从 public 迁到 src/assets, 让 Obsidian 预览和 Vite 构建都能正常显示图片。'
 postID: '1e78a05c' # 自动生成, 不要修改这个项目的值
 tags:
