@@ -1,0 +1,10 @@
+.nav-folder:has([data-path="components"]),
+.nav-folder:has([data-path="icons"]),
+.nav-folder:has([data-path="layouts"]),
+.nav-folder:has([data-path="loaders"]),
+.nav-folder:has([data-path="objects"]),
+.nav-folder:has([data-path="pages"]),
+.nav-folder:has([data-path="styles"])
+{
+  display: none;
+}

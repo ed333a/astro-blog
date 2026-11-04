@@ -199,6 +199,7 @@ const themeVars = [
         <!-- <link rel="icon" type="image/svg+xml" href="/favicon.svg" /> -->
         <link rel="icon" href={getAsset(authorConfig.favIcon)} />
         <link rel="alternate" type="application/rss+xml" title={`${siteConfig.title} RSS`} href="/rss.xml" />
+        <link rel="alternate" type="application/atom+xml" title={`${siteConfig.title} Atom`} href="/atom.xml" />
         <meta name="generator" content={Astro.generator} />
         <link rel="stylesheet" href="/fonts.css" />
         <!-- 中文大字体走 unicode-range 分片 (构建后由 scripts/split-font.mjs 生成), 只在生产引入 -->

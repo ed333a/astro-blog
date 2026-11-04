@@ -1,7 +1,7 @@
 ---
 title: FPGA SPI 通信
 description: SPI 是典型的同步串行通信接口, 本文从四线式与三线式接线讲起, 说明 SCLK、MOSI、MISO、CS 信号的作用和主从通信时序, 并记录 FPGA 上的 Verilog 实现思路。
-published: 2026-04-19 14:38:34
+publishedAt: 2026-04-19 14:38:34
 tags:
   - FPGA
   - Verilog
@@ -10,6 +10,7 @@ tags:
   - 经验分享
 category: FPGA
 postID: 52a1f482 # 自动生成, 不要修改这个项目的值
+lastModified: 2026-04-19 14:38:34 # content:9bd5dc25753f606a
 ---
 
 ## 简介

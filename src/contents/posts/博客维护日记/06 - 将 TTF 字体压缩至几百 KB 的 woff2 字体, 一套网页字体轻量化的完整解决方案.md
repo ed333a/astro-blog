@@ -1,6 +1,6 @@
 ---
 title: '[blog-MT-06] - 将 TTF 字体压缩至几百 KB 的 woff2 字体, 一套网页字体轻量化的完整解决方案'
-published: 2026-06-06 21:26:18
+publishedAt: 2026-06-06 21:26:18
 draft: false
 description: 'TTF 格式的字体文件通常有十几 MB, 直接用在网站上会严重拖慢加载速度。本文记录了一套完整的字体优化流程: 从原始 TTF 字体出发, 通过子集化 (subsetting) 与 woff2 压缩, 最终输出体积仅为几百 KB 的网页字体。'
 postID: '7a651a2' # 自动生成, 不要修改这个项目的值
@@ -10,29 +10,31 @@ tags:
   - 经验分享
   - web
 category: 博客维护日记
+lastModified: 2026-06-06 21:26:18 # content:02b90cff04b1c811
 ---
 
-${note [fine] 
+:::
+note [fine] 
 这篇解决方案适用于任何以 `Node.js` 构建的站点，是一篇通用教程。
-}
+:::
 
 ## 前言
 
 今天我为博客更换了主要字体: 一款开源字体 [霞鹜文楷 GB](https://github.com/lxgw/LxgwWenKaiGB)。  
-${github lxgw/LxgwWenKaiGB}
+::github lxgw/LxgwWenKaiGB::
 
 
 然而下载下来的完整字体文件接近 25 MB。如果直接原封不动地用于博客, 加载速度会极其缓慢。于是我开始探索字体文件大小的优化方法。
 
 (图为原始 ttf 字体文件的大小)
-![raw-ttf](/img/posts/blog/06/raw-ttf.png)
+![raw-ttf](../../../assets/img/posts/blog/06/raw-ttf.png)
 
 ## 优化方法
 起初, 我尝试了最直接的方式: 利用在线工具将 TTF 格式转换为更适合网页的 woff2 格式。  
 25 MB 的 TTF 转换后仍接近 10 MB。虽然体积已经减少了大约 60%, 但对一个网页来说, 10 MB 的字体资源依然过于庞大。
 
 (图为转换为 woff2 格式后的文件大小)
-![ttf-to-woff2-size](/img/posts/blog/06/ttf-to-woff2-size.png) 
+![ttf-to-woff2-size](../../../assets/img/posts/blog/06/ttf-to-woff2-size.png) 
 
 随后, 借助 AI 工具检索资料后发现: **字体文件中只有一小部分字符是网站实际会用到的**。因此, 我们可以先收集所有页面中用到的字符, 形成一个字符集合, 然后基于这个集合从原字体中生成一个「子集」 (subset) 。  
 这样一来, 原本 10 MB 左右的 woff2 字体还能进一步压缩 (当然也可以直接从 TTF 生成子集) 。
@@ -54,10 +56,11 @@ $ npm install -D subset-font glob jsdom
 
 将原始 TTF 字体放在任意位置, 只要后续脚本能够加载到即可。
 
-${note [warn]
+:::
+note [warn]
 - 如果你存放到了 `public` 文件夹下, 并且在意构建后 `dist` 文件夹的体积, 则需要额外的代码对完整字体进行清理。
 - 如果你存放到了 `src/assets` 文件夹下, 并且在意构建后 `dist` 文件夹的体积, 那么推荐你将其移动到其它路径。 因为 Astro 在构建时会为 `src/assets` 路径下所有文件添加哈希值, 它可能是动态变化的, 而我目前不知道这个哈希值如何获取。因此不推荐放在 `src/assets` 这个路径下。
-}
+:::
 
 我的存放位置是 `public/fonts` 文件夹下, 目录结构如下所示
 ```txt
@@ -96,10 +99,10 @@ const fontConfigs = [
     // file: 完整字体的文件地址, 相对于 fontRoot, 不要添加后缀名, 
     // weight: 字体的字重, 控制字体粗细, 
     // style: normal, 正常, italic, 斜体
-    { family: 'Yozai'                   , file: 'yozai/Yozai-Regular'                            , weight: 400, style: "normal", },
-    { family: 'LXGWWenKaiMonoGB'        , file: 'lxgw-wenkai-gb/LXGWWenKaiMonoGB-Regular'        , weight: 400, style: "normal", },
-    { family: 'JetBrainsMono'           , file: 'jetbrains-mono/JetBrainsMono-Regular'           , weight: 400, style: "normal", },
-    { family: 'JetBrainsMono-Italic'    , file: 'jetbrains-mono/JetBrainsMono-Italic'            , weight: 400, style: "italic", },
+    { family: 'Yozai'               , file: 'yozai/Yozai-Regular'                    , weight: 400, style: "normal", },
+    { family: 'LXGWWenKaiMonoGB'    , file: 'lxgw-wenkai-gb/LXGWWenKaiMonoGB-Regular', weight: 400, style: "normal", },
+    { family: 'JetBrainsMono'       , file: 'jetbrains-mono/JetBrainsMono-Regular'   , weight: 400, style: "normal", },
+    { family: 'JetBrainsMono-Italic', file: 'jetbrains-mono/JetBrainsMono-Italic'    , weight: 400, style: "italic", },
 ];
 
 // 收集 html 中的所有文本字符。
@@ -218,10 +221,10 @@ export async function GET() {
 
     // 字体配置, 可直接从脚本中复制过来
     const fontWeights = [
-        { family: 'Yozai'                   , file: 'yozai/Yozai-Regular'                            , weight: 400, style: "normal", },
-        { family: 'LXGWWenKaiMonoGB'        , file: 'lxgw-wenkai-gb/LXGWWenKaiMonoGB-Regular'        , weight: 400, style: "normal", },
-        { family: 'JetBrainsMono'           , file: 'jetbrains-mono/JetBrainsMono-Regular'           , weight: 400, style: "normal", },
-        { family: 'JetBrainsMono-Italic'    , file: 'jetbrains-mono/JetBrainsMono-Italic'            , weight: 400, style: "italic", },
+        { family: 'Yozai'               , file: 'yozai/Yozai-Regular'                    , weight: 400, style: "normal", },
+        { family: 'LXGWWenKaiMonoGB'    , file: 'lxgw-wenkai-gb/LXGWWenKaiMonoGB-Regular', weight: 400, style: "normal", },
+        { family: 'JetBrainsMono'       , file: 'jetbrains-mono/JetBrainsMono-Regular'   , weight: 400, style: "normal", },
+        { family: 'JetBrainsMono-Italic', file: 'jetbrains-mono/JetBrainsMono-Italic'    , weight: 400, style: "italic", },
     ];
 
     const fontFaces = fontWeights.map(({ family, file, weight, style }) => {
@@ -261,7 +264,7 @@ ${fontFaces}
     - 相比于未子集化的 woff2 字体，体积优化了约 46 倍；相比于原始 TTF 字体，优化了约 116 倍。最终文件的输出路径可由 `scripts/subset-font.mjs` 脚本中 `outputDir` 这个参数设置。
 
 图为生成好的子集字体文件, 可以看到文件大小来到了 203KB 和 235KB, 由于脚本中对文件进行了取哈希值操作, 所以文件名为 16 位哈希结果。
-![generated-subset-font](/img/posts/blog/06/generated-subset-font.png)
+![generated-subset-font](../../../assets/img/posts/blog/06/generated-subset-font.png)
 
 ### Step7. 应用 CSS 样式
 在 `<head>...</head>` 标签中, 引用端点 css, 使网站能够使用定义的 `font-family`。
@@ -271,12 +274,13 @@ ${fontFaces}
 ```
 
 ## 补充说明
-${note [info]
+
+:::note [info]
 关于优化后的体积倍数计算: 
 - 原始 ttf 体积取 25MB
 - **在线工具转换后的 woff2 体积**: 取 10MB, 10/25*100%=40%, 即转换后 woff2 格式的字体文件相比于原始 ttf 压缩了将近 60%, 文件体积变为原始 ttf 文件体积的 40%。
 - **子集化 + woff2 最终体积**: 按截图取 203 KB 和 235 KB, 取中间值约 220 KB, 即 0.215 MB. 25MB/0.215MB ≈ 116 倍。
-}
+:::
 
 ## 进阶: 从「子集化」到「unicode-range 分片」
 
@@ -290,16 +294,16 @@ ${note [info]
 
 ### 两种方案的区别
 
-| 维度 | 子集化方案 (上文) | unicode-range 分片方案 (本文) |
+| 维度 | 子集化方案 (上文) | unicode-range 分片方案 (本章节) |
 | --- | --- | --- |
 | 原理 | 收集静态页面用到的字符, 只保留这些字形 | 把完整字体按 Unicode 区间切成几百个小块 |
 | 覆盖范围 | 仅构建期已知字符 | 完整字体的全部字形 |
-| 动态文本 | ❌ 覆盖不到 (评论新字会回退) | ✅ 浏览器按需补加载 |
+| 动态文本 | 覆盖不到(回退到默认字体) | 浏览器按需补加载 |
 | 单个文件体积 | 极小 (100–300 KB) | 每块几十 KB, 但块数多 |
 | 实际加载量 | 一个子集一次性加载 | 只加载用到的字符所在的分片 |
 | 最适合的字体 | 拉丁小字体 | 中文大字体 |
 
-${note 简单而言就是, 字体的子集化是「只装我用到的字」, 分片则是「全部切好、按需取件」。}
+:::note 简单而言就是, 字体的子集化是「只装我用到的字」, 分片则是「全部切好、按需取件」。:::
 
 ### 为什么换到分片方案
 
@@ -395,8 +399,8 @@ run()
 ```js
 const fontConfigs = [
     // 中文大字体 LXGWWenKaiMonoGB 改由 scripts/split-font.mjs 分片, 不在这里子集化。
-    { family: 'JetBrainsMono'        , file: 'jetbrains-mono/JetBrainsMono-Regular'        , weight: 400, style: "normal", },
-    { family: 'JetBrainsMono-Italic' , file: 'jetbrains-mono/JetBrainsMono-Italic'         , weight: 400, style: "italic", },
+    { family: 'JetBrainsMono'        , file: 'jetbrains-mono/JetBrainsMono-Regular' , weight: 400, style: "normal", },
+    { family: 'JetBrainsMono-Italic' , file: 'jetbrains-mono/JetBrainsMono-Italic'  , weight: 400, style: "italic", },
 ];
 ```
 
@@ -409,8 +413,8 @@ const fontWeights = [
     ...(isDev
         ? [{ family: 'LXGWWenKaiMonoGB', file: 'lxgw-wenkai-gb/LXGWWenKaiMonoGB-Regular', weight: 400, style: "normal" }]
         : []),
-    { family: 'JetBrainsMono'           , file: 'jetbrains-mono/JetBrainsMono-Regular'           , weight: 400, style: "normal", },
-    { family: 'JetBrainsMono-Italic'    , file: 'jetbrains-mono/JetBrainsMono-Italic'            , weight: 400, style: "italic", },
+    { family: 'JetBrainsMono'       , file: 'jetbrains-mono/JetBrainsMono-Regular'  , weight: 400, style: "normal", },
+    { family: 'JetBrainsMono-Italic', file: 'jetbrains-mono/JetBrainsMono-Italic'   , weight: 400, style: "italic", },
 ];
 ```
 
@@ -439,7 +443,7 @@ const fontWeights = [
 
 ### 三个需要注意的坑
 
-${note [warn]
+:::note [warn]
 **1. 二进制不随 npm 包分发, 需要放行 postinstall**
 
 cn-font-split 的 FFI 二进制 (`libffi-*.dll` / `.so`) 不随 npm 包分发, 靠安装时的 postinstall 脚本从 GitHub 下载。而 pnpm 默认会**阻止**依赖的 postinstall 脚本, 需要在 `pnpm-workspace.yaml` 里显式放行:
@@ -468,4 +472,4 @@ npx cn-font-split i default
 **3. Windows 下进程退出时的访问冲突**
 
 cn-font-split 在 Windows 上退出进程时, Rust DLL 的卸载阶段会触发访问冲突 (退出码 `0xC0000005`)。分片本身其实已经完成, 只需在脚本末尾用 `process.exit(0)` 显式退出即可规避 (见上面的 split-font.mjs 代码)。
-}
+:::

@@ -7,10 +7,13 @@
  *   ③ 摘要 (description 或正文前 80 字) 与阅读时长要在构建期算好, 列表页直接取;
  *   ④ 正文里的 `${post <id> [text]}` 引用要换成真正的链接 —— 必须在 Markdown 解析之前,
  *      所以只能在这一层做 (remark 插件里拿不到上面这些已算好的数据);
- *   ⑤ 代码块 (行号 / 折行 / 折叠 / 工具栏) 要在 shiki 出好 HTML 之后再套一层外壳。
+ *   ⑤ 代码块 (行号 / 折行 / 折叠 / 工具栏) 要在 shiki 出好 HTML 之后再套一层外壳;
+ *   ⑥ 文章内容 (正文 / 标题 / 描述 / 分类 / 标签) 变化后, 把 lastModified 自动写回 frontmatter,
+ *      指纹记在那一行的 YAML 注释里 (见 writeLastModifiedToFile)。
  *
- * 数据流: 读文件 → 解析 frontmatter → 算 postID/日期/链接 → 替换引用 → 算摘要 →
- *         context.parseData(按 content.config.ts 的 schema 校验) → context.renderMarkdown → store.set
+ * 数据流: 读文件 → 解析 frontmatter → 算 postID/日期/链接 → 回写 postID / lastModified →
+ *         替换引用 → 算摘要 → context.parseData(按 content.config.ts 的 schema 校验) →
+ *         context.renderMarkdown → store.set
  */
 
 import { promises as fs, readFileSync } from "node:fs";
@@ -24,7 +27,9 @@ import {
     buildPostPath,
     estimateReadingMinutes,
     extractExcerpt,
+    formatPostDate,
     generatePostID,
+    hashPostContent,
     parsePostDate,
     titlePinyinWarnings,
     toPlainText,
@@ -61,6 +66,8 @@ interface RawDocument {
     filePath: string;
     fileUrl: URL;
     contents: string;
+    /** frontmatter 原文 (不含前后的 --- 分隔行), 写回时按行修改, 保留原文件的字段顺序 */
+    frontmatter: string;
     data: Record<string, unknown>;
     body: string;
 }
@@ -71,12 +78,20 @@ interface PreparedDocument extends RawDocument {
     path: string;
     /** 展示用日期 (YYYY-MM-DD) */
     dateText?: string;
-    /** 发布日期 (来自 frontmatter 的 published) */
-    published?: Date;
+    /** 发布日期 (来自 frontmatter 的 publishedAt) */
+    publishedAt?: Date;
+    /** 最后修改时间 (frontmatter 的 lastModified, 由 loader 维护) */
+    lastModified?: Date;
+    /** 本次算出来的内容指纹 (正文 + 标题 / 描述 / 分类 / 标签) */
+    contentHash: string;
+    /** 上一次写回时记在 frontmatter 注释里的指纹; 没写过则为 undefined */
+    storedContentHash?: string;
+    /** 这次同步是否要把 lastModified 写回文件 */
+    needsLastModifiedWrite: boolean;
     type: DocumentType;
 }
 
-/** frontmatter 里空着的字段 (例如 `published:`) 会被 YAML 解析成 null, 统一当成「没写」 */
+/** frontmatter 里空着的字段 (例如 `publishedAt:`) 会被 YAML 解析成 null, 统一当成「没写」 */
 function withoutNulls(data: Record<string, unknown>): Record<string, unknown> {
     const cleaned: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(data)) {
@@ -85,14 +100,14 @@ function withoutNulls(data: Record<string, unknown>): Record<string, unknown> {
     return cleaned;
 }
 
-function splitFrontmatter(contents: string): { data: Record<string, unknown>; body: string } {
+function splitFrontmatter(contents: string): { data: Record<string, unknown>; body: string; frontmatter: string } {
     const normalized = contents.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n");
     const matched = /^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/.exec(normalized);
-    if (!matched) return { data: {}, body: normalized };
+    if (!matched) return { data: {}, body: normalized, frontmatter: "" };
 
     const parsed = parseYaml(matched[1]);
     const data = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {};
-    return { data: withoutNulls(data), body: normalized.slice(matched[0].length) };
+    return { data: withoutNulls(data), body: normalized.slice(matched[0].length), frontmatter: matched[1] };
 }
 
 function toPosix(path: string): string {
@@ -127,7 +142,7 @@ async function readDocuments(directory: URL, rootDirectory: string): Promise<Raw
 
     const documents = await Promise.all(files.map(async (fileUrl) => {
         const contents = await fs.readFile(fileUrl, "utf-8");
-        const { data, body } = splitFrontmatter(contents);
+        const { data, body, frontmatter } = splitFrontmatter(contents);
         const filePath = toPosix(relative(rootDirectory, fileURLToPath(fileUrl)));
         const relativePath = decodeURIComponent(fileUrl.pathname).slice(basePathname.length);
 
@@ -137,6 +152,7 @@ async function readDocuments(directory: URL, rootDirectory: string): Promise<Raw
             filePath,
             fileUrl,
             contents,
+            frontmatter,
             data,
             body,
         } satisfies RawDocument;
@@ -160,7 +176,35 @@ function prepareDocument(document: RawDocument, options: MarkdownLoaderOptions):
     const postID = asString(document.data.postID)
         ?? generatePostID(title, description, siteConfig.hashLength);
 
-    const parsedDate = parsePostDate(asString(document.data.published));
+    const parsedDate = parsePostDate(asString(document.data.publishedAt));
+    const publishedAt = parsedDate?.date;
+
+    // 最后修改时间: frontmatter 里已有的 lastModified 优先 (同时兼容小写的 lastmodified),
+    // 没有就用发布日期兜底 —— 首次迁移时不会把所有老文章都标成「刚刚更新」。
+    const declaredLastModified = parsePostDate(
+        asString(document.data.lastModified ?? document.data.lastmodified),
+    );
+
+    const contentHash = hashPostContent({
+        body       : document.body,
+        title,
+        description,
+        category,
+        tags       : Array.isArray(document.data.tags) ? document.data.tags.map(String) : [],
+    });
+    const storedContentHash = readStoredContentHash(document.frontmatter);
+
+    let lastModified = declaredLastModified?.date ?? publishedAt;
+    // 缺 lastModified 字段 (首次迁移), 或者还没有记下指纹 (用户手写了日期) → 都需要写一次
+    let needsLastModifiedWrite = declaredLastModified === undefined || storedContentHash === undefined;
+
+    // 指纹对不上 = 正文 / 标题 / 描述 / 分类 / 标签改过 → 最后修改时间更新为此刻
+    if (storedContentHash !== undefined && storedContentHash !== contentHash) {
+        lastModified = new Date();
+        needsLastModifiedWrite = true;
+    }
+    // 连发布日期都没有 (模板 / 未定稿的草稿): 没有可回退的时间, 先不写
+    if (!lastModified) needsLastModifiedWrite = false;
 
     // 文章: 交给 siteConfig.postPermalink; 特殊页面: 直接用文件名 (About.md → about)
     const path = options.usePermalink
@@ -187,8 +231,12 @@ function prepareDocument(document: RawDocument, options: MarkdownLoaderOptions):
         postID,
         path,
         type,
-        published : parsedDate?.date,
-        dateText  : parsedDate?.text,
+        publishedAt,
+        lastModified,
+        contentHash,
+        storedContentHash,
+        needsLastModifiedWrite,
+        dateText   : parsedDate?.text,
     };
 }
 
@@ -209,6 +257,48 @@ async function writePostIDToFile(fileUrl: URL, postID: string): Promise<void> {
         await fs.writeFile(fileUrl, updated, "utf-8");
     } catch (error) {
         console.warn(`[content] 写入 postID 失败 (${fileURLToPath(fileUrl)}): ${String(error)}`);
+    }
+}
+
+/** 上一次同步时记下的内容指纹 (写在 lastModified 行的注释里), 没写过返回 undefined */
+function readStoredContentHash(frontmatter: string): string | undefined {
+    const matched = /^[ \t]*last(?:Modified|modified)[ \t]*:[^\r\n]*?[ \t]+#[ \t]*content:([0-9a-f]{16})[ \t]*$/m.exec(frontmatter);
+    return matched?.[1];
+}
+
+/**
+ * 把 lastModified 与内容指纹写回 frontmatter (只改这一行, 其它字段与正文原样保留)。
+ *
+ * 写入格式:
+ *     lastModified: 2026-11-04 12:34:56 # content:3f2a9c1d8e7b0a12
+ * 指纹放在 YAML 注释里, 不是 frontmatter 字段 —— 下次同步靠它判断内容有没有变。
+ * 整行没有变化时不写文件, 避免 dev 下的目录监听被自己的写入反复触发。
+ */
+async function writeLastModifiedToFile(fileUrl: URL, lastModified: Date, contentHash: string): Promise<void> {
+    try {
+        const contents = await fs.readFile(fileUrl, "utf-8");
+        const match = /^(---[ \t]*\r?\n)([\s\S]*?)(\r?\n---[ \t]*(?:\r?\n|$))/.exec(contents);
+        if (!match) return;
+
+        const newline = match[1].endsWith("\r\n") ? "\r\n" : "\n";
+        const value = `${formatPostDate(lastModified)} # content:${contentHash}`;
+        // 兼容用户手写的 lastmodified (小写), 更新时统一成 lastModified
+        const linePattern = /^([ \t]*)last(?:Modified|modified)[ \t]*:.*$/m;
+        const existing = linePattern.exec(match[2]);
+
+        let frontmatter: string;
+        if (existing) {
+            const updated = `${existing[1]}lastModified: ${value}`;
+            if (existing[0].trim() === updated.trim()) return;
+            frontmatter = match[2].replace(linePattern, () => updated);
+        } else {
+            frontmatter = `${match[2]}${newline}lastModified: ${value}`;
+        }
+
+        const updatedContents = `${match[1]}${frontmatter}${match[3]}${contents.slice(match[0].length)}`;
+        await fs.writeFile(fileUrl, updatedContents, "utf-8");
+    } catch (error) {
+        console.warn(`[content] 写入 lastModified 失败 (${fileURLToPath(fileUrl)}): ${String(error)}`);
     }
 }
 
@@ -302,6 +392,17 @@ async function sync(context: LoaderContext, options: MarkdownLoaderOptions): Pro
         );
     }
 
+    // 内容有变化 (或还没有 lastModified): 把 lastModified + 内容指纹写回 frontmatter。
+    // 只处理文章集合, 特殊页面 (about 等) 不参与订阅源 / 站点地图的更新时间。
+    if (options.usePermalink) {
+        const writes: Promise<void>[] = [];
+        for (const document of postDocuments) {
+            if (!document.needsLastModifiedWrite || !document.lastModified) continue;
+            writes.push(writeLastModifiedToFile(document.fileUrl, document.lastModified, document.contentHash));
+        }
+        await Promise.all(writes);
+    }
+
     const references = buildReferenceMap(postDocuments);
 
     // ② 当前集合要落库的文档
@@ -325,7 +426,8 @@ async function sync(context: LoaderContext, options: MarkdownLoaderOptions): Pro
             type          : document.type,
             draft         : document.data.draft === true,
             postID        : document.postID,
-            published     : document.published,
+            publishedAt   : document.publishedAt,
+            lastModified  : document.lastModified,
             dateText      : document.dateText,
             category      : asString(document.data.category),
             tags          : Array.isArray(document.data.tags) ? document.data.tags.map(String) : [],

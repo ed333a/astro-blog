@@ -1,13 +1,14 @@
 ---
 import type { CollectionEntry } from "astro:content";
 import GlassElement from "./glass/GlassElement.astro";
+import { formatDateYYYYMMDD } from "@/objects/utils"
 
 interface Props {
     post: CollectionEntry<"posts">;
 }
 
 const { post } = Astro.props;
-const { title, excerpt, category, dateText, readingMinutes, wordCount, tags, path } = post.data;
+const { title, excerpt, category, dateText, readingMinutes, lastModified, wordCount, tags, path } = post.data;
 ---
 
 <GlassElement
@@ -19,8 +20,9 @@ const { title, excerpt, category, dateText, readingMinutes, wordCount, tags, pat
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
             {category && <span class="rounded-full bg-black/20 px-3 py-1 font-semibold tracking-wide">{category}</span>}
             {dateText && <time datetime={dateText} class="font-medium text-ink/75">{dateText}</time>}
-            <span class="text-ink/75">{readingMinutes} 分钟阅读</span>
-            <span class="text-ink/75">{wordCount.toLocaleString("zh-CN")} 字</span>
+            <span class="text-ink/75">{readingMinutes} 分钟阅读</span> |
+            <span class="text-ink/75">{wordCount.toLocaleString("zh-CN")} 字</span> |
+            {lastModified && <span class="text-ink/75">最后更新于 {formatDateYYYYMMDD(lastModified)} </span>}
         </div>
 
         <h2 class="text-lg leading-snug font-bold sm:text-xl">

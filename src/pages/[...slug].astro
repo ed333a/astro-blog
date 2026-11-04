@@ -7,6 +7,7 @@ import TableOfContents from "../components/TableOfContents.astro";
 import { getSortedPosts } from "../objects/collections";
 import { commentsConfig } from "../objects/config";
 import ArtalkComment from "@/components/ArtalkComment.astro";
+import { formatDateYYYYMMDD } from "@/objects/utils";
 
 /**
  * 文章详情 + 特殊页面 (About) 的公用路由。
@@ -39,7 +40,7 @@ const { entry, older, newer } = Astro.props;
 const { Content, headings } = await render(entry);
 
 const isPost = entry.data.type === "post";
-const { title, description, category, dateText, tags, path, readingMinutes, wordCount, published } = entry.data;
+const { title, description, category, dateText, tags, path, readingMinutes, wordCount, publishedAt, lastModified } = entry.data;
 
 // SEO 关键词: 分类 + 标签 (去重), 会输出成 meta keywords / article:tag / JSON-LD
 const keywordList = [...new Set([...(category ? [category] : []), ...tags])];
@@ -53,8 +54,8 @@ const keywordList = [...new Set([...(category ? [category] : []), ...tags])];
     path={path}
     type={isPost ? "article" : "website"}
     keywords={keywordList}
-    publishedTime={isPost ? published : undefined}
-    modifiedTime={isPost ? published : undefined}
+    publishedTime={isPost ? publishedAt : undefined}
+    modifiedTime={isPost ? lastModified ?? publishedAt : undefined}
     section={isPost ? category : undefined}
 >
     <!-- 正文面板: 一块毛玻璃卡片, 圆角用 --radius-card (config.yml 的 frostedGlassStyle.radius.card)。
@@ -77,9 +78,10 @@ const keywordList = [...new Set([...(category ? [category] : []), ...tags])];
         <header class="flex flex-col gap-3">
             <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
                 {category && <span class="rounded-full bg-black/20 px-3 py-1 font-semibold tracking-wide">{category}</span>}
-                {dateText && <time datetime={dateText} class="font-medium text-ink/75">{dateText}</time>}
-                {isPost && <span class="text-ink/75">{readingMinutes} 分钟阅读</span>}
-                {isPost && <span class="text-ink/75">{wordCount.toLocaleString("zh-CN")} 字</span>}
+                {dateText && <time datetime={dateText} class="font-medium text-ink/75">{dateText} |</time>} 
+                {isPost && <span class="text-ink/75">{readingMinutes} 分钟阅读 |</span>}
+                {isPost && <span class="text-ink/75">{wordCount.toLocaleString("zh-CN")} 字 |</span>} 
+                {lastModified && <span class="text-ink/75">最后更新于 {formatDateYYYYMMDD(lastModified)} </span>}
             </div>
 
             <h1 class="m-0 text-2xl leading-tight font-extrabold sm:text-3xl">{title}</h1>

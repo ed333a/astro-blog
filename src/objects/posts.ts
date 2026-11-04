@@ -74,6 +74,17 @@ export function parsePostDate(raw?: string | null): ParsedPostDate | undefined {
 }
 
 /**
+ * Date → frontmatter 里用的日期文本 (YYYY-MM-DD HH:mm:ss, 本地时区)。
+ * 与 parsePostDate() 互逆: 写回 lastModified 时用它, 保持和文章里手写的日期同一个格式。
+ */
+export function formatPostDate(date: Date): string {
+    return [
+        `${pad(date.getFullYear(), 4)}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
+        `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`,
+    ].join(" ");
+}
+
+/**
  * 生成文章 ID: title + description 的哈希, 取 config.yml 里 siteConfig.hashLength 位。
  * 模板注释里提到 ID 要用引号包起来 (防止被当成数字), 所以这里也保证结果里至少有一个字母 ——
  * 否则像 "0123456789abcdef" 那样纯数字的片段容易被 YAML/JSON 解析成 number。
@@ -186,6 +197,39 @@ export function toPlainText(markdown: string): string {
         .trim();
 }
 
+/** hashPostContent 的入参: 参与内容指纹的字段 (只挑「改了对读者有影响」的, 日期类不参与) */
+export interface PostContentInput {
+    body        : string;
+    title?      : string;
+    description?: string;
+    category?   : string;
+    tags?       : string[];
+}
+
+/**
+ * 文章内容指纹 (16 位十六进制)。
+ *
+ * loader 把上一次的指纹写在 frontmatter 里 lastModified 那一行的注释中:
+ *     lastModified: 2026-11-04 12:34:56 # content:3f2a9c1d8e7b0a12
+ * 下次同步时对比指纹就能判断「正文 / 标题 / 描述 / 分类 / 标签」有没有改过:
+ *   · 改过   → lastModified 更新为本次时间, 并重写指纹;
+ *   · 没改过 → lastModified 保持原值 (只补指纹, 不改日期)。
+ *
+ * 日期字段不参与计算, 所以「写回 lastModified」本身不会改变指纹 ——
+ * dev 下 watcher 被自己的写入触发时不会无限循环。
+ */
+export function hashPostContent({ body, title, description, category, tags }: PostContentInput): string {
+    const payload = JSON.stringify([
+        title ?? "",
+        description ?? "",
+        category ?? "",
+        tags ?? [],
+        // 统一换行 / 去掉首尾空白: 只是编辑器换行风格变化时不该算作内容更新
+        body.replace(/\r\n/g, "\n").trim(),
+    ]);
+    return createHash("sha256").update(payload).digest("hex").slice(0, 16);
+}
+
 /**
  * 文章摘要: 优先取 frontmatter 的 description, 没有就从正文里截前 maxLength 个字。
  */
@@ -213,17 +257,17 @@ export function absoluteUrl(path: string): string {
 
 interface SortablePost {
     data: {
-        published?: Date;
-        title     : string;
-        draft     : boolean;
+        publishedAt?: Date;
+        title       : string;
+        draft       : boolean;
     };
 }
 
 /** 新文章在前; 没有日期的排在最后 (按标题兜底, 保证每次构建顺序一致) */
 export function sortPostsDescending<T extends SortablePost>(entries: T[]): T[] {
     return [...entries].sort((a, b) => {
-        const left  = a.data.published?.getTime() ?? Number.NEGATIVE_INFINITY;
-        const right = b.data.published?.getTime() ?? Number.NEGATIVE_INFINITY;
+        const left  = a.data.publishedAt?.getTime() ?? Number.NEGATIVE_INFINITY;
+        const right = b.data.publishedAt?.getTime() ?? Number.NEGATIVE_INFINITY;
         if (left !== right) return right - left;
         return a.data.title.localeCompare(b.data.title, "zh-CN");
     });

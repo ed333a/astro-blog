@@ -11,7 +11,7 @@
 import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
 import { siteConfig } from "../objects/config";
-import { absoluteSiteUrl } from "../objects/seo";
+import { absoluteSiteUrl, escapeXml } from "../objects/seo";
 import { sortPostsDescending } from "../objects/posts";
 import { tagHash } from "../objects/tags";
 
@@ -24,57 +24,49 @@ interface SitemapEntry {
     priority: number;
 }
 
-/** XML 特殊字符转义 (URL 里的 & 也要转) */
-function escapeXml(value: string): string {
-    return value.replace(/[<>&'"]/g, (char) => {
-        switch (char) {
-            case "<": return "&lt;";
-            case ">": return "&gt;";
-            case "&": return "&amp;";
-            case "'": return "&apos;";
-            case '"': return "&quot;";
-            default : return char;
-        }
-    });
-}
-
 export const GET: APIRoute = async () => {
     const posts = sortPostsDescending(await getCollection("posts", ({ data }) => !data.draft));
     const pages = (await getCollection("pages", ({ data }) => !data.draft))
         .sort((left, right) => left.data.title.localeCompare(right.data.title, "zh-CN"));
 
     // 全站最近一次更新: 用作首页 / 列表页这类聚合页面的 lastmod
-    const latestUpdate = posts[0]?.data.published;
+    // 取「最后修改时间」(内容变更后由 loader 写回), 缺失时退回发布时间
+    const lastUpdated = posts.reduce<Date | undefined>((latest, post) => {
+        const current = post.data.lastModified ?? post.data.publishedAt;
+        if (!current) return latest;
+        return !latest || current > latest ? current : latest;
+    }, undefined);
 
     const entries: SitemapEntry[] = [];
     const add = (entry: SitemapEntry) => entries.push(entry);
 
     // ── 固定页面 ──
-    add({ path: "/", lastmod: latestUpdate, changefreq: "daily", priority: 1.0 });
-    add({ path: "/blog", lastmod: latestUpdate, changefreq: "weekly", priority: 0.8 });
-    add({ path: "/archives", lastmod: latestUpdate, changefreq: "weekly", priority: 0.6 });
-    add({ path: "/categories", lastmod: latestUpdate, changefreq: "weekly", priority: 0.6 });
-    add({ path: "/tags", lastmod: latestUpdate, changefreq: "weekly", priority: 0.6 });
-    add({ path: "/friends", lastmod: latestUpdate, changefreq: "monthly", priority: 0.5 });
-    add({ path: "/rss", lastmod: latestUpdate, changefreq: "monthly", priority: 0.4 });
+    add({ path: "/", lastmod: lastUpdated, changefreq: "daily", priority: 1.0 });
+    add({ path: "/blog", lastmod: lastUpdated, changefreq: "weekly", priority: 0.8 });
+    add({ path: "/archives", lastmod: lastUpdated, changefreq: "weekly", priority: 0.6 });
+    add({ path: "/categories", lastmod: lastUpdated, changefreq: "weekly", priority: 0.6 });
+    add({ path: "/tags", lastmod: lastUpdated, changefreq: "weekly", priority: 0.6 });
+    add({ path: "/friends", lastmod: lastUpdated, changefreq: "monthly", priority: 0.5 });
+    add({ path: "/rss", lastmod: lastUpdated, changefreq: "monthly", priority: 0.4 });
 
     // ── 特殊页面 (About.md → /about) ──
     for (const page of pages) {
-        add({ path: page.data.path, lastmod: latestUpdate, changefreq: "monthly", priority: 0.6 });
+        add({ path: page.data.path, lastmod: lastUpdated, changefreq: "monthly", priority: 0.6 });
     }
 
     // ── 文章列表分页 (/blog/2, /blog/3 ...) ──
     const perPage = siteConfig.postsPerPage;
     const totalPages = Math.max(1, Math.ceil(posts.length / perPage));
     for (let page = 2; page <= totalPages; page += 1) {
-        add({ path: `/blog/${page}`, lastmod: latestUpdate, changefreq: "weekly", priority: 0.7 });
+        add({ path: `/blog/${page}`, lastmod: lastUpdated, changefreq: "weekly", priority: 0.7 });
     }
 
     // ── 文章详情 ──
     for (const post of posts) {
         add({
             path : post.data.path,
-            lastmod: post.data.published,
+            // 内容改过就是最后修改时间, 没改过则和发布时间一致
+            lastmod: post.data.lastModified ?? post.data.publishedAt,
             changefreq: "monthly",
             priority: 0.9,
         });
@@ -83,10 +75,11 @@ export const GET: APIRoute = async () => {
     // ── 标签详情 (与 tags/[hash].astro 的 getStaticPaths 保持一致) ──
     const tagLatest = new Map<string, Date | undefined>();
     for (const post of posts) {
+        const updated = post.data.lastModified ?? post.data.publishedAt;
         for (const tag of post.data.tags) {
             const current = tagLatest.get(tag);
-            if (!current || (post.data.published && post.data.published > current)) {
-                tagLatest.set(tag, post.data.published);
+            if (!current || (updated && updated > current)) {
+                tagLatest.set(tag, updated);
             }
         }
     }

@@ -37,7 +37,7 @@ export function splitMarkdownSegments(markdown: string): MarkdownSegment[] {
             continue;
         }
 
-        // 连续的非代码行合并成同一段: 跨行的语法 (比如多行的 ${note ...}) 才能被整体匹配。
+        // 连续的非代码行合并成同一段: 跨行的语法 (比如多行的 :::note ...:::) 才能被整体匹配。
         const last = chunks[chunks.length - 1];
         if (last && !last.code) last.lines.push(line);
         else chunks.push({ code: false, lines: [line] });

@@ -30,6 +30,23 @@ export function absoluteSiteUrl(pathOrUrl: string): string {
 }
 
 /**
+ * XML 特殊字符转义 (sitemap / atom 这类手写 XML 的端点共用)。
+ * 已经用于属性值时也能直接套: `&` 会先被转义, 不会跑出第二个 `&amp;` 的问题。
+ */
+export function escapeXml(value: string): string {
+    return value.replace(/[<>&'"]/g, (char) => {
+        switch (char) {
+            case "<": return "&lt;";
+            case ">": return "&gt;";
+            case "&": return "&amp;";
+            case "'": return "&apos;";
+            case '"': return "&quot;";
+            default : return char;
+        }
+    });
+}
+
+/**
  * 裁剪 meta description: 折叠空白、去掉空串, 超长时按字符截断。
  * 没写描述时回落到站点描述, 保证每个页面都有 description。
  */

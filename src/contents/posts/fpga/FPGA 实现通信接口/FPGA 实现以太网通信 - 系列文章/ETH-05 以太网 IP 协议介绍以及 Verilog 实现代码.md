@@ -1,7 +1,7 @@
 ---
 title: ETH-05 以太网 IP 协议介绍以及 Verilog 实现代码
 description: 介绍 IP 协议的作用与 IPv4 首部各字段, 说明首部校验和的计算方法, 并给出 FPGA 中用 Verilog 实现 IP 数据报收发的代码。
-published: 2026-06-04 16:51:35
+publishedAt: 2026-06-04 16:51:35
 draft: false
 tags:
   - FPGA
@@ -12,6 +12,7 @@ tags:
   - 经验分享
 category: FPGA
 postID: dda32b50 # 自动生成, 不要修改这个项目的值
+lastModified: 2026-06-04 16:51:35 # content:5261890a6b7c742a
 ---
 
 ## IP 协议简介

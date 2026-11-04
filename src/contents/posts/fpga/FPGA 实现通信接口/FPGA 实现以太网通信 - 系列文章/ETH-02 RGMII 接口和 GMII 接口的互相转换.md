@@ -1,7 +1,7 @@
 ---
 title: ETH-02 RGMII 接口和 GMII 接口的互相转换
 description: RGMII 采用双边沿传输数据, FPGA 只采上升沿会丢数据。本文说明如何用 Xilinx IDDR 与 ODDR 原语完成 RGMII 与 GMII 之间的互相转换。
-published: 2026-04-14 14:26:09
+publishedAt: 2026-04-14 14:26:09
 tags:
   - FPGA
   - Verilog
@@ -11,15 +11,18 @@ tags:
   - 经验分享
 category: FPGA
 postID: db8d0357 # 自动生成, 不要修改这个项目的值
+lastModified: 2026-04-14 14:26:09 # content:791f6b8f413e932b
 ---
 
 在 ${post 4a0bb95d} 中我讲到了 RGMII 接口和 GMII 的两种数据接口。本篇则围绕这两种数据接口的互相转换展开。
 ## 前言
 **在 FPGA 中，数据通常只在时钟的上升沿被采集。对于采用双边沿数据有效的 RGMII 接口而言，若仅使用上升沿进行采样，就会丢失下降沿所对应的数据**。同理，FPGA 在输出数据时，也只能在上升沿发生变化。为解决这一问题，Xilinx 提供了 `IDDR` 和 `ODDR` 两个原语，分别用于接收和发送双边沿数据。
 
-${note [info]
+:::
+note [info]
+
 下方所有配图均来自 [[7Series FPGAs SelectIO Resources User Guide (UG471)]](https://docs.amd.com/v/u/en-US/ug471_7Series_SelectIO), 你可以打开 DOCNav 来搜索对应的文档名称
-}
+:::
 
 ## IDDR (Input Double Data Rate)
 `IDDR` 的作用是将 RGMII 接口中的**双边沿数据** (DDR) 转换为 FPGA 内部可以处理的**单边沿数据**，`IDDR` 将双边沿变化的数据通过寄存器输出到了 Q1/Q2 两个端口上，分别代表上升沿的数据和下降沿的数据。
@@ -108,9 +111,11 @@ ODDR #(
 |   **数据错误**    |      1      |     1      |           1            |           0            | **发送错误**。指示当前传输帧中存在错误，通常由MAC层发起 |
 |     保留/异常     |      0      |     1      |           0            |           1            |         无效的组合，实际过程中用不到          |
 
-${note [info]
+:::
+note [info]
+
 在标准操作中，大多数应用只需要关注`正常帧传输`（上升沿=1，下降沿=1）和`数据错误`（上升沿=1，下降沿=0）这两种情况。
-}
+:::
 
 关于 `TX_CTL` 信号的产生方式，代码如下：
 ```verilog

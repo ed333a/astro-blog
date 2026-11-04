@@ -13,6 +13,12 @@ import { absoluteUrl } from "../objects/posts";
 
 const posts = await getSortedPosts();
 const feedUrl = absoluteUrl("rss.xml");
+const atomUrl = absoluteUrl("atom.xml");
+// 同一个订阅内容提供两种格式, 阅读器支持哪个就用哪个
+const feeds = [
+    { name: "RSS 2.0", url: feedUrl },
+    { name: "Atom 1.0", url: atomUrl },
+];
 const recent = posts.slice(0, 10);
 
 const readers = [
@@ -37,24 +43,31 @@ const readers = [
     <GlassElement class="flex flex-col gap-4 rounded-[var(--radius-card)] p-6 text-ink sm:p-8">
         <div class="flex flex-col gap-1">
             <h2 class="m-0 text-xl font-bold">订阅地址</h2>
-            <p class="m-0 text-sm text-ink/80">把下面的地址添加到你的 RSS 阅读器即可。</p>
+            <p class="m-0 text-sm text-ink/80">把下面的地址添加到你的 RSS 阅读器即可, RSS 2.0 / Atom 1.0 任选其一。</p>
         </div>
 
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <code class="min-w-0 flex-1 rounded-2xl border border-ink/20 bg-black/20 px-4 py-3 font-mono text-sm break-all text-ink/90 dark:bg-white/10">{feedUrl}</code>
-            <button
-                type="button"
-                data-copy-feed
-                data-feed-url={feedUrl}
-                class="shrink-0 cursor-pointer rounded-full bg-black/20 px-5 py-2.5 text-sm font-semibold transition duration-300 ease-out hover:opacity-70 dark:bg-white/15"
-            >
-                <span data-copy-label>复制链接</span>
-            </button>
+        <div class="flex flex-col gap-3">
+            {feeds.map((feed) => (
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <code class="min-w-0 flex-1 rounded-2xl border border-ink/20 bg-black/20 px-4 py-3 font-mono text-sm break-all text-ink/90 dark:bg-white/10">{feed.url}</code>
+                    <button
+                        type="button"
+                        data-copy-feed
+                        data-feed-url={feed.url}
+                        aria-label={`复制 ${feed.name} 订阅地址`}
+                        class="shrink-0 cursor-pointer rounded-full bg-black/20 px-5 py-2.5 text-sm font-semibold transition duration-300 ease-out hover:opacity-70 dark:bg-white/15"
+                    >
+                        <span data-copy-label>复制链接</span>
+                    </button>
+                </div>
+            ))}
         </div>
 
         <p class="m-0 text-xs text-ink/60">
             也可以直接打开 XML:
             <a href="/rss.xml" target="_blank" rel="noopener" data-no-swup class="font-semibold underline-offset-4 transition-opacity hover:underline hover:opacity-80">/rss.xml</a>
+            ·
+            <a href="/atom.xml" target="_blank" rel="noopener" data-no-swup class="font-semibold underline-offset-4 transition-opacity hover:underline hover:opacity-80">/atom.xml</a>
         </p>
     </GlassElement>
 

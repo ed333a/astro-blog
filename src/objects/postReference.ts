@@ -1,8 +1,8 @@
 /**
- * 文章之间的引用: 把正文里的 `${post <id> [text]}` 换成指向另一篇文章的 Markdown 链接。
+ * 文章之间的引用: 把正文里的 `::post <id> [text]}::` 换成指向另一篇文章的 Markdown 链接。
  *
- *   ${post 5f2a1c9d3b7e}               → 链接文本 = 被引用文章的标题
- *   ${post 5f2a1c9d3b7e [相关阅读]}     → 链接文本 = 方括号里的内容
+ *   ::post 5f2a1c9d3b7e::               → 链接文本 = 被引用文章的标题
+ *   ::post 5f2a1c9d3b7e [相关阅读]::     → 链接文本 = 方括号里的内容
  *
  * 注意: 代码块 (``` / ~~~) 与行内代码 (`...`) 里的内容会被跳过 —— 否则「怎么写这个引用语法」
  * 这类文章根本没法写出来。
@@ -10,7 +10,7 @@
 
 import { transformOutsideCode } from "./markdownSegments";
 
-const REFERENCE_PATTERN = /\$\{\s*post\s+([^\s[\]}]+)\s*(?:\[([^\]]*)\])?\s*\}/g;
+const REFERENCE_PATTERN = /::post\s+([^\s\[\]{}]+)(?:\s+\[(.*?)\])?::/g;
 
 export interface PostReferenceTarget {
     title: string;

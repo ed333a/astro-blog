@@ -1,14 +1,14 @@
 /**
- * 提示框: 把正文里的 `${note [warn|info|danger|fine] <content>}` 换成带颜色的提示框。
+ * 提示框: 把正文里的 `:::note [warn|info|danger|fine] <content>:::` 换成带颜色的提示框。
  *
- *   ${note 普通提示}            → info (灰色, 默认)
- *   ${note [warn] 注意 ...}     → warn (黄色)
- *   ${note [danger] 危险 ...}   → danger (红色)
- *   ${note [fine] 很好 ...}     → fine (绿色)
+ *   :::note 普通提示:::            → info (灰色, 默认)
+ *   :::note [warn] 注意 ...:::     → warn (黄色)
+ *   :::note [danger] 危险 ...:::   → danger (红色)
+ *   :::note [fine] 很好 ...:::     → fine (绿色)
  *
  * 输出的是块级 HTML <div>, 并在 content 前后各留一个空行 —— 这样主 Markdown 渲染管线会把
  * content 当作正常的 Markdown 解析 (段落 / 列表 / 行内代码 / 代码块 / 链接 … 都能渲染), 再被这个 <div> 包起来。
- * 代码块与行内代码里的 `${note ...}` 会被跳过 (方便在文章里写这个语法本身);
+ * 代码块与行内代码里的 `:::note ...:::` 会被跳过 (方便在文章里写这个语法本身);
  * 反过来, 提示框的 content 里也可以包含代码块。
  */
 
@@ -17,7 +17,7 @@ import { splitMarkdownSegments } from "./markdownSegments";
 export type NoteType = "info" | "warn" | "danger" | "fine";
 
 // 第二段 [warn|info|danger|fine] 可选; 不写时默认 info
-const NOTE_PATTERN = /\$\{\s*note\b\s*(?:\[\s*(warn|info|danger|fine)\s*\])?\s*([\s\S]*?)\s*\}/g;
+const NOTE_BLOCK_PATTERN = /:::\s*note\b\s*(?:\[\s*(warn|info|danger|fine)\s*\])?\s*([\s\S]*?)\s*:::/g;
 
 /** 提示框的基础样式 (四种类型共用) */
 const NOTE_BASE =
@@ -38,9 +38,9 @@ function buildNote(rawType: string | undefined, content: string): string {
 }
 
 /**
- * 替换正文里的 `${note ...}` 提示框。
+ * 替换正文里的 `:::note ...:::` 提示框。
  *
- * 分三步, 让「content 里可以写代码块 / 行内代码」和「代码块里可以写 ${note ...} 本身」同时成立:
+ * 分三步, 让「content 里可以写代码块 / 行内代码」和「代码块里可以写 :::note ...::: 本身」同时成立:
  *   ① 围栏代码块 → 占位符 (提示框内部可以包含代码块, 代码示例里的语法也不会被误替换);
  *   ② 行内代码 → 占位符 (避免 content 里的 `}` 提前结束匹配);
  *   ③ 匹配并替换提示框, 最后把占位符按原样还原。
@@ -64,7 +64,7 @@ export function replaceNotes(markdown: string): string {
     });
 
     // ③ 替换提示框, 再还原占位符
-    const replaced = withoutInlineCodes.replace(NOTE_PATTERN, (_raw, rawType: string | undefined, content: string) =>
+    const replaced = withoutInlineCodes.replace(NOTE_BLOCK_PATTERN, (_raw, rawType: string | undefined, content: string) =>
         buildNote(rawType, content),
     );
 

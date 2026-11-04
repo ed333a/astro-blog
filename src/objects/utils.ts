@@ -33,3 +33,10 @@ export function theme(theme: BlogTheme | void): BlogTheme | undefined | void {
     }
     console.log(`Applied ${theme} theme.`)
 }
+
+const pad = (value: number, length = 2) => String(value).padStart(length, "0");
+export function formatDateYYYYMMDD(date: Date): string {
+    return [
+        `${pad(date.getFullYear(), 4)}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
+    ].join(" ");
+}

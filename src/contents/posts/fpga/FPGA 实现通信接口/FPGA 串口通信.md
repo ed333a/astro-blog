@@ -1,7 +1,7 @@
 ---
 title: FPGA 串口通信
 description: 从 UART 的异步通信原理出发, 介绍 TXD/RXD 交叉接线、起始位与停止位、奇偶校验和波特率, 并给出 FPGA 串口发送与接收模块的 Verilog 实现。
-published: 2026-04-17 14:08:17
+publishedAt: 2026-04-17 14:08:17
 tags:
   - FPGA
   - Verilog
@@ -10,10 +10,11 @@ tags:
   - 经验分享
 category: FPGA
 postID: 96d23a91 # 自动生成, 不要修改这个项目的值
+lastModified: 2026-11-04 14:51:35 # content:383891a503ba1952
 ---
 
 ## 简介
-串口，即 UART(全称 Universal Asynchronous Receiver/Transmitter，中文正式名称为通用异步收发器)，是采用串行通信方式的接口。串行通信将字节数据**按比特在一条数据线上逐个传输**，其特点是线路简单，但传输速度较慢。
+串口，即 UART(全称 Universal Asynchronous Receiver/Transmitter，中文正式名称为通用异步收发器)，是采用串行通信方式的接口。串行通信将字节数据**按比特在一条数据线上逐个传输**，其特点是线路简单，但传输速度较慢s
 
 对于传输速度要求不高的场合，如工业控制、嵌入式开发等领域，串口通信是常客。
 ## 串口通信方式

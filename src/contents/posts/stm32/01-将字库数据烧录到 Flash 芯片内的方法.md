@@ -2,7 +2,7 @@
 title: 关于点阵字库数据的生成, 以及对应偏移地址的计算方法
 description: 记录点阵字库数据的生成方法, 以及把字库按偏移地址烧录到 W25Q 系列 Flash 芯片的完整流程, 包含 GBK 编码计算与程序实现思路。
 type: post
-published: 2026-03-17 09:18:06
+publishedAt: 2026-03-17 09:18:06
 tags:
 - STM32
 - 嵌入式
@@ -10,6 +10,7 @@ tags:
 - 经验分享
 category: STM32
 postID: 29f8f7f6 # 自动生成, 不要修改这个项目的值
+lastModified: 2026-03-17 09:18:06 # content:3325ac0fba168503
 ---
 
 ## 前言

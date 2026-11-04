@@ -16,6 +16,7 @@ const latexEnabled = rawConfig?.siteConfig?.latex?.enable ?? true;
 
 // https://astro.build/config
 export default defineConfig({
+    site: rawConfig.siteConfig.siteUrl,
     integrations: [
         // 页面过渡 (参考 fuwari 模板): Swup 只替换 #swup-container 的内容,
         // 导航栏 / 背景 / 返回顶部都在容器外, 所以背景完全不动。

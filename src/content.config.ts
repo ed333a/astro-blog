@@ -25,7 +25,12 @@ const documentSchema = z.object({
     /** 文章 ID: frontmatter 没写时由 loader 按 title + description 的哈希生成 */
     postID     : z.string(),
     /** 发布日期 (解析失败 / 没写时为 undefined) */
-    published   : z.date().optional(),
+    publishedAt : z.date().optional(),
+    /**
+     * 最后修改时间: 由 loader 在正文/标题/描述/分类/标签发生变化时自动写回 frontmatter,
+     * 这里只负责读进来 (见 loaders/markdown.ts 的 writeLastModifiedToFile)
+     */
+    lastModified: z.date().optional(),
     /** 展示用日期 (YYYY-MM-DD) */
     dateText   : z.string().optional(),
     category   : z.string().optional(),
