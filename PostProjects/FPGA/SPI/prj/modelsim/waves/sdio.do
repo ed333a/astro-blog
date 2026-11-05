@@ -7,24 +7,24 @@ add wave -noupdate /sdio_tb/dut/sdio_start_op
 add wave -noupdate /sdio_tb/dut/register_addr
 add wave -noupdate /sdio_tb/dut/dat_tx
 add wave -noupdate /sdio_tb/dut/dat_rx
-add wave -noupdate /sdio_tb/dut/spi_sclk
-add wave -noupdate /sdio_tb/dut/spi_cs_n
-add wave -noupdate /sdio_tb/dut/sdio
+add wave -noupdate -color Gold -height 25 /sdio_tb/dut/spi_sclk
+add wave -noupdate -color Gold -height 25 /sdio_tb/dut/spi_cs_n
+add wave -noupdate -color Gold -height 25 /sdio_tb/dut/sdio
+add wave -noupdate -color Gold -height 25 /sdio_tb/dut/sdio_dir
 add wave -noupdate /sdio_tb/dut/spi_mosi
 add wave -noupdate /sdio_tb/dut/spi_miso
 add wave -noupdate /sdio_tb/dut/dat_rx_t
 add wave -noupdate /sdio_tb/dut/data_bit_cnt
-add wave -noupdate /sdio_tb/dut/sdio_dir
 add wave -noupdate /sdio_tb/dut/spi_end
 add wave -noupdate -expand -group IOBUF /sdio_tb/dut/spi_iobuf/O
 add wave -noupdate -expand -group IOBUF /sdio_tb/dut/spi_iobuf/IO
 add wave -noupdate -expand -group IOBUF /sdio_tb/dut/spi_iobuf/I
 add wave -noupdate -expand -group IOBUF /sdio_tb/dut/spi_iobuf/T
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {901362 ps} 0}
+WaveRestoreCursors {{Cursor 1} {1954491 ps} 0}
 quietly wave cursor active 1
-configure wave -namecolwidth 150
-configure wave -valuecolwidth 100
+configure wave -namecolwidth 107
+configure wave -valuecolwidth 57
 configure wave -justifyvalue left
 configure wave -signalnamewidth 1
 configure wave -snapdistance 10
@@ -37,4 +37,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ps
 update
-WaveRestoreZoom {0 ps} {11678088 ps}
+WaveRestoreZoom {0 ps} {8371449 ps}

@@ -17,6 +17,7 @@
 ```text
 [ROOT]
   ├─ public --------------- 公共资源文件夹
+  ├─ PostProjects --------- 文章中的一些工程代码会存放到这里供大家学习和使用
   ├─ scripts -------------- 存放字体子集化, 以及 Unicode 分片脚本.
   └─ src
       ├─ assets ----------- astro 内部资源的存放位置
@@ -129,6 +130,26 @@ note [info]
 - 支持标题展示
 :::
 ==============================
+```
+
+## 如何运行
+- 克隆这个仓库
+```bash
+$ git clone https://github.com/ed333a/astro-blog.git
+```
+
+- 运行
+```bash
+# 安装 pnpm (若已安装可以跳过)
+npm i pnpm
+
+# 运行 DEV 环境, 在该环境下可以用浏览器预览页面
+# (pnpm 会自动安装相关 node 模块)
+pnpm dev
+```
+- 构建静态页面:
+```bash
+$ pnpm build
 ```
 
 ## 数学公式
