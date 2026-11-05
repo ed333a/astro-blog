@@ -45,6 +45,22 @@ export default defineConfig({
     vite: {
         // Tailwind CSS v4 (样式入口: src/styles/global.css)
         plugins: [tailwindcss()],
+        server: {
+            watch: {
+                // 不监听以下文件的更改
+                ignored: [
+                    '**/.astro/**',
+                    '**/.vscode/**',
+                    '**/archives/**',
+                    '**/dist/**',
+                    '**/node_modules/**',
+                    '**/PostProjects/**',
+                    '**/scripts/**',
+                    '**/temp/**',
+                    '**/README.md',
+                ]
+            }
+        },
     },
     markdown: {
         // 行内 $...$ / 块级 $$...$$ 数学公式: 用 @astrojs/markdown-remark 的 unified 处理器

@@ -11,10 +11,14 @@
             "id": "bebe7e6851db70ea",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "contents/posts/fpga/FPGA 实现通信接口/FPGA SPI 通信.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "新标签页"
+              "title": "FPGA SPI 通信"
             }
           }
         ]
@@ -184,8 +188,12 @@
       "bases:新建数据库": false
     }
   },
-  "active": "b22df5ea4631c964",
+  "active": "bebe7e6851db70ea",
   "lastOpenFiles": [
+    "assets/img/posts/fpga_impl_interface/spi/modelsim_full_wave_spi.png",
+    "assets/img/posts/fpga_impl_interface/spi/modelsim_full_wave_sdio.png",
+    "contents/posts/fpga/FPGA 实现通信接口/modelsim_full_wave_sdio.png",
+    "contents/posts/fpga/FPGA 实现通信接口/image.png",
     "assets/img/posts/blog/05/obsidian-file-explorer-2.png",
     "contents/posts/博客维护日记/obsidian-file-explorer-2.png",
     "contents/posts/博客维护日记/image.png",
@@ -194,10 +202,6 @@
     "contents/posts/博客维护日记/obsidian-open-cfg-2.png",
     "contents/posts/博客维护日记/obsidian-open-cfg-w.png",
     "contents/posts/博客维护日记/obsidian-open-cfg-1.png",
-    "assets/img/posts/blog/05/obsidian-file-explorer.png",
-    "assets/img/posts/blog/05/obsidian-open-cfg-1.png",
-    "assets/img/posts/blog/05/obsidian_open_css_1.png",
-    "contents/posts/博客维护日记/obsidian_open_css_1.png",
     "assets/img/posts/blog/05",
     "contents/posts/博客维护日记/02 - 使用 cloudflare pages 托管博客网页的静态资源.md",
     "contents/posts/博客维护日记/03 - 给宝塔面板设置反向代理.md",

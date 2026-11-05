@@ -11,7 +11,7 @@ tags:
   - 经验分享
 category: FPGA
 postID: 3723985a # 自动生成, 不要修改这个项目的值
-lastModified: 2026-04-18 15:18:25 # content:3d37e5aad1cfab88
+lastModified: 2026-11-05 16:40:45 # content:e1c74551d7be5ed4
 ---
 
 ## 前言
@@ -79,7 +79,7 @@ assign eth_mdio = eth_mdio_dir ? eth_mdio_in : eth_mdio_out; // 三态门根据�
 //... 其它代码 ... 如时钟信号、驱动 eth_mdio_dir 的逻辑等等
 ```
 ### 时钟信号的产生
-和之前有一篇讲 ${post 52a1f482} 文章中的代码类似，也是产生一个双边沿的脉冲信号，然后根据这个双边沿脉冲信号去翻转 MDC 信号就得到了驱动时钟。
+和之前有一篇讲 ::post 52a1f482:: 文章中的代码类似，也是产生一个双边沿的脉冲信号，然后根据这个双边沿脉冲信号去翻转 MDC 信号就得到了驱动时钟。
 ```verilog
 // MDC inv Generation, inv pulse signal is active-high when MDC rising edge and falling edge
 always  @(posedge clk or negedge rst_n) begin

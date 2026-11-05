@@ -1,4 +1,18 @@
-D:/astroblog/astro-blog-glass/PostProjects/Xilinx/SPI/rtl/spi_master.v {1 {vlog -work work -vopt -stats=none D:/astroblog/astro-blog-glass/PostProjects/Xilinx/SPI/rtl/spi_master.v
+D:/astroblog/astro-blog-glass/PostProjects/Xilinx/SPI/rtl/IOBUF.v {1 {vlog -work work -vopt -stats=none D:/astroblog/astro-blog-glass/PostProjects/Xilinx/SPI/rtl/IOBUF.v
+Model Technology ModelSim SE-64 vlog 2020.4 Compiler 2020.10 Oct 13 2020
+-- Compiling module IOBUF
+
+Top level modules:
+	IOBUF
+
+} {} {}} D:/astroblog/astro-blog-glass/PostProjects/Xilinx/SPI/rtl/sdio.v {1 {vlog -work work -vopt -stats=none D:/astroblog/astro-blog-glass/PostProjects/Xilinx/SPI/rtl/sdio.v
+Model Technology ModelSim SE-64 vlog 2020.4 Compiler 2020.10 Oct 13 2020
+-- Compiling module sdio_interface
+
+Top level modules:
+	sdio_interface
+
+} {} {}} D:/astroblog/astro-blog-glass/PostProjects/Xilinx/SPI/rtl/spi_master.v {1 {vlog -work work -vopt -stats=none D:/astroblog/astro-blog-glass/PostProjects/Xilinx/SPI/rtl/spi_master.v
 Model Technology ModelSim SE-64 vlog 2020.4 Compiler 2020.10 Oct 13 2020
 -- Compiling module spi_master
 

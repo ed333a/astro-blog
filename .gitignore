@@ -25,4 +25,5 @@ pnpm-debug.log*
 
 archives
 
-PostProjexts/
+# modelsim
+PostProjects/**/work/
