@@ -10,7 +10,7 @@ tags:
   - 经验分享
 category: FPGA
 postID: 52a1f482 # 自动生成, 不要修改这个项目的值
-lastModified: 2026-04-19 14:38:34 # content:9bd5dc25753f606a
+lastModified: 2026-11-05 15:54:34 # content:58af067f8265bf1c
 ---
 
 ## 简介
@@ -535,8 +535,8 @@ spi_master # (
 
     .spi_sclk               (   spi_sclk                        ),  // [O] [   0:0] serial clock
     .spi_cs_n               (   spi_cs_n                        ),  // [O] [   0:0] chip select signal, active low
-    .spi_mosi               (   spi_mosi                        ),  // [I] [   0:0] master in slave out
-    .spi_miso               (   spi_miso                        ),  // [O] [   0:0] master out slave in
+    .spi_mosi               (   spi_mosi                        ),  // [O] [   0:0] master in slave out
+    .spi_miso               (   spi_miso                        ),  // [I] [   0:0] master out slave in
     .data_bit_cnt           (   data_bit_cnt                    )   // [O] [   7:0] bit transmit counter
 );
 
@@ -546,10 +546,10 @@ IOBUF # (
     .IBUF_LOW_PWR   (   "TRUE"          ),
     .IOSTANDARD     (   "DEFAULT"       ),
     .SLEW           (   "SLOW"          )
-) ms14d2600_spi_iobuf (
-    .O              (   spi_miso        ),  //  IOBUF 原语的输出端口，接到 spi_miso 中
+) spi_iobuf (
+    .O              (   spi_miso        ),  //  IOBUF 原语的输出端口，双向 IO 口为输出方向时, 输出从双向 IO 中接收到的数据, 这个端口连接到 spi_miso
     .IO             (   sdio            ),  //  IOBUF 原语的双向端口，输出到模块端口
-    .I              (   spi_mosi        ),  //  IOBUF 原语的输入端口，接到 spi_mosi 中
+    .I              (   spi_mosi        ),  //  IOBUF 原语的输入端口, 双向 IO 口为输入方向时, 数据从这个端口采样, 这个端口连接到 spi_mosi
     .T              (   sdio_dir        )   //  IOBUF 原语的方向控制端口，low: output, high: input
 );
 
